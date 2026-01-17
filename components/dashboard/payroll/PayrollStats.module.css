@@ -1,0 +1,85 @@
+.statsGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-lg);
+}
+
+@media (max-width: 1200px) {
+    .statsGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .statsGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.statCard {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-md);
+    background: var(--card-bg);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    border: 1px solid var(--border-light);
+    transition: all var(--transition-base);
+}
+
+.statCard:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.iconWrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-md);
+    flex-shrink: 0;
+}
+
+.employees .iconWrapper {
+    background: rgba(0, 82, 255, 0.1);
+    color: var(--primary-blue);
+}
+
+.payroll .iconWrapper {
+    background: rgba(0, 211, 149, 0.1);
+    color: #00D395;
+}
+
+.schedule .iconWrapper {
+    background: rgba(139, 92, 246, 0.1);
+    color: #8B5CF6;
+}
+
+.loans .iconWrapper {
+    background: rgba(255, 159, 0, 0.1);
+    color: #FF9F00;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.label {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+}
+
+.value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.subtext {
+    font-size: 0.75rem;
+    color: var(--text-light);
+}

@@ -1,0 +1,138 @@
+.dashboardLayout {
+    display: flex;
+    min-height: 100vh;
+    background: var(--bg-cream);
+}
+
+.mainContent {
+    flex: 1;
+    margin-left: 260px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.main {
+    flex: 1;
+    padding: var(--space-xl);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+}
+
+/* Page Header */
+.pageHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pageHeader h1 {
+    font-size: 1.75rem;
+    margin-bottom: var(--space-xs);
+}
+
+.pageHeader p {
+    font-size: 0.9375rem;
+    color: var(--text-muted);
+}
+
+.headerActions {
+    display: flex;
+    gap: var(--space-md);
+}
+
+/* Filters */
+.filters {
+    display: flex;
+    gap: var(--space-md);
+    flex-wrap: wrap;
+}
+
+.searchBox {
+    position: relative;
+    flex: 1;
+    min-width: 250px;
+    max-width: 400px;
+}
+
+.searchIcon {
+    position: absolute;
+    left: var(--space-md);
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+}
+
+.searchInput {
+    width: 100%;
+    padding: var(--space-md);
+    padding-left: calc(var(--space-md) + 26px);
+    font-family: var(--font-sans);
+    font-size: 0.9375rem;
+    color: var(--text-dark);
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+}
+
+.searchInput:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px rgba(0, 82, 255, 0.1);
+}
+
+.filterGroup {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-md);
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    color: var(--text-muted);
+}
+
+.filterSelect {
+    font-family: var(--font-sans);
+    font-size: 0.9375rem;
+    color: var(--text-dark);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.filterSelect:focus {
+    outline: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .mainContent {
+        margin-left: 0;
+    }
+
+    .pageHeader {
+        flex-direction: column;
+        gap: var(--space-lg);
+        align-items: stretch;
+    }
+
+    .headerActions {
+        flex-direction: column;
+    }
+
+    .headerActions a {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .filters {
+        flex-direction: column;
+    }
+
+    .searchBox {
+        max-width: none;
+    }
+}

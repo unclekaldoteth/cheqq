@@ -1,0 +1,123 @@
+.cta {
+    padding: var(--space-3xl) 0;
+}
+
+.ctaCard {
+    background: var(--gradient-primary);
+    border-radius: var(--radius-xl);
+    padding: var(--space-4xl);
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: var(--space-3xl);
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.ctaCard::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 400px;
+    height: 400px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+}
+
+.ctaContent {
+    position: relative;
+    z-index: 1;
+}
+
+.ctaContent h2 {
+    color: white;
+    margin-bottom: var(--space-lg);
+    font-size: clamp(1.75rem, 3vw, 2.5rem);
+}
+
+.ctaContent p {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.125rem;
+    max-width: 500px;
+    margin-bottom: var(--space-xl);
+}
+
+.ctaButtons {
+    display: flex;
+    gap: var(--space-md);
+}
+
+.ctaButtons .btn-primary {
+    background: white;
+    color: var(--primary-blue);
+}
+
+.ctaButtons .btn-primary:hover {
+    background: var(--bg-cream);
+}
+
+.ctaVisual {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: center;
+}
+
+.statCard {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-xl);
+    padding: var(--space-xl) var(--space-2xl);
+    display: flex;
+    align-items: center;
+    gap: var(--space-lg);
+    color: white;
+}
+
+.statEmoji {
+    font-size: 3rem;
+}
+
+.statCard>div {
+    display: flex;
+    flex-direction: column;
+}
+
+.statLabel {
+    font-size: 0.875rem;
+    opacity: 0.9;
+}
+
+.statValue {
+    font-size: 2rem;
+    font-weight: 800;
+}
+
+@media (max-width: 1024px) {
+    .ctaCard {
+        grid-template-columns: 1fr;
+        text-align: center;
+        padding: var(--space-3xl) var(--space-xl);
+    }
+
+    .ctaContent {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .ctaButtons {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .ctaButtons a {
+        width: 100%;
+    }
+
+    .ctaVisual {
+        display: none;
+    }
+}

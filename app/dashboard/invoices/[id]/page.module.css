@@ -1,0 +1,310 @@
+.dashboardLayout {
+    display: flex;
+    min-height: 100vh;
+    background: var(--bg-cream);
+}
+
+.mainContent {
+    flex: 1;
+    margin-left: 260px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.main {
+    flex: 1;
+    padding: var(--space-xl);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+}
+
+/* Page Header */
+.pageHeader {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.backBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    transition: color var(--transition-fast);
+    width: fit-content;
+}
+
+.backBtn:hover {
+    color: var(--primary-blue);
+}
+
+.headerRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-lg);
+}
+
+.invoiceTitle {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    margin-bottom: var(--space-xs);
+}
+
+.invoiceTitle h1 {
+    font-size: 1.75rem;
+}
+
+.headerRow p {
+    font-size: 0.9375rem;
+    color: var(--text-muted);
+}
+
+.headerActions {
+    display: flex;
+    gap: var(--space-sm);
+}
+
+/* Content */
+.content {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: var(--space-xl);
+}
+
+.mainSection {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+.sideSection {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+/* Amount Card */
+.amountCard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    background: linear-gradient(135deg, var(--primary-blue) 0%, #0040CC 100%);
+    border-radius: var(--radius-lg);
+    padding: var(--space-2xl);
+    color: white;
+}
+
+.amountLabel {
+    font-size: 0.875rem;
+    opacity: 0.8;
+    margin-bottom: var(--space-sm);
+}
+
+.amountValue {
+    font-size: 2.5rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+.amountValue .currency {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-left: var(--space-sm);
+    opacity: 0.9;
+}
+
+.dueLine {
+    font-size: 0.875rem;
+    opacity: 0.8;
+    margin-top: var(--space-md);
+}
+
+/* Info Card */
+.infoCard {
+    background: var(--card-bg);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    border: 1px solid var(--border-light);
+}
+
+.infoCard h3 {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    margin-bottom: var(--space-lg);
+    color: var(--text-dark);
+}
+
+.infoGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-lg);
+}
+
+.infoItem {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.infoLabel {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+}
+
+.infoValue {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--text-dark);
+}
+
+.memo {
+    font-size: 0.9375rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+}
+
+/* Link Box */
+.linkBox {
+    display: flex;
+    gap: var(--space-sm);
+}
+
+.linkInput {
+    flex: 1;
+    padding: var(--space-md);
+    font-family: monospace;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    background: #FAFBFC;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+}
+
+.linkBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    text-decoration: none;
+}
+
+.linkBtn:hover {
+    border-color: var(--primary-blue);
+    color: var(--primary-blue);
+}
+
+/* Timeline */
+.timeline {
+    display: flex;
+    flex-direction: column;
+}
+
+.timelineItem {
+    position: relative;
+    padding-left: var(--space-xl);
+    padding-bottom: var(--space-lg);
+}
+
+.timelineItem:last-child {
+    padding-bottom: 0;
+}
+
+.timelineDot {
+    position: absolute;
+    left: 0;
+    top: 4px;
+    width: 10px;
+    height: 10px;
+    background: var(--primary-blue);
+    border-radius: 50%;
+}
+
+.timelineLine {
+    position: absolute;
+    left: 4px;
+    top: 14px;
+    bottom: 0;
+    width: 2px;
+    background: var(--border-light);
+}
+
+.timelineContent {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.timelineDate {
+    font-size: 0.75rem;
+    color: var(--text-light);
+}
+
+.timelineDesc {
+    font-size: 0.875rem;
+    color: var(--text-dark);
+}
+
+.txLink {
+    font-size: 0.8125rem;
+    color: var(--primary-blue);
+    text-decoration: none;
+    margin-top: 4px;
+}
+
+.txLink:hover {
+    text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .content {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .mainContent {
+        margin-left: 0;
+    }
+
+    .headerRow {
+        flex-direction: column;
+    }
+
+    .headerActions {
+        width: 100%;
+    }
+
+    .headerActions .btn {
+        flex: 1;
+    }
+
+    .infoGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .amountValue {
+        font-size: 2rem;
+    }
+}

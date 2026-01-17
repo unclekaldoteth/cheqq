@@ -1,0 +1,302 @@
+.dashboardLayout {
+    display: flex;
+    min-height: 100vh;
+    background: var(--bg-cream);
+}
+
+.mainContent {
+    flex: 1;
+    margin-left: 260px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.main {
+    flex: 1;
+    padding: var(--space-xl);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+}
+
+/* Page Header */
+.pageHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.backBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) 0;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+    cursor: pointer;
+    margin-bottom: var(--space-md);
+    transition: color var(--transition-fast);
+}
+
+.backBtn:hover {
+    color: var(--primary-blue);
+}
+
+.pageHeader h1 {
+    font-size: 1.75rem;
+    margin-bottom: var(--space-xs);
+}
+
+.pageHeader p {
+    font-size: 0.9375rem;
+    color: var(--text-muted);
+}
+
+/* Steps */
+.steps {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-lg);
+    background: var(--card-bg);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-light);
+}
+
+.step {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    color: var(--text-light);
+}
+
+.step.active {
+    color: var(--primary-blue);
+}
+
+.step.completed {
+    color: #00D395;
+}
+
+.stepNumber {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--border-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.step.active .stepNumber {
+    background: var(--primary-blue);
+    color: white;
+}
+
+.step.completed .stepNumber {
+    background: #00D395;
+    color: white;
+}
+
+.stepLabel {
+    font-size: 0.9375rem;
+    font-weight: 500;
+}
+
+.stepDivider {
+    flex: 1;
+    height: 2px;
+    background: var(--border-light);
+}
+
+/* Content */
+.content {
+    flex: 1;
+}
+
+/* Period Selector */
+.periodSelector {
+    display: flex;
+    gap: var(--space-lg);
+    padding: var(--space-lg);
+    background: var(--card-bg);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-light);
+}
+
+.periodField {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.periodField label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.periodField input,
+.periodField select {
+    padding: var(--space-md);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    font-size: 0.9375rem;
+    background: white;
+}
+
+.periodField input:focus,
+.periodField select:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px rgba(0, 82, 255, 0.1);
+}
+
+/* Actions */
+.actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-lg);
+    background: var(--card-bg);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-light);
+}
+
+.actionButtons {
+    display: flex;
+    gap: var(--space-md);
+}
+
+/* Confirmation */
+.confirmation {
+    background: var(--card-bg);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-light);
+    padding: var(--space-2xl);
+    text-align: center;
+}
+
+.confirmIcon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(0, 211, 149, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto var(--space-xl);
+    color: #00D395;
+}
+
+.confirmation h2 {
+    font-size: 1.5rem;
+    margin-bottom: var(--space-md);
+}
+
+.confirmation p {
+    color: var(--text-muted);
+    margin-bottom: var(--space-xl);
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.confirmAmount {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-xl);
+    margin-bottom: var(--space-2xl);
+    flex-wrap: wrap;
+}
+
+.confirmItem {
+    text-align: center;
+}
+
+.confirmLabel {
+    display: block;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-bottom: var(--space-xs);
+}
+
+.confirmValue {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.confirmButtons {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-md);
+}
+
+/* Success */
+.successIcon {
+    background: rgba(0, 211, 149, 0.12);
+    color: #00D395;
+}
+
+.txHash {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    background: #FAFBFC;
+    border-radius: var(--radius-md);
+    font-family: monospace;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-bottom: var(--space-xl);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .mainContent {
+        margin-left: 0;
+    }
+
+    .steps {
+        flex-wrap: wrap;
+    }
+
+    .stepDivider {
+        display: none;
+    }
+
+    .periodSelector {
+        flex-direction: column;
+    }
+
+    .actions {
+        flex-direction: column;
+        gap: var(--space-lg);
+    }
+
+    .actionButtons {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .actionButtons .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .confirmButtons {
+        flex-direction: column;
+    }
+
+    .confirmButtons .btn {
+        width: 100%;
+    }
+}

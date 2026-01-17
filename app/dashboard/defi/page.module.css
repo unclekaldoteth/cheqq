@@ -1,0 +1,353 @@
+.dashboardLayout {
+    display: flex;
+    min-height: 100vh;
+    background: var(--bg-cream);
+}
+
+.mainContent {
+    flex: 1;
+    margin-left: 260px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.main {
+    flex: 1;
+    padding: var(--space-xl);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+}
+
+/* Page Header */
+.pageHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pageHeader h1 {
+    font-size: 1.75rem;
+    margin-bottom: var(--space-xs);
+}
+
+.pageHeader p {
+    font-size: 0.9375rem;
+    color: var(--text-muted);
+}
+
+/* Stats Grid */
+.statsGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-lg);
+}
+
+.statCard {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-md);
+    background: var(--card-bg);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    border: 1px solid var(--border-light);
+    transition: all var(--transition-base);
+}
+
+.statCard:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.statCard.primary {
+    background: var(--gradient-primary);
+    border: none;
+}
+
+.statCard.primary .statLabel {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.statCard.primary .statValue {
+    color: white;
+}
+
+.iconWrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-md);
+    flex-shrink: 0;
+}
+
+.statCard.blue .iconWrapper {
+    background: rgba(0, 82, 255, 0.1);
+    color: var(--primary-blue);
+}
+
+.statCard.green .iconWrapper {
+    background: rgba(0, 211, 149, 0.1);
+    color: #00D395;
+}
+
+.statCard.orange .iconWrapper {
+    background: rgba(255, 159, 0, 0.1);
+    color: #FF9F00;
+}
+
+.statCard.red .iconWrapper {
+    background: rgba(239, 68, 68, 0.1);
+    color: #EF4444;
+}
+
+.statContent {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.statLabel {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+}
+
+.statValue {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.statSubtext {
+    font-size: 0.75rem;
+    color: var(--text-light);
+}
+
+/* Sections */
+.sections {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-xl);
+}
+
+.section {
+    background: var(--card-bg);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-light);
+    padding: var(--space-xl);
+}
+
+.sectionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-lg);
+}
+
+.sectionHeader h2 {
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+.badge {
+    background: rgba(0, 82, 255, 0.1);
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--primary-blue);
+}
+
+/* Protocol Cards */
+.protocols {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.protocolCard {
+    display: flex;
+    align-items: center;
+    gap: var(--space-lg);
+    padding: var(--space-lg);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-base);
+}
+
+.protocolCard:hover {
+    border-color: var(--primary-blue);
+    box-shadow: var(--shadow-sm);
+}
+
+.protocolIcon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-md);
+    background: rgba(0, 82, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.protocolInfo {
+    flex: 1;
+}
+
+.protocolName {
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 2px;
+}
+
+.protocolDesc {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+}
+
+.protocolStats {
+    text-align: right;
+}
+
+.protocolApy {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #00D395;
+}
+
+.protocolDeposit {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+/* Loan List */
+.loanList {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.loanItem {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+    background: #FAFBFC;
+}
+
+.loanAvatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--gradient-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+}
+
+.loanInfo {
+    flex: 1;
+}
+
+.loanName {
+    font-weight: 500;
+    color: var(--text-dark);
+}
+
+.loanDate {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+}
+
+.loanAmount {
+    text-align: right;
+}
+
+.loanBalance {
+    font-weight: 600;
+    color: #DC2626;
+}
+
+.loanMonthly {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* Actions Card */
+.actionsCard {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-md);
+    margin-top: var(--space-lg);
+}
+
+.actionBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    padding: var(--space-md);
+    background: var(--card-bg);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-md);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.actionBtn:hover {
+    border-color: var(--primary-blue);
+    background: rgba(0, 82, 255, 0.05);
+    color: var(--primary-blue);
+}
+
+.actionBtn.primary {
+    background: var(--primary-blue);
+    border-color: var(--primary-blue);
+    color: white;
+}
+
+.actionBtn.primary:hover {
+    background: var(--primary-blue-hover);
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .statsGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .sections {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .mainContent {
+        margin-left: 0;
+    }
+
+    .pageHeader {
+        flex-direction: column;
+        gap: var(--space-lg);
+        align-items: stretch;
+    }
+
+    .actionsCard {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    .statsGrid {
+        grid-template-columns: 1fr;
+    }
+}

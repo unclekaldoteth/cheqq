@@ -1,0 +1,68 @@
+.status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: var(--radius-full);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.status.sm {
+    padding: 2px 8px;
+    font-size: 0.75rem;
+}
+
+.dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* Status Colors */
+.draft {
+    background: rgba(139, 145, 158, 0.12);
+    color: #5B616E;
+}
+
+.draft .dot {
+    background: #8A919E;
+}
+
+.pending {
+    background: rgba(255, 159, 0, 0.12);
+    color: #B86E00;
+}
+
+.pending .dot {
+    background: #FF9F00;
+}
+
+.paid {
+    background: rgba(0, 211, 149, 0.12);
+    color: #00A368;
+}
+
+.paid .dot {
+    background: #00D395;
+}
+
+.overdue {
+    background: rgba(239, 68, 68, 0.12);
+    color: #DC2626;
+}
+
+.overdue .dot {
+    background: #EF4444;
+}
+
+.cancelled {
+    background: rgba(107, 114, 128, 0.12);
+    color: #4B5563;
+}
+
+.cancelled .dot {
+    background: #6B7280;
+}

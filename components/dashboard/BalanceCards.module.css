@@ -1,0 +1,93 @@
+.balanceGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-lg);
+}
+
+.balanceCard {
+    background: var(--card-bg);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    border: 1px solid var(--border-light);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    transition: all var(--transition-base);
+}
+
+.balanceCard:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.cardHeader {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.iconBox {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+}
+
+.label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.cardBody {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.subValue {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.change {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.change.up {
+    color: var(--accent-green);
+}
+
+.change.down {
+    color: #EF4444;
+}
+
+.period {
+    color: var(--text-light);
+    font-weight: 400;
+}
+
+@media (max-width: 1200px) {
+    .balanceGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .balanceGrid {
+        grid-template-columns: 1fr;
+    }
+}

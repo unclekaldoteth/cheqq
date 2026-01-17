@@ -1,0 +1,137 @@
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+}
+
+.formSection {
+    background: var(--card-bg);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    border: 1px solid var(--border-light);
+}
+
+.sectionTitle {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: var(--space-lg);
+    color: var(--text-dark);
+}
+
+.fieldGroup {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-lg);
+}
+
+@media (max-width: 600px) {
+    .fieldGroup {
+        grid-template-columns: 1fr;
+    }
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-dark);
+}
+
+.label svg {
+    color: var(--text-muted);
+}
+
+.input,
+.textarea {
+    width: 100%;
+    padding: var(--space-md);
+    font-family: var(--font-sans);
+    font-size: 0.9375rem;
+    color: var(--text-dark);
+    background: #FAFBFC;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+}
+
+.input:focus,
+.textarea:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+    background: var(--card-bg);
+    box-shadow: 0 0 0 3px rgba(0, 82, 255, 0.1);
+}
+
+.input.error {
+    border-color: #EF4444;
+}
+
+.input::placeholder,
+.textarea::placeholder {
+    color: var(--text-light);
+}
+
+.textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Amount Field */
+.amountWrapper {
+    display: flex;
+    gap: var(--space-sm);
+}
+
+.amountInput {
+    flex: 1;
+}
+
+.currencySelect {
+    padding: var(--space-md);
+    font-family: var(--font-sans);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    background: #FAFBFC;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.currencySelect:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+    background: var(--card-bg);
+}
+
+/* Error Text */
+.errorText {
+    font-size: 0.75rem;
+    color: #EF4444;
+}
+
+/* Form Actions */
+.formActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-md);
+}
+
+@media (max-width: 600px) {
+    .formActions {
+        flex-direction: column-reverse;
+    }
+
+    .formActions .btn {
+        width: 100%;
+    }
+}

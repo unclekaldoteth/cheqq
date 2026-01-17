@@ -1,0 +1,186 @@
+.dashboardLayout {
+    display: flex;
+    min-height: 100vh;
+    background: var(--bg-cream);
+}
+
+.mainContent {
+    flex: 1;
+    margin-left: 260px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.main {
+    flex: 1;
+    padding: var(--space-xl);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+}
+
+/* Page Header */
+.pageHeader {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.backBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) 0;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+    cursor: pointer;
+    transition: color var(--transition-fast);
+    width: fit-content;
+}
+
+.backBtn:hover {
+    color: var(--primary-blue);
+}
+
+.pageHeader h1 {
+    font-size: 1.75rem;
+    margin-bottom: var(--space-xs);
+}
+
+.pageHeader p {
+    font-size: 0.9375rem;
+    color: var(--text-muted);
+}
+
+/* Form Container */
+.formContainer {
+    max-width: 640px;
+}
+
+.form {
+    background: var(--card-bg);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-light);
+    padding: var(--space-xl);
+}
+
+.formSection {
+    margin-bottom: var(--space-xl);
+}
+
+.formSection:last-child {
+    margin-bottom: 0;
+}
+
+.formSection h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: var(--space-lg);
+    padding-bottom: var(--space-sm);
+    border-bottom: 1px solid var(--border-light);
+}
+
+.formGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-lg);
+}
+
+.formGroup {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.formGroup.fullWidth {
+    grid-column: 1 / -1;
+}
+
+.formGroup label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-dark);
+}
+
+.formGroup input,
+.formGroup select {
+    padding: var(--space-md);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    font-size: 0.9375rem;
+    background: white;
+    transition: all var(--transition-base);
+}
+
+.formGroup input:focus,
+.formGroup select:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px rgba(0, 82, 255, 0.1);
+}
+
+.formGroup input::placeholder {
+    color: var(--text-light);
+}
+
+.hint {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* Salary Group */
+.salaryGroup {
+    display: flex;
+    gap: var(--space-md);
+}
+
+.salaryInput {
+    flex: 1;
+}
+
+.currencySelect {
+    width: 100px;
+}
+
+/* Actions */
+.formActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-md);
+    padding-top: var(--space-xl);
+    border-top: 1px solid var(--border-light);
+    margin-top: var(--space-xl);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .mainContent {
+        margin-left: 0;
+    }
+}
+
+@media (max-width: 600px) {
+    .formGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .salaryGroup {
+        flex-direction: column;
+    }
+
+    .currencySelect {
+        width: 100%;
+    }
+
+    .formActions {
+        flex-direction: column-reverse;
+    }
+
+    .formActions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}

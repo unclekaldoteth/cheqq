@@ -1,0 +1,334 @@
+.dashboardLayout {
+    display: flex;
+    min-height: 100vh;
+    background: var(--bg-cream);
+}
+
+.mainContent {
+    flex: 1;
+    margin-left: 260px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.main {
+    flex: 1;
+    padding: var(--space-xl);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+}
+
+/* Page Header */
+.pageHeader {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.backBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) 0;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+    cursor: pointer;
+    transition: color var(--transition-fast);
+    width: fit-content;
+}
+
+.backBtn:hover {
+    color: var(--primary-blue);
+}
+
+.headerRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-lg);
+}
+
+.employeeHeader {
+    display: flex;
+    align-items: center;
+    gap: var(--space-lg);
+}
+
+.avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--gradient-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.5rem;
+}
+
+.employeeInfo h1 {
+    font-size: 1.5rem;
+    margin-bottom: var(--space-xs);
+}
+
+.employeeMeta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+}
+
+.status {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.statusActive {
+    background: rgba(0, 211, 149, 0.12);
+    color: #00A368;
+}
+
+.statusPending {
+    background: rgba(255, 159, 0, 0.12);
+    color: #B86E00;
+}
+
+.statusInactive {
+    background: rgba(107, 114, 128, 0.12);
+    color: #4B5563;
+}
+
+.headerActions {
+    display: flex;
+    gap: var(--space-md);
+}
+
+/* Content Grid */
+.content {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: var(--space-xl);
+}
+
+.mainSection {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+}
+
+.sideSection {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+}
+
+/* Cards */
+.card {
+    background: var(--card-bg);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-light);
+    padding: var(--space-xl);
+}
+
+.card h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: var(--space-lg);
+    padding-bottom: var(--space-sm);
+    border-bottom: 1px solid var(--border-light);
+}
+
+/* Info Grid */
+.infoGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-lg);
+}
+
+.infoItem {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.infoItem.fullWidth {
+    grid-column: 1 / -1;
+}
+
+.infoLabel {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+}
+
+.infoValue {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-dark);
+}
+
+.infoValue.mono {
+    font-family: monospace;
+    font-size: 0.875rem;
+}
+
+/* Salary Card */
+.salaryCard {
+    text-align: center;
+    padding: var(--space-2xl);
+}
+
+.salaryAmount {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: var(--space-xs);
+}
+
+.salaryCurrency {
+    font-size: 1rem;
+    color: var(--primary-blue);
+    font-weight: 600;
+}
+
+.salaryLabel {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-top: var(--space-sm);
+}
+
+/* Loan Card */
+.loanCard {
+    background: linear-gradient(135deg, rgba(0, 82, 255, 0.05) 0%, rgba(0, 211, 149, 0.05) 100%);
+}
+
+.loanAmount {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #DC2626;
+    margin-bottom: var(--space-xs);
+}
+
+.loanInfo {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    margin-top: var(--space-lg);
+}
+
+.loanRow {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.875rem;
+}
+
+.loanRow span:first-child {
+    color: var(--text-muted);
+}
+
+.loanRow span:last-child {
+    font-weight: 500;
+}
+
+.noLoan {
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+}
+
+/* Activity */
+.activityList {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.activityItem {
+    display: flex;
+    gap: var(--space-md);
+    padding: var(--space-md) 0;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.activityItem:last-child {
+    border-bottom: none;
+}
+
+.activityIcon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(0, 82, 255, 0.1);
+    color: var(--primary-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.activityContent {
+    flex: 1;
+}
+
+.activityTitle {
+    font-weight: 500;
+    color: var(--text-dark);
+    margin-bottom: 2px;
+}
+
+.activityDate {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .content {
+        grid-template-columns: 1fr;
+    }
+
+    .headerRow {
+        flex-direction: column;
+    }
+
+    .headerActions {
+        width: 100%;
+    }
+
+    .headerActions .btn {
+        flex: 1;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .mainContent {
+        margin-left: 0;
+    }
+}
+
+@media (max-width: 600px) {
+    .employeeHeader {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .employeeMeta {
+        flex-direction: column;
+        gap: var(--space-sm);
+    }
+
+    .infoGrid {
+        grid-template-columns: 1fr;
+    }
+}

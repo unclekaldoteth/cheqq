@@ -1,0 +1,117 @@
+.transactionCard {
+    background: var(--card-bg);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-light);
+    overflow: hidden;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-lg) var(--space-xl);
+    border-bottom: 1px solid var(--border-light);
+}
+
+.header h3 {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.viewAll {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--primary-blue);
+    transition: gap var(--transition-fast);
+}
+
+.viewAll:hover {
+    gap: var(--space-sm);
+}
+
+.transactionList {
+    display: flex;
+    flex-direction: column;
+}
+
+.transaction {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-md) var(--space-xl);
+    border-bottom: 1px solid var(--border-light);
+    transition: background var(--transition-fast);
+}
+
+.transaction:last-child {
+    border-bottom: none;
+}
+
+.transaction:hover {
+    background: var(--bg-cream);
+}
+
+.icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon.incoming {
+    background: rgba(0, 211, 149, 0.1);
+    color: var(--accent-green);
+}
+
+.icon.outgoing {
+    background: rgba(239, 68, 68, 0.1);
+    color: #EF4444;
+}
+
+.details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.title {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--text-dark);
+}
+
+.description {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.meta {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.amount {
+    font-size: 0.9375rem;
+    font-weight: 600;
+}
+
+.amount.positive {
+    color: var(--accent-green);
+}
+
+.amount.negative {
+    color: var(--text-dark);
+}
+
+.time {
+    font-size: 0.75rem;
+    color: var(--text-light);
+}

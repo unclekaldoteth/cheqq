@@ -1,0 +1,136 @@
+.sidebar {
+    width: 260px;
+    height: 100vh;
+    background: var(--card-bg);
+    border-right: 1px solid var(--border-light);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    left: 0;
+    top: 0;
+    transition: width var(--transition-base);
+    z-index: 100;
+}
+
+.sidebar.collapsed {
+    width: 72px;
+}
+
+.sidebarHeader {
+    padding: var(--space-lg);
+    border-bottom: 1px solid var(--border-light);
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--text-dark);
+}
+
+.logoIcon {
+    color: var(--primary-blue);
+    font-size: 1.5rem;
+}
+
+.nav {
+    flex: 1;
+    padding: var(--space-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.navItem {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+    color: var(--text-muted);
+    font-weight: 500;
+    transition: all var(--transition-fast);
+}
+
+.navItem:hover {
+    background: var(--bg-cream);
+    color: var(--text-dark);
+}
+
+.navItem.active {
+    background: rgba(0, 82, 255, 0.1);
+    color: var(--primary-blue);
+}
+
+.collapsed .navItem {
+    justify-content: center;
+}
+
+.collapsed .navItem span {
+    display: none;
+}
+
+.collapseBtn {
+    position: absolute;
+    right: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: all var(--transition-fast);
+}
+
+.collapseBtn:hover {
+    background: var(--bg-cream);
+    color: var(--primary-blue);
+}
+
+.sidebarFooter {
+    padding: var(--space-lg);
+    border-top: 1px solid var(--border-light);
+}
+
+.networkBadge {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    background: rgba(0, 211, 149, 0.1);
+    border-radius: var(--radius-md);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--accent-green);
+}
+
+.networkDot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent-green);
+    animation: pulse 2s infinite;
+}
+
+.collapsed .networkBadge {
+    justify-content: center;
+    padding: var(--space-sm);
+}
+
+.collapsed .networkBadge span:not(.networkDot) {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        display: none;
+    }
+}

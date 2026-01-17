@@ -1,0 +1,378 @@
+.dashboardLayout {
+    display: flex;
+    min-height: 100vh;
+    background: var(--bg-cream);
+}
+
+.mainContent {
+    flex: 1;
+    margin-left: 260px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.main {
+    flex: 1;
+    padding: var(--space-xl);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+}
+
+/* Page Header */
+.pageHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.greeting h1 {
+    font-size: 1.75rem;
+    margin-bottom: var(--space-xs);
+}
+
+.greeting p {
+    font-size: 0.9375rem;
+    color: var(--text-muted);
+}
+
+.quickActions {
+    display: flex;
+    gap: var(--space-md);
+}
+
+/* Balance Card */
+.balanceCard {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: var(--radius-xl);
+    padding: var(--space-2xl);
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.balanceInfo h2 {
+    font-size: 0.875rem;
+    font-weight: 500;
+    opacity: 0.8;
+    margin-bottom: var(--space-sm);
+}
+
+.balanceAmount {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: var(--space-xs);
+}
+
+.balanceCurrency {
+    font-size: 1rem;
+    opacity: 0.7;
+}
+
+.balanceActions {
+    display: flex;
+    gap: var(--space-md);
+}
+
+.balanceBtn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-md) var(--space-xl);
+    border-radius: var(--radius-md);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    border: none;
+}
+
+.balanceBtn.primary {
+    background: #00D395;
+    color: white;
+}
+
+.balanceBtn.primary:hover {
+    background: #00B880;
+}
+
+.balanceBtn.secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.balanceBtn.secondary:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* Stats Grid */
+.statsGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-lg);
+}
+
+.statCard {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-md);
+    background: var(--card-bg);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    border: 1px solid var(--border-light);
+    transition: all var(--transition-base);
+}
+
+.statCard:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.iconWrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-md);
+    flex-shrink: 0;
+}
+
+.statCard.green .iconWrapper {
+    background: rgba(0, 211, 149, 0.1);
+    color: #00D395;
+}
+
+.statCard.orange .iconWrapper {
+    background: rgba(255, 159, 0, 0.1);
+    color: #FF9F00;
+}
+
+.statCard.blue .iconWrapper {
+    background: rgba(0, 82, 255, 0.1);
+    color: var(--primary-blue);
+}
+
+.statContent {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.statLabel {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+}
+
+.statValue {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.statSubtext {
+    font-size: 0.75rem;
+    color: var(--text-light);
+}
+
+/* Sections */
+.sections {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: var(--space-xl);
+}
+
+.section {
+    background: var(--card-bg);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-light);
+    padding: var(--space-xl);
+}
+
+.sectionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-lg);
+}
+
+.sectionHeader h2 {
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+.sectionHeader a {
+    font-size: 0.875rem;
+    color: #00D395;
+    font-weight: 500;
+}
+
+/* Transaction List */
+.transactionList {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.transactionItem {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-md) 0;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.transactionItem:last-child {
+    border-bottom: none;
+}
+
+.transactionIcon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.transactionIcon.income {
+    background: rgba(0, 211, 149, 0.1);
+    color: #00D395;
+}
+
+.transactionIcon.expense {
+    background: rgba(239, 68, 68, 0.1);
+    color: #EF4444;
+}
+
+.transactionInfo {
+    flex: 1;
+}
+
+.transactionTitle {
+    font-weight: 500;
+    color: var(--text-dark);
+    margin-bottom: 2px;
+}
+
+.transactionDate {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+}
+
+.transactionAmount {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.transactionAmount.income {
+    color: #00D395;
+}
+
+.transactionAmount.expense {
+    color: #EF4444;
+}
+
+/* Quick Links */
+.quickLinks {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.quickLink {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-lg);
+    background: #FAFBFC;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    border: none;
+    width: 100%;
+    text-align: left;
+}
+
+.quickLink:hover {
+    background: var(--border-light);
+}
+
+.quickLinkIcon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    background: rgba(0, 211, 149, 0.1);
+    color: #00D395;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.quickLinkInfo {
+    flex: 1;
+}
+
+.quickLinkTitle {
+    font-weight: 500;
+    color: var(--text-dark);
+    margin-bottom: 2px;
+}
+
+.quickLinkDesc {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+}
+
+/* Empty State */
+.emptyState {
+    text-align: center;
+    padding: var(--space-2xl);
+    color: var(--text-muted);
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .statsGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .sections {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .mainContent {
+        margin-left: 0;
+    }
+
+    .pageHeader {
+        flex-direction: column;
+        gap: var(--space-lg);
+        align-items: stretch;
+    }
+
+    .quickActions {
+        flex-direction: column;
+    }
+
+    .balanceCard {
+        flex-direction: column;
+        gap: var(--space-xl);
+        text-align: center;
+    }
+
+    .balanceActions {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .balanceBtn {
+        justify-content: center;
+    }
+}
