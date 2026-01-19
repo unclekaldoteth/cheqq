@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Menu, X, ChevronDown } from 'lucide-react';
 import styles from './Navbar.module.css';
 
@@ -12,10 +13,10 @@ export default function Navbar() {
         <nav className={styles.navbar}>
             <div className={`container ${styles.navContainer}`}>
                 {/* Logo */}
-                <a href="/" className={styles.logo}>
+                <Link href="/" className={styles.logo}>
                     <span className={styles.logoIcon}>◆</span>
                     Cheqq
-                </a>
+                </Link>
 
                 {/* Desktop Navigation */}
                 <div className={styles.navLinks}>
@@ -60,8 +61,8 @@ export default function Navbar() {
 
                 {/* CTA Buttons */}
                 <div className={styles.navActions}>
-                    <a href="/dashboard" className="btn btn-outline">Sign In</a>
-                    <a href="/dashboard" className="btn btn-primary">Launch App</a>
+                    <Link href="/dashboard" className="btn btn-outline">Sign In</Link>
+                    <Link href="/dashboard" className="btn btn-primary">Launch App</Link>
                 </div>
 
                 {/* Mobile Menu Button */}
@@ -82,8 +83,8 @@ export default function Navbar() {
                     <a href="#advantages" className={styles.mobileLink} onClick={() => setIsMenuOpen(false)}>Why Cheqq</a>
                     <a href="https://docs.cheqq.io" className={styles.mobileLink}>Docs</a>
                     <div className={styles.mobileActions}>
-                        <a href="/dashboard" className="btn btn-outline" style={{ width: '100%' }}>Sign In</a>
-                        <a href="/dashboard" className="btn btn-primary" style={{ width: '100%' }}>Launch App</a>
+                        <Link href="/dashboard" className="btn btn-outline" style={{ width: '100%' }}>Sign In</Link>
+                        <Link href="/dashboard" className="btn btn-primary" style={{ width: '100%' }}>Launch App</Link>
                     </div>
                 </div>
             )}

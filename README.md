@@ -1,36 +1,93 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Cheqq — Payroll & DeFi. Unified on Base.
 
-## Getting Started
+OiOi. Prof. NOTA v11.11 reporting in.
 
-First, run the development server:
+Cheqq is a Next.js (App Router) product prototype for:
+- invoice management + payment links (USDC / IDRX)
+- borderless payroll runs (batch payouts, loan deductions)
+- treasury yield routing (e.g. Morpho / Aerodrome concepts)
+- employee lending/advances collateralized by future payroll (concept)
 
+This repo is currently a **frontend/UI prototype** (mock data + simulated actions). The smart-contract architecture is documented in flowcharts; it is not implemented here.
+
+## Quickstart (Local Lab)
+
+Prereqs:
+- Node.js (18+ recommended)
+- npm (this repo has `package-lock.json`)
+
+Run:
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## What’s Inside (Syllabus)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**Landing**
+- `/` — marketing/overview sections (Navbar, Hero, Products, How It Works, Advantages, Partners, CTA)
 
-## Learn More
+**Company (Admin)**
+- `/dashboard` — overview (balances, transactions, yield, loans)
+- `/dashboard/invoices` — invoices list + filters + payment link copy
+- `/dashboard/invoices/new` — invoice creation → payment link modal
+- `/dashboard/payroll` — employees list + payroll stats
+- `/dashboard/payroll/run` — multi-step “Run Payroll” flow (select → confirm → success)
+- `/dashboard/defi` — treasury yield + employee lending widgets
+- `/dashboard/settings` — company/wallet/payroll/notifications settings (mock save)
 
-To learn more about Next.js, take a look at the following resources:
+**Freelancer**
+- `/freelancer/dashboard` — earnings + recent activity
+- `/freelancer/invoices` + `/freelancer/invoices/new` — invoice flows (mock)
+- `/freelancer/payments` — payments list (mock)
+- `/freelancer/withdraw` — withdraw stablecoins → fiat (simulated)
+- `/freelancer/settings` — profile/preferences (mock)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Tech Stack (Tools of the Trade)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Next.js `16.1.0` (App Router)
+- React `19.2.3`
+- TypeScript `^5`
+- CSS Modules + global design system in `app/globals.css`
+- Icons: `lucide-react`
+- Linting: ESLint `^9` + `eslint-config-next`
 
-## Deploy on Vercel
+## Project Map (Where Things Live)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `app/` — routes (Next.js App Router)
+- `components/` — UI building blocks (landing, dashboard, freelancer)
+- `public/` — static assets
+- `excalidraw-flow-chart/` — architecture + flows
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Flowcharts & Architecture Notes
+
+- Mermaid + notes: `excalidraw-flow-chart/payfi_flowcharts.md`
+- Excalidraw diagrams:
+  - `excalidraw-flow-chart/system-architecture.excalidraw`
+  - `excalidraw-flow-chart/onboarding-flow.excalidraw`
+  - `excalidraw-flow-chart/invoice-flow.excalidraw`
+  - `excalidraw-flow-chart/payroll-flow.excalidraw`
+  - `excalidraw-flow-chart/defi-yield-flow.excalidraw`
+  - `excalidraw-flow-chart/employee-lending-flow.excalidraw`
+
+## Notes from Prof. NOTA (Reality Check)
+
+- All “API calls” and “transactions” are simulated with timeouts and mock state.
+- Payment links shown in the UI are generated client-side (demo behavior).
+- Wallet connection, Base L2 interactions, stablecoin contracts, and protocol integrations are not wired up yet.
+
+## Scripts (Press the Buttons)
+
+- `npm run dev` — run locally
+- `npm run build` — production build
+- `npm run start` — serve production build
+- `npm run lint` — lint
+
+## Roadmap (Homework)
+
+- Add real data layer (API + persistence)
+- Add wallet connect + on-chain reads/writes (Base)
+- Implement invoice + payroll + treasury modules (contracts or service layer)
+- Replace mock flows with real transaction state + error handling

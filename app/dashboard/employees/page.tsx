@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Plus, Filter, Search, Users, UserCheck, Clock, CreditCard } from 'lucide-react';
 import { Sidebar, TopBar } from '@/components/dashboard';
@@ -127,10 +128,10 @@ export default function EmployeesPage() {
                             <h1>Employees</h1>
                             <p>Manage your team members and their payroll settings</p>
                         </div>
-                        <a href="/dashboard/employees/new" className="btn btn-primary">
+                        <Link href="/dashboard/employees/new" className="btn btn-primary">
                             <Plus size={18} />
                             Add Employee
-                        </a>
+                        </Link>
                     </div>
 
                     {/* Stats */}

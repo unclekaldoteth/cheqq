@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Plus, Play, Filter, Search } from 'lucide-react';
 import { Sidebar, TopBar } from '@/components/dashboard';
@@ -120,14 +121,14 @@ export default function PayrollPage() {
                             <p>Manage employees and run payroll disbursements</p>
                         </div>
                         <div className={styles.headerActions}>
-                            <a href="/dashboard/employees/new" className="btn btn-outline">
+                            <Link href="/dashboard/employees/new" className="btn btn-outline">
                                 <Plus size={18} />
                                 Add Employee
-                            </a>
-                            <a href="/dashboard/payroll/run" className="btn btn-primary">
+                            </Link>
+                            <Link href="/dashboard/payroll/run" className="btn btn-primary">
                                 <Play size={18} />
                                 Run Payroll
-                            </a>
+                            </Link>
                         </div>
                     </div>
 

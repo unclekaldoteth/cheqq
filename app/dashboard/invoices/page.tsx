@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Plus, Filter, Search } from 'lucide-react';
 import { Sidebar, TopBar } from '@/components/dashboard';
@@ -119,10 +120,10 @@ export default function InvoicesPage() {
                             <h1>Invoices</h1>
                             <p>Create, track, and manage your invoices</p>
                         </div>
-                        <a href="/dashboard/invoices/new" className="btn btn-primary">
+                        <Link href="/dashboard/invoices/new" className="btn btn-primary">
                             <Plus size={18} />
                             New Invoice
-                        </a>
+                        </Link>
                     </div>
 
                     {/* Stats */}
