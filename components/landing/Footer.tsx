@@ -1,4 +1,6 @@
 import { Twitter, MessageCircle, Github, Mail } from 'lucide-react';
+import Link from 'next/link';
+import type { ReactNode } from 'react';
 import styles from './Footer.module.css';
 
 const footerLinks = {
@@ -35,16 +37,35 @@ const socialLinks = [
 ];
 
 export default function Footer() {
+    const renderLink = (href: string, label: ReactNode, className?: string) => {
+        if (href.startsWith('/')) {
+            return (
+                <Link href={href} className={className}>
+                    {label}
+                </Link>
+            );
+        }
+        return (
+            <a href={href} className={className}>
+                {label}
+            </a>
+        );
+    };
+
     return (
         <footer className={styles.footer}>
             <div className="container">
                 <div className={styles.footerGrid}>
                     {/* Brand */}
                     <div className={styles.brand}>
-                        <a href="/" className={styles.logo}>
-                            <span className={styles.logoIcon}>◆</span>
-                            Cheqq
-                        </a>
+                        {renderLink(
+                            '/',
+                            <>
+                                <span className={styles.logoIcon}>◆</span>
+                                Cheqq
+                            </>,
+                            styles.logo
+                        )}
                         <p>
                             Payroll & DeFi. Unified on Base. The future of business finance.
                         </p>
@@ -70,7 +91,7 @@ export default function Footer() {
                         <ul>
                             {footerLinks.products.map((link, index) => (
                                 <li key={index}>
-                                    <a href={link.href}>{link.label}</a>
+                                    {renderLink(link.href, link.label)}
                                 </li>
                             ))}
                         </ul>
@@ -81,7 +102,7 @@ export default function Footer() {
                         <ul>
                             {footerLinks.resources.map((link, index) => (
                                 <li key={index}>
-                                    <a href={link.href}>{link.label}</a>
+                                    {renderLink(link.href, link.label)}
                                 </li>
                             ))}
                         </ul>
@@ -92,7 +113,7 @@ export default function Footer() {
                         <ul>
                             {footerLinks.company.map((link, index) => (
                                 <li key={index}>
-                                    <a href={link.href}>{link.label}</a>
+                                    {renderLink(link.href, link.label)}
                                 </li>
                             ))}
                         </ul>
@@ -103,7 +124,7 @@ export default function Footer() {
                         <ul>
                             {footerLinks.legal.map((link, index) => (
                                 <li key={index}>
-                                    <a href={link.href}>{link.label}</a>
+                                    {renderLink(link.href, link.label)}
                                 </li>
                             ))}
                         </ul>
