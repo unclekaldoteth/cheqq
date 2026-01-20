@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import {
     LayoutDashboard,
     FileText,
@@ -28,15 +29,15 @@ export default function Sidebar() {
     return (
         <aside className={`${styles.sidebar} ${collapsed ? styles.collapsed : ''}`}>
             <div className={styles.sidebarHeader}>
-                <a href="/" className={styles.logo}>
+                <Link href="/" className={styles.logo}>
                     <span className={styles.logoIcon}>◆</span>
                     {!collapsed && <span>Cheqq</span>}
-                </a>
+                </Link>
             </div>
 
             <nav className={styles.nav}>
                 {menuItems.map((item, index) => (
-                    <a
+                    <Link
                         key={index}
                         href={item.href}
                         className={`${styles.navItem} ${item.active ? styles.active : ''}`}
@@ -44,7 +45,7 @@ export default function Sidebar() {
                     >
                         {item.icon}
                         {!collapsed && <span>{item.label}</span>}
-                    </a>
+                    </Link>
                 ))}
             </nav>
 

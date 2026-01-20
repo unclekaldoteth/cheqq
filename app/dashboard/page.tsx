@@ -6,6 +6,7 @@ import {
     YieldCard,
     LoanCard
 } from '@/components/dashboard';
+import Link from 'next/link';
 import styles from './page.module.css';
 
 export const metadata = {
@@ -27,12 +28,12 @@ export default function DashboardPage() {
                             <p>Here&apos;s what&apos;s happening with your business finances today.</p>
                         </div>
                         <div className={styles.quickActions}>
-                            <a href="/dashboard/invoices/new" className="btn btn-primary">
+                            <Link href="/dashboard/invoices/new" className="btn btn-primary">
                                 + New Invoice
-                            </a>
-                            <a href="/dashboard/payroll/run" className="btn btn-secondary">
+                            </Link>
+                            <Link href="/dashboard/payroll/run" className="btn btn-secondary">
                                 Run Payroll
-                            </a>
+                            </Link>
                         </div>
                     </div>
 
