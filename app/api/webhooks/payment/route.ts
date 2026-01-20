@@ -6,6 +6,15 @@ import type { Currency } from '@prisma/client';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
+const ALLOWED_CURRENCIES = ['USDC', 'IDRX', 'ETH'] as const;
+
+const normalizeCurrency = (value: string | undefined | null): Currency | null => {
+    const normalized = (value || 'USDC').trim().toUpperCase();
+    return ALLOWED_CURRENCIES.includes(normalized as Currency)
+        ? (normalized as Currency)
+        : null;
+};
+
 // Webhook secret for verifying signatures (set in .env)
 const WEBHOOK_SECRET = process.env.PAYMENT_WEBHOOK_SECRET || '';
 
@@ -63,12 +72,28 @@ export async function POST(request: Request) {
                 const paymentId = (data as { paymentId?: string }).paymentId || null;
                 const txHash = (data as { txHash?: string }).txHash || null;
                 const amount = (data as { amount?: string | number }).amount;
-                const currency = (data as { currency?: string }).currency || 'USDC';
+                const currency = normalizeCurrency((data as { currency?: string }).currency);
                 const payerAddress = (data as { payerAddress?: string }).payerAddress || null;
 
                 if (!invoiceId || amount === undefined || amount === null) {
                     return NextResponse.json(
                         { error: 'Missing required payment fields' },
+                        { status: 400 }
+                    );
+                }
+
+                if (!currency) {
+                    return NextResponse.json(
+                        { error: 'Invalid currency' },
+                        { status: 400 }
+                    );
+                }
+
+                const amountValue = String(amount).trim();
+                const parsedAmount = Number.parseFloat(amountValue);
+                if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+                    return NextResponse.json(
+                        { error: 'Invalid payment amount' },
                         { status: 400 }
                     );
                 }
@@ -96,8 +121,8 @@ export async function POST(request: Request) {
                     },
                     create: {
                         invoiceId,
-                        amount,
-                        currency: (currency || 'USDC') as Currency,
+                        amount: amountValue,
+                        currency,
                         status: 'COMPLETED',
                         txHash,
                         payerAddress,
@@ -164,7 +189,7 @@ export async function POST(request: Request) {
                 }
 
                 // Update payroll run and items
-                await prisma.payrollRun.update({
+                const payrollUpdate = await prisma.payrollRun.updateMany({
                     where: { id: payrollRunId },
                     data: {
                         status: 'COMPLETED',
@@ -172,12 +197,19 @@ export async function POST(request: Request) {
                     },
                 });
 
+                if (payrollUpdate.count === 0) {
+                    return NextResponse.json(
+                        { error: 'Payroll run not found' },
+                        { status: 404 }
+                    );
+                }
+
                 // Update individual items
                 for (const result of results) {
                     if (!result.itemId) {
                         continue;
                     }
-                    await prisma.payrollItem.update({
+                    await prisma.payrollItem.updateMany({
                         where: { id: result.itemId },
                         data: {
                             status: result.success ? 'COMPLETED' : 'FAILED',
