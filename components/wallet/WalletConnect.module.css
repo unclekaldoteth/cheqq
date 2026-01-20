@@ -1,0 +1,39 @@
+.walletWrapper {
+    display: flex;
+    align-items: center;
+}
+
+.avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+}
+
+.name {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.identity {
+    padding: 12px;
+    border-bottom: 1px solid var(--border-color, #e5e7eb);
+}
+
+/* Override OnchainKit default styles to match Cheqq design */
+.walletWrapper :global([data-testid="ockConnectWallet_Container"]) {
+    background: var(--primary-gradient, linear-gradient(135deg, #0052FF 0%, #0066FF 100%));
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.walletWrapper :global([data-testid="ockConnectWallet_Container"]:hover) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 82, 255, 0.3);
+}
+
+.walletWrapper :global([data-testid="ockConnectWallet_Container"][data-connected="true"]) {
+    background: var(--surface-secondary, #f8f9fa);
+    color: var(--text-primary, #1a1a1a);
+}

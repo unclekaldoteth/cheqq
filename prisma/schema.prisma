@@ -1,0 +1,216 @@
+// Prisma schema for Cheqq - Payroll & Invoice Platform
+// Supports both B2B (Company) and B2C (Freelancer) flows
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ================== B2B MODELS ==================
+
+model Company {
+  id              String        @id @default(cuid())
+  name            String
+  email           String        @unique
+  walletAddress   String?       // Treasury wallet
+  logo            String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  employees       Employee[]
+  invoices        Invoice[]     @relation("CompanyInvoices")
+  payrollRuns     PayrollRun[]
+  treasuryBalance TreasuryBalance[]
+}
+
+model Employee {
+  id              String        @id @default(cuid())
+  companyId       String
+  name            String
+  email           String
+  walletAddress   String
+  salary          Decimal       @db.Decimal(18, 2)
+  currency        Currency      @default(USDC)
+  status          EmployeeStatus @default(ACTIVE)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  company         Company       @relation(fields: [companyId], references: [id])
+  payrollItems    PayrollItem[]
+  loans           Loan[]
+}
+
+model PayrollRun {
+  id              String        @id @default(cuid())
+  companyId       String
+  totalAmount     Decimal       @db.Decimal(18, 2)
+  currency        Currency      @default(USDC)
+  status          PayrollStatus @default(PENDING)
+  txHash          String?
+  scheduledAt     DateTime?
+  executedAt      DateTime?
+  createdAt       DateTime      @default(now())
+
+  company         Company       @relation(fields: [companyId], references: [id])
+  items           PayrollItem[]
+}
+
+model PayrollItem {
+  id              String        @id @default(cuid())
+  payrollRunId    String
+  employeeId      String
+  grossAmount     Decimal       @db.Decimal(18, 2)
+  loanDeduction   Decimal       @default(0) @db.Decimal(18, 2)
+  netAmount       Decimal       @db.Decimal(18, 2)
+  txHash          String?
+  status          PaymentStatus @default(PENDING)
+
+  payrollRun      PayrollRun    @relation(fields: [payrollRunId], references: [id])
+  employee        Employee      @relation(fields: [employeeId], references: [id])
+}
+
+model Loan {
+  id              String        @id @default(cuid())
+  employeeId      String
+  amount          Decimal       @db.Decimal(18, 2)
+  remainingAmount Decimal       @db.Decimal(18, 2)
+  monthlyDeduction Decimal      @db.Decimal(18, 2)
+  currency        Currency      @default(USDC)
+  status          LoanStatus    @default(ACTIVE)
+  approvedAt      DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  employee        Employee      @relation(fields: [employeeId], references: [id])
+}
+
+model TreasuryBalance {
+  id              String        @id @default(cuid())
+  companyId       String
+  currency        Currency
+  balance         Decimal       @db.Decimal(18, 6)
+  yieldEarned     Decimal       @default(0) @db.Decimal(18, 6)
+  updatedAt       DateTime      @updatedAt
+
+  company         Company       @relation(fields: [companyId], references: [id])
+
+  @@unique([companyId, currency])
+}
+
+// ================== B2C MODELS ==================
+
+model Freelancer {
+  id              String        @id @default(cuid())
+  name            String
+  email           String        @unique
+  walletAddress   String
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  invoices        Invoice[]     @relation("FreelancerInvoices")
+  withdrawals     Withdrawal[]
+}
+
+// ================== SHARED MODELS ==================
+
+model Invoice {
+  id              String        @id @default(cuid())
+  companyId       String?       // For B2B
+  freelancerId    String?       // For B2C
+  clientName      String
+  clientEmail     String
+  description     String
+  amount          Decimal       @db.Decimal(18, 2)
+  currency        Currency      @default(USDC)
+  status          InvoiceStatus @default(DRAFT)
+  dueDate         DateTime
+  paidAt          DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  company         Company?      @relation("CompanyInvoices", fields: [companyId], references: [id])
+  freelancer      Freelancer?   @relation("FreelancerInvoices", fields: [freelancerId], references: [id])
+  payments        Payment[]
+}
+
+model Payment {
+  id              String        @id @default(cuid())
+  invoiceId       String
+  amount          Decimal       @db.Decimal(18, 2)
+  currency        Currency
+  status          PaymentStatus @default(PENDING)
+  txHash          String?
+  payerAddress    String?
+  createdAt       DateTime      @default(now())
+  confirmedAt     DateTime?
+
+  invoice         Invoice       @relation(fields: [invoiceId], references: [id])
+}
+
+model Withdrawal {
+  id              String        @id @default(cuid())
+  freelancerId    String
+  amount          Decimal       @db.Decimal(18, 2)
+  currency        Currency
+  destinationType WithdrawalType
+  destination     String        // Bank account or wallet address
+  status          PaymentStatus @default(PENDING)
+  txHash          String?
+  createdAt       DateTime      @default(now())
+  completedAt     DateTime?
+
+  freelancer      Freelancer    @relation(fields: [freelancerId], references: [id])
+}
+
+// ================== ENUMS ==================
+
+enum Currency {
+  USDC
+  IDRX
+  ETH
+}
+
+enum InvoiceStatus {
+  DRAFT
+  PENDING
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum PayrollStatus {
+  PENDING
+  APPROVED
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum EmployeeStatus {
+  ACTIVE
+  INACTIVE
+  TERMINATED
+}
+
+enum LoanStatus {
+  PENDING
+  ACTIVE
+  PAID
+  DEFAULTED
+}
+
+enum WithdrawalType {
+  BANK
+  CRYPTO
+}

@@ -1,5 +1,8 @@
-import { Bell, Search, ChevronDown } from 'lucide-react';
+'use client';
+
+import { Bell, Search } from 'lucide-react';
 import styles from './TopBar.module.css';
+import { WalletConnect } from '@/components/wallet/WalletConnect';
 
 export default function TopBar() {
     return (
@@ -19,13 +22,7 @@ export default function TopBar() {
                     <span className={styles.notificationDot}></span>
                 </button>
 
-                <div className={styles.walletInfo}>
-                    <div className={styles.walletAddress}>
-                        <span className={styles.walletIcon}>🔵</span>
-                        <span>0x1234...5678</span>
-                    </div>
-                    <ChevronDown size={16} />
-                </div>
+                <WalletConnect />
 
                 <div className={styles.userProfile}>
                     <div className={styles.avatar}>A</div>
@@ -38,3 +35,4 @@ export default function TopBar() {
         </header>
     );
 }
+

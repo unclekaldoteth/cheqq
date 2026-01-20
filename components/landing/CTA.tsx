@@ -13,7 +13,7 @@ export default function CTA() {
                             and treasury — all on Base.
                         </p>
                         <div className={styles.ctaButtons}>
-                            <a href="/dashboard" className="btn btn-primary">
+                            <a href="/get-started" className="btn btn-primary">
                                 Launch App <ArrowRight size={18} />
                             </a>
                             <a href="https://t.me/cheqq" className="btn btn-outline" style={{ background: 'white' }}>

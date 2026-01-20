@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
+import { useAccount } from 'wagmi';
 import { Sidebar, TopBar } from '@/components/dashboard';
 import { InvoiceForm, PaymentLinkModal } from '@/components/dashboard/invoice';
 import styles from './page.module.css';
@@ -18,6 +19,7 @@ interface InvoiceFormData {
 
 export default function NewInvoicePage() {
     const router = useRouter();
+    const { address } = useAccount();
     const [isLoading, setIsLoading] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const [createdInvoice, setCreatedInvoice] = useState<{
@@ -36,14 +38,19 @@ export default function NewInvoicePage() {
 
         // Generate mock invoice
         const invoiceNumber = `INV-2024-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
-        const paymentLink = `${window.location.origin}/pay/${invoiceNumber.toLowerCase()}`;
+        const paymentLinkUrl = new URL(`${window.location.origin}/pay/${invoiceNumber.toLowerCase()}`);
+        paymentLinkUrl.searchParams.set('amount', data.amount);
+        paymentLinkUrl.searchParams.set('currency', data.currency);
+        if (address) {
+            paymentLinkUrl.searchParams.set('recipient', address);
+        }
 
         setCreatedInvoice({
             invoiceNumber,
             clientName: data.clientName,
             amount: parseFloat(data.amount),
             currency: data.currency,
-            paymentLink,
+            paymentLink: paymentLinkUrl.toString(),
         });
 
         setShowModal(true);

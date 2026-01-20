@@ -2,6 +2,7 @@
 
 import { Bell, Search } from 'lucide-react';
 import styles from './FreelancerTopBar.module.css';
+import { WalletConnect } from '@/components/wallet/WalletConnect';
 
 export default function FreelancerTopBar() {
     return (
@@ -21,10 +22,7 @@ export default function FreelancerTopBar() {
                     <span className={styles.notificationDot}></span>
                 </button>
 
-                <div className={styles.walletInfo}>
-                    <span className={styles.walletDot}></span>
-                    <span className={styles.walletAddress}>0x1234...5678</span>
-                </div>
+                <WalletConnect />
 
                 <div className={styles.userProfile}>
                     <div className={styles.avatar}>JD</div>
@@ -37,3 +35,4 @@ export default function FreelancerTopBar() {
         </header>
     );
 }
+

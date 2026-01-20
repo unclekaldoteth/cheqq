@@ -61,8 +61,8 @@ export default function Navbar() {
 
                 {/* CTA Buttons */}
                 <div className={styles.navActions}>
-                    <Link href="/dashboard" className="btn btn-outline">Sign In</Link>
-                    <Link href="/dashboard" className="btn btn-primary">Launch App</Link>
+                    <Link href="/login" className="btn btn-outline">Sign In</Link>
+                    <Link href="/get-started" className="btn btn-primary">Launch App</Link>
                 </div>
 
                 {/* Mobile Menu Button */}
@@ -83,8 +83,8 @@ export default function Navbar() {
                     <a href="#advantages" className={styles.mobileLink} onClick={() => setIsMenuOpen(false)}>Why Cheqq</a>
                     <a href="https://docs.cheqq.io" className={styles.mobileLink}>Docs</a>
                     <div className={styles.mobileActions}>
-                        <Link href="/dashboard" className="btn btn-outline" style={{ width: '100%' }}>Sign In</Link>
-                        <Link href="/dashboard" className="btn btn-primary" style={{ width: '100%' }}>Launch App</Link>
+                        <Link href="/login" className="btn btn-outline" style={{ width: '100%' }}>Sign In</Link>
+                        <Link href="/get-started" className="btn btn-primary" style={{ width: '100%' }}>Launch App</Link>
                     </div>
                 </div>
             )}

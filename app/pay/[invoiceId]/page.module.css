@@ -1,0 +1,224 @@
+.container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+    padding: 20px;
+}
+
+.card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    padding: 40px;
+    max-width: 480px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 32px;
+}
+
+.logoIcon {
+    font-size: 28px;
+}
+
+.logoText {
+    font-size: 24px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.title {
+    font-size: 28px;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 8px;
+}
+
+.subtitle {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 16px;
+    margin-bottom: 32px;
+}
+
+.invoiceDetails {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 32px;
+    text-align: left;
+}
+
+.row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.label {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 14px;
+}
+
+.value {
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 20px 0;
+}
+
+.amountRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.amountLabel {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 16px;
+}
+
+.amount {
+    font-size: 28px;
+    font-weight: 700;
+    color: #0052FF;
+}
+
+.connectSection {
+    margin-bottom: 24px;
+}
+
+.connectText {
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 16px;
+}
+
+.connectButton {
+    width: 100%;
+    padding: 16px 24px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.checkoutSection {
+    margin-bottom: 24px;
+}
+
+.payButton {
+    width: 100%;
+    padding: 16px 24px;
+    font-size: 18px;
+    font-weight: 600;
+    border-radius: 12px;
+}
+
+.footer {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.4);
+    margin-top: 24px;
+}
+
+.loading {
+    color: #ffffff;
+    font-size: 18px;
+}
+
+.successIcon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #0052FF, #0066FF);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    color: white;
+    margin: 0 auto 24px;
+}
+
+.invoiceId {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 14px;
+    margin-top: 16px;
+}
+
+/* Currency Selector Styles */
+.currencySection {
+    margin: 20px 0;
+}
+
+.currencyOptions {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.currencyButton {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 16px 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.currencyButton:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.currencyButtonActive {
+    background: rgba(0, 82, 255, 0.15);
+    border-color: #0052FF;
+}
+
+.currencyButtonActive:hover {
+    background: rgba(0, 82, 255, 0.2);
+}
+
+.currencyIcon {
+    font-size: 24px;
+}
+
+.currencyName {
+    font-size: 16px;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.currencyFullName {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+    text-align: center;
+}
+
+.notice {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 12px;
+    margin-top: 12px;
+}
+
+.error {
+    color: #ff6b6b;
+    font-size: 12px;
+    margin-top: 12px;
+}

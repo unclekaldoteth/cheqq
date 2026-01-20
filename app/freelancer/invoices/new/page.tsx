@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Link as LinkIcon, Copy, Check } from 'lucide-react';
+import { useAccount } from 'wagmi';
 import { FreelancerSidebar, FreelancerTopBar } from '@/components/freelancer';
 import styles from './page.module.css';
 
@@ -17,6 +18,7 @@ interface InvoiceFormData {
 
 export default function NewInvoicePage() {
     const router = useRouter();
+    const { address } = useAccount();
     const [isLoading, setIsLoading] = useState(false);
     const [showPaymentLink, setShowPaymentLink] = useState(false);
     const [paymentLink, setPaymentLink] = useState('');
@@ -44,7 +46,13 @@ export default function NewInvoicePage() {
 
         // Generate mock payment link
         const invoiceId = `INV-2024-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`;
-        setPaymentLink(`${window.location.origin}/pay/${invoiceId}`);
+        const paymentLinkUrl = new URL(`${window.location.origin}/pay/${invoiceId.toLowerCase()}`);
+        paymentLinkUrl.searchParams.set('amount', formData.amount);
+        paymentLinkUrl.searchParams.set('currency', formData.currency);
+        if (address) {
+            paymentLinkUrl.searchParams.set('recipient', address);
+        }
+        setPaymentLink(paymentLinkUrl.toString());
         setShowPaymentLink(true);
         setIsLoading(false);
     };

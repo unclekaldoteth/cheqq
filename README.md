@@ -1,93 +1,152 @@
 # Cheqq — Payroll & DeFi. Unified on Base.
 
-OiOi. Prof. NOTA v11.11 reporting in.
+Cheqq is a Next.js web application for borderless payroll, invoicing, and DeFi treasury management built on Base.
 
-Cheqq is a Next.js (App Router) product prototype for:
-- invoice management + payment links (USDC / IDRX)
-- borderless payroll runs (batch payouts, loan deductions)
-- treasury yield routing (e.g. Morpho / Aerodrome concepts)
-- employee lending/advances collateralized by future payroll (concept)
+## Features
 
-This repo is currently a **frontend/UI prototype** (mock data + simulated actions). The smart-contract architecture is documented in flowcharts; it is not implemented here.
+**For Companies (B2B)**
+- Payroll management with batch payouts and loan deductions
+- Invoice creation and payment link generation
+- Treasury yield routing (Morpho / Aerodrome concepts)
+- Employee lending/advances collateralized by future payroll
 
-## Quickstart (Local Lab)
+**For Freelancers (B2C)**
+- Create and send invoices with payment links
+- Accept crypto payments (USDC / IDRX)
+- Withdraw to bank or crypto wallet
+- Track payments and earnings
 
-Prereqs:
-- Node.js (18+ recommended)
-- npm (this repo has `package-lock.json`)
+## Tech Stack
 
-Run:
+- **Framework:** Next.js 16.1.0 (App Router)
+- **Frontend:** React 19.2.3, TypeScript, CSS Modules
+- **Database:** PostgreSQL (Supabase) + Prisma ORM
+- **Wallet:** OnchainKit, WalletConnect
+- **Network:** Base Sepolia (testnet) / Base (mainnet)
+- **Payments:** USDC, IDRX stablecoins
+
+## Getting Started
+
+### Prerequisites
+- Node.js 18+
+- npm
+- Supabase account (for database)
+
+### Installation
+
 ```bash
 npm install
+```
+
+### Environment Setup
+
+Create `.env.local` with:
+
+```env
+# OnchainKit
+NEXT_PUBLIC_ONCHAINKIT_CDP_KEY=your-key
+NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME=Cheqq
+
+# WalletConnect
+NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID=your-project-id
+
+# Network (base-sepolia or base)
+NEXT_PUBLIC_CHAIN=base-sepolia
+
+# Supabase Database
+DATABASE_URL="postgresql://..."
+```
+
+### Database Setup
+
+```bash
+npx prisma generate
+npx prisma db push
+```
+
+### Run Development Server
+
+```bash
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+Open `http://localhost:3000`
 
-## What’s Inside (Syllabus)
+## Routes
 
-**Landing**
-- `/` — marketing/overview sections (Navbar, Hero, Products, How It Works, Advantages, Partners, CTA)
+### Public
+- `/` — Landing page
+- `/get-started` — Role selection (Company or Freelancer)
+- `/login` — Wallet-based login for returning users
+- `/register/company` — Company registration with KYB
+- `/register/freelancer` — Freelancer registration with KYC
+- `/pay/[invoiceId]` — Payment page with USDC/IDRX support
 
-**Company (Admin)**
-- `/dashboard` — overview (balances, transactions, yield, loans)
-- `/dashboard/invoices` — invoices list + filters + payment link copy
-- `/dashboard/invoices/new` — invoice creation → payment link modal
-- `/dashboard/payroll` — employees list + payroll stats
-- `/dashboard/payroll/run` — multi-step “Run Payroll” flow (select → confirm → success)
-- `/dashboard/defi` — treasury yield + employee lending widgets
-- `/dashboard/settings` — company/wallet/payroll/notifications settings (mock save)
+### Company Dashboard
+- `/dashboard` — Overview (balances, transactions, yield)
+- `/dashboard/invoices` — Invoice management
+- `/dashboard/invoices/new` — Create invoice
+- `/dashboard/payroll` — Employee list and payroll stats
+- `/dashboard/payroll/run` — Run batch payroll
+- `/dashboard/employees` — Employee management
+- `/dashboard/defi` — Treasury yield and lending
+- `/dashboard/settings` — Company settings
 
-**Freelancer**
-- `/freelancer/dashboard` — earnings + recent activity
-- `/freelancer/invoices` + `/freelancer/invoices/new` — invoice flows (mock)
-- `/freelancer/payments` — payments list (mock)
-- `/freelancer/withdraw` — withdraw stablecoins → fiat (simulated)
-- `/freelancer/settings` — profile/preferences (mock)
+### Freelancer Dashboard
+- `/freelancer/dashboard` — Earnings overview
+- `/freelancer/invoices` — Invoice management
+- `/freelancer/invoices/new` — Create invoice
+- `/freelancer/payments` — Payment history
+- `/freelancer/withdraw` — Withdraw to bank/crypto
+- `/freelancer/settings` — Profile settings
 
-## Tech Stack (Tools of the Trade)
+### API Endpoints
+- `/api/auth/wallet` — Wallet authentication check
+- `/api/companies` — Company CRUD
+- `/api/freelancers` — Freelancer CRUD
+- `/api/invoices` — Invoice management
+- `/api/payments/status` — Payment status updates
+- `/api/payroll` — Batch payroll execution
+- `/api/webhooks/payment` — Payment webhooks
 
-- Next.js `16.1.0` (App Router)
-- React `19.2.3`
-- TypeScript `^5`
-- CSS Modules + global design system in `app/globals.css`
-- Icons: `lucide-react`
-- Linting: ESLint `^9` + `eslint-config-next`
+## Database Schema
 
-## Project Map (Where Things Live)
+**B2B Models:**
+- Company, Employee, PayrollRun, PayrollItem, Loan, TreasuryBalance
 
-- `app/` — routes (Next.js App Router)
-- `components/` — UI building blocks (landing, dashboard, freelancer)
-- `public/` — static assets
-- `excalidraw-flow-chart/` — architecture + flows
+**B2C Models:**
+- Freelancer, Withdrawal
 
-## Flowcharts & Architecture Notes
+**Shared Models:**
+- Invoice, Payment
 
-- Mermaid + notes: `excalidraw-flow-chart/payfi_flowcharts.md`
-- Excalidraw diagrams:
-  - `excalidraw-flow-chart/system-architecture.excalidraw`
-  - `excalidraw-flow-chart/onboarding-flow.excalidraw`
-  - `excalidraw-flow-chart/invoice-flow.excalidraw`
-  - `excalidraw-flow-chart/payroll-flow.excalidraw`
-  - `excalidraw-flow-chart/defi-yield-flow.excalidraw`
-  - `excalidraw-flow-chart/employee-lending-flow.excalidraw`
+## Authentication Flow
 
-## Notes from Prof. NOTA (Reality Check)
+1. **New Users:** Click "Launch App" → Choose role → Complete KYB/KYC → Dashboard
+2. **Returning Users:** Click "Sign In" → Connect wallet → Auto-redirect to dashboard
 
-- All “API calls” and “transactions” are simulated with timeouts and mock state.
-- Payment links shown in the UI are generated client-side (demo behavior).
-- Wallet connection, Base L2 interactions, stablecoin contracts, and protocol integrations are not wired up yet.
+Wallet address is used as the unique identifier. Users cannot switch between Company and Freelancer roles.
 
-## Scripts (Press the Buttons)
+## Scripts
 
-- `npm run dev` — run locally
-- `npm run build` — production build
-- `npm run start` — serve production build
-- `npm run lint` — lint
+```bash
+npm run dev      # Development server
+npm run build    # Production build
+npm run start    # Serve production build
+npm run lint     # Run ESLint
+```
 
-## Roadmap (Homework)
+## Roadmap
 
-- Add real data layer (API + persistence)
-- Add wallet connect + on-chain reads/writes (Base)
-- Implement invoice + payroll + treasury modules (contracts or service layer)
-- Replace mock flows with real transaction state + error handling
+- [x] Database integration (Prisma + Supabase)
+- [x] Wallet authentication
+- [x] KYB/KYC registration flow
+- [x] Multi-currency support (USDC/IDRX)
+- [ ] Smart contract deployment for batch payroll
+- [ ] Real on-chain transactions
+- [ ] Fiat off-ramp integration
+- [ ] Production deployment
+
+## License
+
+Base Indonesia Hackathon 2025
