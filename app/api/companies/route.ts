@@ -31,13 +31,48 @@ export async function POST(request: Request) {
         const prisma = getPrisma();
 
         const body = await request.json();
-        const name = body.companyName || body.name;
-        const email = body.email;
+        const name = String(body.companyName || body.name || '').trim();
+        const email = String(body.email || '').trim();
+        const walletAddress = String(body.walletAddress || '').trim();
 
-        if (!name || !email) {
+        if (!name || !email || !walletAddress) {
             return NextResponse.json(
-                { error: 'Company name and email are required' },
+                { error: 'Company name, email, and wallet address are required' },
                 { status: 400 }
+            );
+        }
+
+        const existingCompany = await prisma.company.findFirst({
+            where: {
+                walletAddress: {
+                    mode: 'insensitive',
+                    equals: walletAddress,
+                },
+            },
+            select: { id: true },
+        });
+
+        if (existingCompany) {
+            return NextResponse.json(
+                { error: 'This wallet is already registered to a company' },
+                { status: 409 }
+            );
+        }
+
+        const existingFreelancer = await prisma.freelancer.findFirst({
+            where: {
+                walletAddress: {
+                    mode: 'insensitive',
+                    equals: walletAddress,
+                },
+            },
+            select: { id: true },
+        });
+
+        if (existingFreelancer) {
+            return NextResponse.json(
+                { error: 'This wallet is already registered to a freelancer' },
+                { status: 409 }
             );
         }
 
@@ -45,7 +80,7 @@ export async function POST(request: Request) {
             data: {
                 name,
                 email,
-                walletAddress: body.walletAddress || null,
+                walletAddress,
                 logo: body.logo || null,
             },
         });

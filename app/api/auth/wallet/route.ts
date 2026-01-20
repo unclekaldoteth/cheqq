@@ -12,7 +12,7 @@ export async function GET(request: Request) {
         const prisma = getPrisma();
 
         const { searchParams } = new URL(request.url);
-        const address = searchParams.get('address')?.toLowerCase();
+        const address = searchParams.get('address')?.trim().toLowerCase();
 
         if (!address) {
             return NextResponse.json(

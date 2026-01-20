@@ -31,14 +31,48 @@ export async function POST(request: Request) {
         const prisma = getPrisma();
 
         const body = await request.json();
-        const name = body.fullName || body.name;
-        const email = body.email;
-        const walletAddress = body.walletAddress;
+        const name = String(body.fullName || body.name || '').trim();
+        const email = String(body.email || '').trim();
+        const walletAddress = String(body.walletAddress || '').trim();
 
         if (!name || !email || !walletAddress) {
             return NextResponse.json(
                 { error: 'Full name, email, and wallet address are required' },
                 { status: 400 }
+            );
+        }
+
+        const existingFreelancer = await prisma.freelancer.findFirst({
+            where: {
+                walletAddress: {
+                    mode: 'insensitive',
+                    equals: walletAddress,
+                },
+            },
+            select: { id: true },
+        });
+
+        if (existingFreelancer) {
+            return NextResponse.json(
+                { error: 'This wallet is already registered to a freelancer' },
+                { status: 409 }
+            );
+        }
+
+        const existingCompany = await prisma.company.findFirst({
+            where: {
+                walletAddress: {
+                    mode: 'insensitive',
+                    equals: walletAddress,
+                },
+            },
+            select: { id: true },
+        });
+
+        if (existingCompany) {
+            return NextResponse.json(
+                { error: 'This wallet is already registered to a company' },
+                { status: 409 }
             );
         }
 

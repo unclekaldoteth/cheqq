@@ -6,6 +6,15 @@ import { executeBatchPayroll } from '@/lib/cdp';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
+const ALLOWED_PAYROLL_STATUSES = ['PENDING', 'APPROVED', 'PROCESSING', 'COMPLETED', 'FAILED'] as const;
+const ALLOWED_CURRENCIES = ['USDC', 'IDRX', 'ETH'] as const;
+
+const isAllowedPayrollStatus = (value: string): value is PayrollStatus =>
+    ALLOWED_PAYROLL_STATUSES.includes(value as PayrollStatus);
+
+const isAllowedCurrency = (value: string): value is Currency =>
+    ALLOWED_CURRENCIES.includes(value as Currency);
+
 interface PayrollItem {
     employeeId: string;
     walletAddress: string;
@@ -62,12 +71,46 @@ export async function POST(request: Request) {
 
         const body = await request.json();
         const { companyId, employeeIds, currency = 'USDC' } = body;
+        const normalizedCompanyId = String(companyId || '').trim();
+        const currencyInput = String(currency || 'USDC').trim().toUpperCase();
+
+        if (!normalizedCompanyId) {
+            return NextResponse.json(
+                { error: 'Company ID is required' },
+                { status: 400 }
+            );
+        }
+
+        if (!Array.isArray(employeeIds) || employeeIds.length === 0) {
+            return NextResponse.json(
+                { error: 'At least one employee ID is required' },
+                { status: 400 }
+            );
+        }
+
+        const normalizedEmployeeIds = employeeIds
+            .filter((id: unknown) => typeof id === 'string' && id.trim().length > 0)
+            .map((id: string) => id.trim());
+
+        if (normalizedEmployeeIds.length === 0) {
+            return NextResponse.json(
+                { error: 'Employee IDs must be valid strings' },
+                { status: 400 }
+            );
+        }
+
+        if (!isAllowedCurrency(currencyInput)) {
+            return NextResponse.json(
+                { error: 'Invalid payroll currency' },
+                { status: 400 }
+            );
+        }
 
         // Fetch employees
         const employees = await prisma.employee.findMany({
             where: {
-                id: { in: employeeIds },
-                companyId,
+                id: { in: normalizedEmployeeIds },
+                companyId: normalizedCompanyId,
                 status: 'ACTIVE',
             },
             include: {
@@ -80,6 +123,13 @@ export async function POST(request: Request) {
         if (employees.length === 0) {
             return NextResponse.json(
                 { error: 'No active employees found' },
+                { status: 400 }
+            );
+        }
+
+        if (employees.length !== normalizedEmployeeIds.length) {
+            return NextResponse.json(
+                { error: 'Some employees were not found or inactive' },
                 { status: 400 }
             );
         }
@@ -102,14 +152,25 @@ export async function POST(request: Request) {
             };
         });
 
+        const invalidItem = items.find(
+            (item) => !Number.isFinite(item.netAmount) || item.netAmount < 0
+        );
+
+        if (invalidItem) {
+            return NextResponse.json(
+                { error: 'Loan deductions exceed salary for one or more employees' },
+                { status: 400 }
+            );
+        }
+
         const totalAmount = items.reduce((sum: number, item: PayrollItem) => sum + item.netAmount, 0);
 
         // Create payroll run with items
         const payrollRun = await prisma.payrollRun.create({
             data: {
-                companyId,
+                companyId: normalizedCompanyId,
                 totalAmount,
-                currency: currency as Currency,
+                currency: currencyInput as Currency,
                 status: 'PENDING',
                 items: {
                     create: items.map((item: PayrollItem) => ({
@@ -149,9 +210,25 @@ export async function PATCH(request: Request) {
 
         const body = await request.json();
         const { id, action, txHash, fromAddress } = body;
+        const payrollId = String(id || '').trim();
+        const actionInput = action ? String(action).trim() : '';
+
+        if (!payrollId) {
+            return NextResponse.json(
+                { error: 'Payroll run ID is required' },
+                { status: 400 }
+            );
+        }
+
+        if (actionInput && actionInput !== 'execute') {
+            return NextResponse.json(
+                { error: 'Invalid payroll action' },
+                { status: 400 }
+            );
+        }
 
         const payrollRun = await prisma.payrollRun.findUnique({
-            where: { id },
+            where: { id: payrollId },
             include: {
                 items: {
                     include: { employee: true },
@@ -168,10 +245,10 @@ export async function PATCH(request: Request) {
         }
 
         // Execute payroll using CDP SDK
-        if (action === 'execute') {
+        if (actionInput === 'execute') {
             // Update status to processing
             await prisma.payrollRun.update({
-                where: { id },
+                where: { id: payrollId },
                 data: { status: 'PROCESSING' },
             });
 
@@ -222,7 +299,7 @@ export async function PATCH(request: Request) {
                 const allSuccessful = results.every((r: { success: boolean }) => r.success);
 
                 await prisma.payrollRun.update({
-                    where: { id },
+                    where: { id: payrollId },
                     data: {
                         status: allSuccessful ? 'COMPLETED' : 'FAILED',
                         executedAt: new Date(),
@@ -231,7 +308,7 @@ export async function PATCH(request: Request) {
 
                 return NextResponse.json({
                     payrollRun: await prisma.payrollRun.findUnique({
-                        where: { id },
+                        where: { id: payrollId },
                         include: { items: true },
                     }),
                     results,
@@ -239,20 +316,28 @@ export async function PATCH(request: Request) {
                 });
             } catch (error) {
                 await prisma.payrollRun.update({
-                    where: { id },
+                    where: { id: payrollId },
                     data: { status: 'FAILED' },
                 });
                 throw error;
             }
         }
 
+        const statusInput = String(body.status || '').trim().toUpperCase();
+        if (!isAllowedPayrollStatus(statusInput)) {
+            return NextResponse.json(
+                { error: 'Valid payroll status is required' },
+                { status: 400 }
+            );
+        }
+
         // Simple status update
         const updated = await prisma.payrollRun.update({
-            where: { id },
+            where: { id: payrollId },
             data: {
-                status: body.status as PayrollStatus,
+                status: statusInput as PayrollStatus,
                 txHash: txHash || undefined,
-                executedAt: body.status === 'COMPLETED' ? new Date() : undefined,
+                executedAt: statusInput === 'COMPLETED' ? new Date() : undefined,
             },
         });
 

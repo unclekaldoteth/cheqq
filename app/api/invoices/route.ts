@@ -5,6 +5,15 @@ import type { Currency, InvoiceStatus } from '@prisma/client';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
+const ALLOWED_STATUSES = ['DRAFT', 'PENDING', 'PAID', 'OVERDUE', 'CANCELLED'] as const;
+const ALLOWED_CURRENCIES = ['USDC', 'IDRX', 'ETH'] as const;
+
+const isAllowedStatus = (value: string): value is InvoiceStatus =>
+    ALLOWED_STATUSES.includes(value as InvoiceStatus);
+
+const isAllowedCurrency = (value: string): value is Currency =>
+    ALLOWED_CURRENCIES.includes(value as Currency);
+
 // GET /api/invoices - List all invoices
 export async function GET(request: Request) {
     try {
@@ -15,7 +24,15 @@ export async function GET(request: Request) {
         const id = searchParams.get('id');
         const companyId = searchParams.get('companyId');
         const freelancerId = searchParams.get('freelancerId');
-        const status = searchParams.get('status') as InvoiceStatus | null;
+        const statusParam = searchParams.get('status');
+        const status = statusParam ? statusParam.toUpperCase() : null;
+
+        if (status && !isAllowedStatus(status)) {
+            return NextResponse.json(
+                { error: 'Invalid invoice status' },
+                { status: 400 }
+            );
+        }
 
         if (id) {
             const invoice = await prisma.invoice.findUnique({
@@ -79,27 +96,89 @@ export async function POST(request: Request) {
         const prisma = getPrisma();
 
         const body = await request.json();
+        const companyId = String(body.companyId || '').trim();
+        const freelancerId = String(body.freelancerId || '').trim();
+        const clientName = String(body.clientName || '').trim();
+        const clientEmail = String(body.clientEmail || '').trim();
+        const description = String(body.description || '').trim();
+        const amount = String(body.amount ?? '').trim();
+        const currencyInput = String(body.currency || 'USDC').trim().toUpperCase();
+
+        if (!companyId && !freelancerId) {
+            return NextResponse.json(
+                { error: 'Company or freelancer ID is required' },
+                { status: 400 }
+            );
+        }
+
+        if (!clientName || !clientEmail || !description) {
+            return NextResponse.json(
+                { error: 'Client name, email, and description are required' },
+                { status: 400 }
+            );
+        }
+
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clientEmail)) {
+            return NextResponse.json(
+                { error: 'Invalid client email address' },
+                { status: 400 }
+            );
+        }
+
+        const parsedAmount = Number.parseFloat(amount);
+        if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+            return NextResponse.json(
+                { error: 'Invoice amount must be greater than zero' },
+                { status: 400 }
+            );
+        }
+
+        if (!isAllowedCurrency(currencyInput)) {
+            return NextResponse.json(
+                { error: 'Invalid currency' },
+                { status: 400 }
+            );
+        }
+
+        const dueDate = body.dueDate ? new Date(body.dueDate) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+        if (Number.isNaN(dueDate.getTime())) {
+            return NextResponse.json(
+                { error: 'Invalid due date' },
+                { status: 400 }
+            );
+        }
 
         const invoice = await prisma.invoice.create({
             data: {
-                companyId: body.companyId || null,
-                freelancerId: body.freelancerId || null,
-                clientName: body.clientName,
-                clientEmail: body.clientEmail,
-                description: body.description,
-                amount: body.amount,
-                currency: (body.currency as Currency) || 'USDC',
+                companyId: companyId || null,
+                freelancerId: freelancerId || null,
+                clientName,
+                clientEmail,
+                description,
+                amount,
+                currency: currencyInput as Currency,
                 status: 'PENDING',
-                dueDate: body.dueDate ? new Date(body.dueDate) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+                dueDate,
+            },
+            include: {
+                company: { select: { walletAddress: true } },
+                freelancer: { select: { walletAddress: true } },
             },
         });
 
         // Generate payment link
-        const paymentLink = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/pay/${invoice.id}`;
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+        const paymentLinkUrl = new URL(`/pay/${invoice.id}`, baseUrl);
+        paymentLinkUrl.searchParams.set('amount', invoice.amount.toString());
+        paymentLinkUrl.searchParams.set('currency', invoice.currency);
+        const recipientAddress = invoice.company?.walletAddress || invoice.freelancer?.walletAddress;
+        if (recipientAddress) {
+            paymentLinkUrl.searchParams.set('recipient', recipientAddress);
+        }
 
         return NextResponse.json({
             invoice,
-            paymentLink,
+            paymentLink: paymentLinkUrl.toString(),
             message: 'Invoice created successfully'
         });
     } catch (error) {
@@ -118,13 +197,36 @@ export async function PATCH(request: Request) {
         const prisma = getPrisma();
 
         const body = await request.json();
-        const { id, status, paidAt } = body;
+        const id = String(body.id || '').trim();
+        const statusInput = body.status ? String(body.status).trim().toUpperCase() : '';
+
+        if (!id) {
+            return NextResponse.json(
+                { error: 'Invoice ID is required' },
+                { status: 400 }
+            );
+        }
+
+        if (!statusInput || !isAllowedStatus(statusInput)) {
+            return NextResponse.json(
+                { error: 'Valid invoice status is required' },
+                { status: 400 }
+            );
+        }
+
+        const paidAt = body.paidAt ? new Date(body.paidAt) : undefined;
+        if (paidAt && Number.isNaN(paidAt.getTime())) {
+            return NextResponse.json(
+                { error: 'Invalid paid at date' },
+                { status: 400 }
+            );
+        }
 
         const invoice = await prisma.invoice.update({
             where: { id },
             data: {
-                status: status as InvoiceStatus,
-                paidAt: paidAt ? new Date(paidAt) : undefined,
+                status: statusInput as InvoiceStatus,
+                paidAt,
             },
         });
 

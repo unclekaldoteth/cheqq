@@ -5,6 +5,15 @@ import type { PaymentStatus, Currency } from '@prisma/client';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
+const ALLOWED_STATUSES = ['PENDING', 'PROCESSING', 'COMPLETED', 'FAILED'] as const;
+const ALLOWED_CURRENCIES = ['USDC', 'IDRX', 'ETH'] as const;
+
+const isAllowedStatus = (value: string): value is PaymentStatus =>
+    ALLOWED_STATUSES.includes(value as PaymentStatus);
+
+const isAllowedCurrency = (value: string): value is Currency =>
+    ALLOWED_CURRENCIES.includes(value as Currency);
+
 // GET /api/payments/status?id=xxx - Check payment status
 export async function GET(request: Request) {
     try {
@@ -60,22 +69,67 @@ export async function POST(request: Request) {
         const prisma = getPrisma();
 
         const body = await request.json();
+        const invoiceId = String(body.invoiceId || '').trim();
+        const amount = String(body.amount ?? '').trim();
+        const statusInput = String(body.status || 'PENDING').trim().toUpperCase();
+        const currencyInput = String(body.currency || 'USDC').trim().toUpperCase();
+
+        if (!invoiceId) {
+            return NextResponse.json(
+                { error: 'Invoice ID is required' },
+                { status: 400 }
+            );
+        }
+
+        const parsedAmount = Number.parseFloat(amount);
+        if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+            return NextResponse.json(
+                { error: 'Payment amount must be greater than zero' },
+                { status: 400 }
+            );
+        }
+
+        if (!isAllowedStatus(statusInput)) {
+            return NextResponse.json(
+                { error: 'Invalid payment status' },
+                { status: 400 }
+            );
+        }
+
+        if (!isAllowedCurrency(currencyInput)) {
+            return NextResponse.json(
+                { error: 'Invalid currency' },
+                { status: 400 }
+            );
+        }
+
+        const invoice = await prisma.invoice.findUnique({
+            where: { id: invoiceId },
+            select: { id: true },
+        });
+
+        if (!invoice) {
+            return NextResponse.json(
+                { error: 'Invoice not found' },
+                { status: 404 }
+            );
+        }
 
         const payment = await prisma.payment.create({
             data: {
-                invoiceId: body.invoiceId,
-                amount: body.amount,
-                currency: (body.currency as Currency) || 'USDC',
-                status: (body.status as PaymentStatus) || 'PENDING',
+                invoiceId,
+                amount,
+                currency: currencyInput as Currency,
+                status: statusInput as PaymentStatus,
                 txHash: body.txHash || null,
                 payerAddress: body.payerAddress || null,
             },
         });
 
         // If payment is completed, update invoice status
-        if (body.status === 'COMPLETED') {
+        if (statusInput === 'COMPLETED') {
             await prisma.invoice.update({
-                where: { id: body.invoiceId },
+                where: { id: invoiceId },
                 data: {
                     status: 'PAID',
                     paidAt: new Date(),
@@ -103,19 +157,34 @@ export async function PATCH(request: Request) {
         const prisma = getPrisma();
 
         const body = await request.json();
-        const { id, status, txHash } = body;
+        const id = String(body.id || '').trim();
+        const statusInput = String(body.status || '').trim().toUpperCase();
+
+        if (!id) {
+            return NextResponse.json(
+                { error: 'Payment ID is required' },
+                { status: 400 }
+            );
+        }
+
+        if (!isAllowedStatus(statusInput)) {
+            return NextResponse.json(
+                { error: 'Valid payment status is required' },
+                { status: 400 }
+            );
+        }
 
         const payment = await prisma.payment.update({
             where: { id },
             data: {
-                status: status as PaymentStatus,
-                txHash: txHash || undefined,
-                confirmedAt: status === 'COMPLETED' ? new Date() : undefined,
+                status: statusInput as PaymentStatus,
+                txHash: body.txHash || undefined,
+                confirmedAt: statusInput === 'COMPLETED' ? new Date() : undefined,
             },
         });
 
         // If payment is completed, update invoice status
-        if (status === 'COMPLETED') {
+        if (statusInput === 'COMPLETED') {
             await prisma.invoice.update({
                 where: { id: payment.invoiceId },
                 data: {
