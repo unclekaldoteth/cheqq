@@ -3,6 +3,9 @@ import prisma from '@/lib/prisma';
 import { PayrollStatus, PaymentStatus, Currency } from '@prisma/client';
 import { executeBatchPayroll } from '@/lib/cdp';
 
+// Force dynamic rendering - prevents build-time analysis
+export const dynamic = 'force-dynamic';
+
 // GET /api/payroll - List payroll runs
 export async function GET(request: Request) {
     try {

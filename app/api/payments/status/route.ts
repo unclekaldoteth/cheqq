@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { PaymentStatus, Currency } from '@prisma/client';
 
+// Force dynamic rendering - prevents build-time analysis
+export const dynamic = 'force-dynamic';
+
 // GET /api/payments/status?id=xxx - Check payment status
 export async function GET(request: Request) {
     try {

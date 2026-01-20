@@ -2,47 +2,54 @@ import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@prisma/client';
 
-// PrismaClient singleton for Next.js hot reloading
+// PrismaClient singleton for Next.js
 declare global {
     // eslint-disable-next-line no-var
-    var prisma: PrismaClient | undefined;
+    var __prisma: PrismaClient | undefined;
 }
 
-// Lazy initialization - only create client when actually used (not at build time)
-function getPrismaClient(): PrismaClient {
-    if (global.prisma) {
-        return global.prisma;
+/**
+ * Get the Prisma client instance.
+ * This function should only be called at runtime, not at build time.
+ */
+export function getPrisma(): PrismaClient {
+    // Return cached instance if available
+    if (global.__prisma) {
+        return global.__prisma;
     }
 
     const connectionString = process.env.DATABASE_URL;
 
     if (!connectionString) {
-        // During build time, throw a clear error that will be caught
-        throw new Error('DATABASE_URL environment variable is not set');
+        throw new Error('DATABASE_URL environment variable is required');
     }
 
     const pool = new Pool({ connectionString });
     const adapter = new PrismaPg(pool);
     const client = new PrismaClient({ adapter });
 
+    // Cache in development for hot reloading
     if (process.env.NODE_ENV !== 'production') {
-        global.prisma = client;
+        global.__prisma = client;
     }
 
     return client;
 }
 
-// Create a proxy that lazily initializes Prisma client
-const prisma = new Proxy({} as PrismaClient, {
-    get(_target, prop: keyof PrismaClient) {
-        const client = getPrismaClient();
-        const value = client[prop];
-        if (typeof value === 'function') {
-            return value.bind(client);
-        }
-        return value;
-    },
-});
-
-export { prisma };
-export default prisma;
+// For backwards compatibility - but this should NOT be used at module level
+// Only use getPrisma() function in API routes
+export default {
+    get company() { return getPrisma().company; },
+    get employee() { return getPrisma().employee; },
+    get payrollRun() { return getPrisma().payrollRun; },
+    get payrollItem() { return getPrisma().payrollItem; },
+    get loan() { return getPrisma().loan; },
+    get treasuryBalance() { return getPrisma().treasuryBalance; },
+    get freelancer() { return getPrisma().freelancer; },
+    get invoice() { return getPrisma().invoice; },
+    get payment() { return getPrisma().payment; },
+    get withdrawal() { return getPrisma().withdrawal; },
+    $connect: () => getPrisma().$connect(),
+    $disconnect: () => getPrisma().$disconnect(),
+    $transaction: (...args: Parameters<PrismaClient['$transaction']>) => getPrisma().$transaction(...args),
+};

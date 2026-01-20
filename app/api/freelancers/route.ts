@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
+// Force dynamic rendering - prevents build-time analysis
+export const dynamic = 'force-dynamic';
+
 // GET /api/freelancers - List all freelancers
 export async function GET() {
     try {

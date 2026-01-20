@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { createHmac } from 'crypto';
 
+// Force dynamic rendering - prevents build-time analysis
+export const dynamic = 'force-dynamic';
+
 // Webhook secret for verifying signatures (set in .env)
 const WEBHOOK_SECRET = process.env.PAYMENT_WEBHOOK_SECRET || '';
 
