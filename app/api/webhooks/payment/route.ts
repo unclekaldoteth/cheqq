@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createHmac } from 'crypto';
+import type { Currency } from '@prisma/client';
 
 // Force dynamic rendering - prevents build-time analysis
 export const dynamic = 'force-dynamic';
@@ -96,7 +97,7 @@ export async function POST(request: Request) {
                     create: {
                         invoiceId,
                         amount,
-                        currency: currency || 'USDC',
+                        currency: (currency || 'USDC') as Currency,
                         status: 'COMPLETED',
                         txHash,
                         payerAddress,
