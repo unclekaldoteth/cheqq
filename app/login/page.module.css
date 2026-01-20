@@ -154,3 +154,80 @@
     font-size: 12px;
     color: rgba(255, 255, 255, 0.4);
 }
+
+/* Not Registered State */
+.notRegistered {
+    margin-top: 16px;
+    padding: 16px;
+    background: rgba(239, 168, 68, 0.1);
+    border: 1px solid rgba(239, 168, 68, 0.3);
+    border-radius: 8px;
+}
+
+.notRegistered p {
+    color: #f59e0b;
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+
+.notRegisteredActions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.registerButton {
+    display: block;
+    width: 100%;
+    padding: 12px 16px;
+    background: #0052FF;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.registerButton:hover {
+    background: #0066FF;
+}
+
+.tryAnotherButton {
+    width: 100%;
+    padding: 12px 16px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tryAnotherButton:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.disconnectButton {
+    margin-top: 12px;
+    width: 100%;
+    padding: 10px 16px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.disconnectButton:hover {
+    color: rgba(255, 255, 255, 0.9);
+    border-color: rgba(255, 255, 255, 0.3);
+}

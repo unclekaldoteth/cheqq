@@ -3,25 +3,30 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ConnectWallet, Wallet } from '@coinbase/onchainkit/wallet';
-import { useAccount } from 'wagmi';
+import { useAccount, useDisconnect } from 'wagmi';
 import { Loader2 } from 'lucide-react';
+import { WalletButtons } from '@/components/wallet/WalletButtons';
 import styles from './page.module.css';
 
 export default function LoginPage() {
     const router = useRouter();
     const { isConnected, address } = useAccount();
+    const { disconnect } = useDisconnect();
     const [isChecking, setIsChecking] = useState(false);
+    const [notRegistered, setNotRegistered] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!isConnected || !address) return;
-
-        let redirectTimeout: ReturnType<typeof setTimeout> | null = null;
+        if (!isConnected || !address) {
+            setNotRegistered(false);
+            setError(null);
+            return;
+        }
 
         const checkWallet = async () => {
             setIsChecking(true);
             setError(null);
+            setNotRegistered(false);
 
             try {
                 const response = await fetch(`/api/auth/wallet?address=${encodeURIComponent(address)}`);
@@ -38,11 +43,8 @@ export default function LoginPage() {
                     // Wallet is registered, redirect to dashboard
                     router.push(data.redirectTo);
                 } else {
-                    // Not registered, redirect to registration
-                    setError('Wallet not registered. Please complete registration first.');
-                    redirectTimeout = setTimeout(() => {
-                        router.push('/get-started');
-                    }, 2000);
+                    // Not registered - show message but don't auto-redirect
+                    setNotRegistered(true);
                 }
             } catch (err) {
                 console.error('Auth check failed:', err);
@@ -53,13 +55,11 @@ export default function LoginPage() {
         };
 
         checkWallet();
-
-        return () => {
-            if (redirectTimeout) {
-                clearTimeout(redirectTimeout);
-            }
-        };
     }, [isConnected, address, router]);
+
+    const handleTryAnotherWallet = () => {
+        disconnect();
+    };
 
     return (
         <div className={styles.container}>
@@ -88,12 +88,37 @@ export default function LoginPage() {
                                     {address?.slice(0, 6)}...{address?.slice(-4)}
                                 </span>
                             </div>
+
+                            {notRegistered && (
+                                <div className={styles.notRegistered}>
+                                    <p>This wallet is not registered.</p>
+                                    <div className={styles.notRegisteredActions}>
+                                        <Link href="/get-started" className={styles.registerButton}>
+                                            Register Now
+                                        </Link>
+                                        <button
+                                            onClick={handleTryAnotherWallet}
+                                            className={styles.tryAnotherButton}
+                                        >
+                                            Try Another Wallet
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
                             {error && <p className={styles.error}>{error}</p>}
+
+                            {!notRegistered && !error && (
+                                <button
+                                    onClick={handleTryAnotherWallet}
+                                    className={styles.disconnectButton}
+                                >
+                                    Connect Different Wallet
+                                </button>
+                            )}
                         </div>
                     ) : (
-                        <Wallet>
-                            <ConnectWallet className={styles.connectButton} />
-                        </Wallet>
+                        <WalletButtons />
                     )}
                 </div>
 
