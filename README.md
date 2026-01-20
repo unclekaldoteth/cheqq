@@ -1,6 +1,6 @@
 # Cheqq — Payroll & DeFi. Unified on Base.
 
-Cheqq is a Next.js web application for borderless payroll, invoicing, and DeFi treasury management built on Base.
+Cheqq is a BASE Blockchain web application for borderless payroll, invoicing, and DeFi treasury management built using Next.js.
 
 ## Features
 
