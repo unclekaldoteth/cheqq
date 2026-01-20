@@ -1,12 +1,15 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
 
 // Force dynamic rendering - prevents build-time analysis
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 // GET /api/companies - List all companies
 export async function GET() {
     try {
+        const { getPrisma } = await import('@/lib/prisma');
+        const prisma = getPrisma();
+
         const companies = await prisma.company.findMany({
             orderBy: { createdAt: 'desc' },
         });
@@ -24,6 +27,9 @@ export async function GET() {
 // POST /api/companies - Register a company
 export async function POST(request: Request) {
     try {
+        const { getPrisma } = await import('@/lib/prisma');
+        const prisma = getPrisma();
+
         const body = await request.json();
         const name = body.companyName || body.name;
         const email = body.email;

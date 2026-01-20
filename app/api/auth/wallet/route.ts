@@ -1,12 +1,16 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
 
 // Force dynamic rendering - prevents build-time analysis
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 // GET /api/auth/wallet?address=0x... - Check if wallet is registered
 export async function GET(request: Request) {
     try {
+        // Dynamic import to avoid build-time Prisma initialization
+        const { getPrisma } = await import('@/lib/prisma');
+        const prisma = getPrisma();
+
         const { searchParams } = new URL(request.url);
         const address = searchParams.get('address')?.toLowerCase();
 

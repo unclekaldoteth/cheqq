@@ -1,13 +1,16 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
-import { Currency, InvoiceStatus } from '@prisma/client';
+import type { Currency, InvoiceStatus } from '@prisma/client';
 
 // Force dynamic rendering - prevents build-time analysis
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 // GET /api/invoices - List all invoices
 export async function GET(request: Request) {
     try {
+        const { getPrisma } = await import('@/lib/prisma');
+        const prisma = getPrisma();
+
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
         const companyId = searchParams.get('companyId');
@@ -72,6 +75,9 @@ export async function GET(request: Request) {
 // POST /api/invoices - Create new invoice
 export async function POST(request: Request) {
     try {
+        const { getPrisma } = await import('@/lib/prisma');
+        const prisma = getPrisma();
+
         const body = await request.json();
 
         const invoice = await prisma.invoice.create({
@@ -108,6 +114,9 @@ export async function POST(request: Request) {
 // PATCH /api/invoices - Update invoice status
 export async function PATCH(request: Request) {
     try {
+        const { getPrisma } = await import('@/lib/prisma');
+        const prisma = getPrisma();
+
         const body = await request.json();
         const { id, status, paidAt } = body;
 

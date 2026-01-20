@@ -1,14 +1,36 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
-import { PayrollStatus, PaymentStatus, Currency } from '@prisma/client';
+import type { PayrollStatus, Currency } from '@prisma/client';
 import { executeBatchPayroll } from '@/lib/cdp';
 
 // Force dynamic rendering - prevents build-time analysis
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
+interface PayrollItem {
+    employeeId: string;
+    walletAddress: string;
+    grossAmount: number;
+    loanDeduction: number;
+    netAmount: number;
+}
+
+interface Loan {
+    monthlyDeduction: string | number;
+}
+
+interface Employee {
+    id: string;
+    walletAddress: string;
+    salary: string | number;
+    loans: Loan[];
+}
 
 // GET /api/payroll - List payroll runs
 export async function GET(request: Request) {
     try {
+        const { getPrisma } = await import('@/lib/prisma');
+        const prisma = getPrisma();
+
         const { searchParams } = new URL(request.url);
         const companyId = searchParams.get('companyId');
 
@@ -35,6 +57,9 @@ export async function GET(request: Request) {
 // POST /api/payroll - Create payroll batch
 export async function POST(request: Request) {
     try {
+        const { getPrisma } = await import('@/lib/prisma');
+        const prisma = getPrisma();
+
         const body = await request.json();
         const { companyId, employeeIds, currency = 'USDC' } = body;
 
@@ -60,7 +85,7 @@ export async function POST(request: Request) {
         }
 
         // Calculate totals with loan deductions
-        const items = employees.map((emp) => {
+        const items: PayrollItem[] = employees.map((emp) => {
             const loanDeduction = emp.loans.reduce(
                 (sum, loan) => sum + Number(loan.monthlyDeduction),
                 0
@@ -77,7 +102,7 @@ export async function POST(request: Request) {
             };
         });
 
-        const totalAmount = items.reduce((sum, item) => sum + item.netAmount, 0);
+        const totalAmount = items.reduce((sum: number, item: PayrollItem) => sum + item.netAmount, 0);
 
         // Create payroll run with items
         const payrollRun = await prisma.payrollRun.create({
@@ -87,7 +112,7 @@ export async function POST(request: Request) {
                 currency: currency as Currency,
                 status: 'PENDING',
                 items: {
-                    create: items.map((item) => ({
+                    create: items.map((item: PayrollItem) => ({
                         employeeId: item.employeeId,
                         grossAmount: item.grossAmount,
                         loanDeduction: item.loanDeduction,
@@ -119,6 +144,9 @@ export async function POST(request: Request) {
 // PATCH /api/payroll - Execute or update payroll status
 export async function PATCH(request: Request) {
     try {
+        const { getPrisma } = await import('@/lib/prisma');
+        const prisma = getPrisma();
+
         const body = await request.json();
         const { id, action, txHash, fromAddress } = body;
 
@@ -147,7 +175,7 @@ export async function PATCH(request: Request) {
                 data: { status: 'PROCESSING' },
             });
 
-            const recipients = payrollRun.items.map((item) => ({
+            const recipients = payrollRun.items.map((item: { employee: { walletAddress: string }; netAmount: { toString: () => string } }) => ({
                 address: item.employee.walletAddress,
                 amount: item.netAmount.toString(),
             }));
@@ -191,7 +219,7 @@ export async function PATCH(request: Request) {
                     }
                 }
 
-                const allSuccessful = results.every((r) => r.success);
+                const allSuccessful = results.every((r: { success: boolean }) => r.success);
 
                 await prisma.payrollRun.update({
                     where: { id },

@@ -1,12 +1,15 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
 
 // Force dynamic rendering - prevents build-time analysis
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 // GET /api/freelancers - List all freelancers
 export async function GET() {
     try {
+        const { getPrisma } = await import('@/lib/prisma');
+        const prisma = getPrisma();
+
         const freelancers = await prisma.freelancer.findMany({
             orderBy: { createdAt: 'desc' },
         });
@@ -24,6 +27,9 @@ export async function GET() {
 // POST /api/freelancers - Register a freelancer
 export async function POST(request: Request) {
     try {
+        const { getPrisma } = await import('@/lib/prisma');
+        const prisma = getPrisma();
+
         const body = await request.json();
         const name = body.fullName || body.name;
         const email = body.email;

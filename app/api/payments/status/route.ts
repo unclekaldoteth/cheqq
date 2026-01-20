@@ -1,13 +1,16 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
-import { PaymentStatus, Currency } from '@prisma/client';
+import type { PaymentStatus, Currency } from '@prisma/client';
 
 // Force dynamic rendering - prevents build-time analysis
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 // GET /api/payments/status?id=xxx - Check payment status
 export async function GET(request: Request) {
     try {
+        const { getPrisma } = await import('@/lib/prisma');
+        const prisma = getPrisma();
+
         const { searchParams } = new URL(request.url);
         const paymentId = searchParams.get('id');
         const invoiceId = searchParams.get('invoiceId');
@@ -53,6 +56,9 @@ export async function GET(request: Request) {
 // POST /api/payments/status - Record payment
 export async function POST(request: Request) {
     try {
+        const { getPrisma } = await import('@/lib/prisma');
+        const prisma = getPrisma();
+
         const body = await request.json();
 
         const payment = await prisma.payment.create({
@@ -93,6 +99,9 @@ export async function POST(request: Request) {
 // PATCH /api/payments/status - Update payment status
 export async function PATCH(request: Request) {
     try {
+        const { getPrisma } = await import('@/lib/prisma');
+        const prisma = getPrisma();
+
         const body = await request.json();
         const { id, status, txHash } = body;
 

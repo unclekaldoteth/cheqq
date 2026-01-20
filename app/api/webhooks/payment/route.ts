@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
 import { createHmac } from 'crypto';
 
 // Force dynamic rendering - prevents build-time analysis
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 // Webhook secret for verifying signatures (set in .env)
 const WEBHOOK_SECRET = process.env.PAYMENT_WEBHOOK_SECRET || '';
@@ -27,6 +27,9 @@ function verifySignature(payload: string, signature: string): boolean {
 // POST /api/webhooks/payment - Handle payment confirmations
 export async function POST(request: Request) {
     try {
+        const { getPrisma } = await import('@/lib/prisma');
+        const prisma = getPrisma();
+
         const rawBody = await request.text();
         const signature = request.headers.get('x-signature') ||
             request.headers.get('x-hub-signature-256') || '';
