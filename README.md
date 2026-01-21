@@ -161,6 +161,7 @@ npm run lint     # Run ESLint
 - [x] B2B APIs (Treasury, Loans, Payroll, Analytics)
 - [x] B2C APIs (Withdrawals, Earnings, Payout Settings)
 - [x] DeFi yield integration (simulated)
+- [x] Dashboard API integration (live data)
 - [ ] Smart contract deployment for batch payroll
 - [ ] Real on-chain transactions
 - [ ] Fiat off-ramp integration

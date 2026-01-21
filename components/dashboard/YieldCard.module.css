@@ -43,6 +43,20 @@
     gap: var(--space-lg);
 }
 
+.loadingState {
+    min-height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+}
+
 .mainStat {
     display: flex;
     flex-direction: column;
@@ -139,6 +153,15 @@
     color: var(--accent-green);
 }
 
+.emptyState {
+    text-align: center;
+    padding: var(--space-md);
+    background: var(--bg-cream);
+    border-radius: var(--radius-md);
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
 .notice {
     display: flex;
     align-items: center;
@@ -153,4 +176,10 @@
 .notice svg {
     color: var(--primary-blue);
     flex-shrink: 0;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }

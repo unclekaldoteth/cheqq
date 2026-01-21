@@ -20,6 +20,17 @@
     transform: translateY(-2px);
 }
 
+.loading {
+    align-items: center;
+    justify-content: center;
+    min-height: 140px;
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+    color: var(--text-muted);
+}
+
 .cardHeader {
     display: flex;
     align-items: center;
@@ -55,8 +66,8 @@
 }
 
 .subValue {
-    font-size: 0.875rem;
-    color: var(--text-muted);
+    font-size: 0.8125rem;
+    color: var(--text-light);
 }
 
 .change {
@@ -89,5 +100,11 @@
 @media (max-width: 640px) {
     .balanceGrid {
         grid-template-columns: 1fr;
+    }
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
     }
 }

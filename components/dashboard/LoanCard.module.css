@@ -156,5 +156,37 @@
 
 .newLoanBtn {
     width: 100%;
+    text-align: center;
+    margin-top: 0.5rem;
+}
+
+.loadingState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     justify-content: center;
+    gap: 0.5rem;
+    padding: 2rem;
+    color: var(--text-light);
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+}
+
+.emptyState {
+    text-align: center;
+    padding: 1rem;
+    color: var(--text-light);
+    font-size: 0.875rem;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }
