@@ -261,6 +261,13 @@ export async function PATCH(request: Request) {
             );
         }
 
+        if (action && action !== 'approve' && action !== 'reject') {
+            return NextResponse.json(
+                { error: 'Invalid loan action' },
+                { status: 400 }
+            );
+        }
+
         // Get existing loan
         const existingLoan = await prisma.loan.findUnique({
             where: { id },
@@ -278,6 +285,63 @@ export async function PATCH(request: Request) {
             if (existingLoan.status !== 'PENDING') {
                 return NextResponse.json(
                     { error: 'Only pending loans can be approved' },
+                    { status: 400 }
+                );
+            }
+
+            const employee = await prisma.employee.findUnique({
+                where: { id: existingLoan.employeeId },
+                select: { salary: true },
+            });
+
+            if (!employee) {
+                return NextResponse.json(
+                    { error: 'Employee not found' },
+                    { status: 404 }
+                );
+            }
+
+            const monthlyDeduction = Number(existingLoan.monthlyDeduction);
+            const salaryAmount = Number(employee.salary);
+
+            if (!Number.isFinite(monthlyDeduction) || monthlyDeduction <= 0) {
+                return NextResponse.json(
+                    { error: 'Invalid monthly deduction for this loan' },
+                    { status: 400 }
+                );
+            }
+
+            if (!Number.isFinite(salaryAmount) || salaryAmount <= 0) {
+                return NextResponse.json(
+                    { error: 'Employee salary must be greater than zero' },
+                    { status: 400 }
+                );
+            }
+
+            if (monthlyDeduction > salaryAmount) {
+                return NextResponse.json(
+                    { error: 'Monthly deduction cannot exceed employee salary' },
+                    { status: 400 }
+                );
+            }
+
+            const activeLoans = await prisma.loan.findMany({
+                where: {
+                    employeeId: existingLoan.employeeId,
+                    status: 'ACTIVE',
+                    NOT: { id },
+                },
+                select: { monthlyDeduction: true },
+            });
+
+            const totalActiveDeductions = activeLoans.reduce(
+                (sum, loan) => sum + Number(loan.monthlyDeduction),
+                0
+            );
+
+            if (totalActiveDeductions + monthlyDeduction > salaryAmount) {
+                return NextResponse.json(
+                    { error: 'Total loan deductions would exceed employee salary' },
                     { status: 400 }
                 );
             }

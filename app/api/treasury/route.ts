@@ -202,6 +202,18 @@ export async function PATCH(request: Request) {
             );
         }
 
+        const existingBalance = await prisma.treasuryBalance.findUnique({
+            where: { id },
+            select: { id: true },
+        });
+
+        if (!existingBalance) {
+            return NextResponse.json(
+                { error: 'Treasury balance not found' },
+                { status: 404 }
+            );
+        }
+
         const balance = await prisma.treasuryBalance.update({
             where: { id },
             data: updateData,
