@@ -138,6 +138,13 @@ Open `http://localhost:3000`
 **Shared Models:**
 - Invoice, Payment
 
+## Smart Contracts
+
+| Network | Contract | Address |
+|---------|----------|---------|
+| Base Sepolia | CheqqPayroll | `0xb1946053637898a74d7C22c9Fc5f221B6DbB2a2e` |
+| Base Mainnet | CheqqPayroll | TBD |
+
 ## Authentication Flow
 
 1. **New Users:** Click "Launch App" → Choose role → Complete KYB/KYC → Dashboard
@@ -166,9 +173,8 @@ npm run lint     # Run ESLint
 - [x] Dashboard API integration (live data)
 - [x] On-chain USDC transfers (CDP SDK)
 - [x] Fiat off-ramp integration (simulated)
-- [ ] Smart contract deployment for batch payroll
-- [ ] Real on-chain transactions
-- [ ] Fiat off-ramp integration
+- [x] Smart contract deployment (CheqqPayroll on Base Sepolia)
+- [ ] Production deployment (mainnet)
 - [ ] Production deployment
 
 ## License
