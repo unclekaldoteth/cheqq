@@ -101,13 +101,29 @@ Open `http://localhost:3000`
 - `/freelancer/settings` — Profile settings
 
 ### API Endpoints
+
+**Authentication**
 - `/api/auth/wallet` — Wallet authentication check
-- `/api/companies` — Company CRUD
-- `/api/freelancers` — Freelancer CRUD
-- `/api/invoices` — Invoice management
+
+**B2B APIs (Company)**
+- `/api/companies` — Company registration and management
+- `/api/payroll` — Batch payroll execution with loan deductions
+- `/api/treasury` — Treasury balance management
+- `/api/loans` — Employee salary advance loans
+- `/api/defi/yield` — DeFi yield rates and deposits
+- `/api/analytics/invoices` — Invoice analytics and statistics
+
+**B2C APIs (Freelancer)**
+- `/api/freelancers` — Freelancer registration and management
+- `/api/withdrawals` — Withdraw to bank or crypto wallet
+- `/api/earnings` — Earnings balance by currency
+- `/api/payout-settings` — Preferred payout method settings
+- `/api/analytics/freelancer` — Freelancer dashboard analytics
+
+**Shared APIs**
+- `/api/invoices` — Invoice creation and management
 - `/api/payments/status` — Payment status updates
-- `/api/payroll` — Batch payroll execution
-- `/api/webhooks/payment` — Payment webhooks
+- `/api/webhooks/payment` — Payment confirmation webhooks
 
 ## Database Schema
 
@@ -142,6 +158,9 @@ npm run lint     # Run ESLint
 - [x] Wallet authentication
 - [x] KYB/KYC registration flow
 - [x] Multi-currency support (USDC/IDRX)
+- [x] B2B APIs (Treasury, Loans, Payroll, Analytics)
+- [x] B2C APIs (Withdrawals, Earnings, Payout Settings)
+- [x] DeFi yield integration (simulated)
 - [ ] Smart contract deployment for batch payroll
 - [ ] Real on-chain transactions
 - [ ] Fiat off-ramp integration
