@@ -42,8 +42,9 @@ next-env.d.ts
 
 /lib/generated/prisma
 
-# Foundry
-/lib/
+# Foundry (submodules only)
+/lib/forge-std/
+/lib/openzeppelin-contracts/
 contracts/out/
 contracts/cache/
 contracts/broadcast/
