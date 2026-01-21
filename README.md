@@ -105,12 +105,13 @@ Open `http://localhost:3000`
 **Authentication**
 - `/api/auth/wallet` — Wallet authentication check
 
-**B2B APIs (Company)**
-- `/api/companies` — Company registration and management
-- `/api/payroll` — Batch payroll execution with loan deductions
+**B2B APIs (Company Dashboard)**
+- `/api/companies` — Company registration/auth
+- `/api/employees` — List employees with salary/deductions
+- `/api/payroll` — Batch payroll execution
 - `/api/treasury` — Treasury balance management
-- `/api/loans` — Employee salary advance loans
-- `/api/defi/yield` — DeFi yield rates and deposits
+- `/api/loans` — Employee salary advances
+- `/api/defi/yield` — DeFi yield dashboard deposits
 - `/api/analytics/invoices` — Invoice analytics and statistics
 
 **B2C APIs (Freelancer)**
@@ -174,8 +175,9 @@ npm run lint     # Run ESLint
 - [x] On-chain USDC transfers (CDP SDK)
 - [x] Fiat off-ramp integration (simulated)
 - [x] Smart contract deployment (CheqqPayroll on Base Sepolia)
+- [x] Payroll UI → Smart Contract integration
+- [x] Withdraw UI → Real balance + Off-ramp integration
 - [ ] Production deployment (mainnet)
-- [ ] Production deployment
 
 ## License
 

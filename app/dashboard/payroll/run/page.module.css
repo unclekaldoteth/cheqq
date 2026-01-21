@@ -119,6 +119,15 @@
     flex: 1;
 }
 
+.notice {
+    padding: var(--space-md);
+    border: 1px solid #F1D8A8;
+    background: #FFF7E6;
+    color: #8A6D3B;
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+}
+
 /* Period Selector */
 .periodSelector {
     display: flex;

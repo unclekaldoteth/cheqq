@@ -1,80 +1,116 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Check, ArrowRight, CheckCircle, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Check, ArrowRight, CheckCircle, ExternalLink, Loader2 } from 'lucide-react';
+import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { Sidebar, TopBar } from '@/components/dashboard';
 import { PayrollPreview, type PayrollItem } from '@/components/dashboard/payroll';
+import { CHEQQ_PAYROLL_ABI, getCheqqPayrollAddress, generatePayrollId } from '@/lib/contracts';
+import { getTokenAddress, parseTokenAmount } from '@/lib/tokens';
 import styles from './page.module.css';
 
-// Mock employee data for payroll
-const mockPayrollData: PayrollItem[] = [
-    {
-        id: '1',
-        name: 'Sarah Chen',
-        walletAddress: '0x1234567890abcdef1234567890abcdef12345678',
-        grossAmount: 5000,
-        loanDeduction: 500,
-        netAmount: 4500,
-        currency: 'USDC',
-        selected: true,
-    },
-    {
-        id: '2',
-        name: 'Michael Johnson',
-        walletAddress: '0xabcdef1234567890abcdef1234567890abcdef12',
-        grossAmount: 4500,
-        loanDeduction: 0,
-        netAmount: 4500,
-        currency: 'USDC',
-        selected: true,
-    },
-    {
-        id: '3',
-        name: 'Dewi Putri',
-        walletAddress: '0x9876543210fedcba9876543210fedcba98765432',
-        grossAmount: 75000000,
-        loanDeduction: 5000000,
-        netAmount: 70000000,
-        currency: 'IDRX',
-        selected: true,
-    },
-    {
-        id: '4',
-        name: 'James Wilson',
-        walletAddress: '0xfedcba9876543210fedcba9876543210fedcba98',
-        grossAmount: 6000,
-        loanDeduction: 0,
-        netAmount: 6000,
-        currency: 'USDC',
-        selected: true,
-    },
-    {
-        id: '5',
-        name: 'Emily Rodriguez',
-        walletAddress: '0x5678901234abcdef5678901234abcdef56789012',
-        grossAmount: 4000,
-        loanDeduction: 0,
-        netAmount: 4000,
-        currency: 'USDC',
-        selected: true,
-    },
-];
-
-type Step = 'select' | 'confirm' | 'success';
+type Step = 'select' | 'approve' | 'confirm' | 'success';
 
 export default function RunPayrollPage() {
     const router = useRouter();
     const [step, setStep] = useState<Step>('select');
-    const [items, setItems] = useState<PayrollItem[]>(mockPayrollData);
+    const [items, setItems] = useState<PayrollItem[]>([]);
+    const [loading, setLoading] = useState(true);
     const [paymentDate, setPaymentDate] = useState(
         new Date().toISOString().split('T')[0]
     );
-    const [isProcessing, setIsProcessing] = useState(false);
-    const [txHash] = useState('0x7a8b...3f2e');
+    const [txHash, setTxHash] = useState<`0x${string}` | undefined>();
 
-    const allSelected = useMemo(() => items.every(item => item.selected), [items]);
+    // Get companyId from localStorage (in production, use auth context)
+    const companyId = typeof window !== 'undefined'
+        ? localStorage.getItem('companyId')
+        : null;
+
+    // Fetch employees from API
+    useEffect(() => {
+        const fetchEmployees = async () => {
+            if (!companyId) {
+                setLoading(false);
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/employees?companyId=${encodeURIComponent(companyId)}`);
+                if (!res.ok) throw new Error('Failed to fetch');
+                const data = await res.json();
+
+                // Transform to PayrollItem format
+                const payrollItems: PayrollItem[] = data.employees.map((emp: {
+                    id: string;
+                    name: string;
+                    walletAddress: string;
+                    grossAmount: number;
+                    loanDeduction: number;
+                    netAmount: number;
+                    currency: string;
+                }) => {
+                    const currency = (emp.currency || 'USDC') as PayrollItem['currency'];
+                    const netAmount = Number(emp.netAmount);
+                    const isPayable = currency === 'USDC' && netAmount > 0;
+                    return {
+                        id: emp.id,
+                        name: emp.name,
+                        walletAddress: emp.walletAddress,
+                        grossAmount: Number(emp.grossAmount),
+                        loanDeduction: Number(emp.loanDeduction),
+                        netAmount,
+                        currency,
+                        selected: isPayable,
+                    };
+                });
+
+                setItems(payrollItems);
+            } catch (error) {
+                console.error('Failed to fetch employees:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchEmployees();
+    }, [companyId]);
+
+    // Smart contract write
+    const { writeContract, data: hash, isPending: isWritePending } = useWriteContract();
+
+    // Wait for transaction
+    const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+        hash,
+    });
+
+    // Handle transaction success
+    useEffect(() => {
+        if (isSuccess && hash) {
+            setTxHash(hash);
+            setStep('success');
+        }
+    }, [isSuccess, hash]);
+
+    const selectableItems = useMemo(
+        () => items.filter(item => item.currency === 'USDC' && item.netAmount > 0),
+        [items]
+    );
+    const allSelected = useMemo(
+        () => selectableItems.length > 0 && selectableItems.every(item => item.selected),
+        [selectableItems]
+    );
     const selectedCount = useMemo(() => items.filter(item => item.selected).length, [items]);
+    const payableItems = useMemo(
+        () => selectableItems.filter(item => item.selected),
+        [selectableItems]
+    );
+    const payableCount = payableItems.length;
+    const hasNonPayableSelected = useMemo(
+        () => items.some(item => item.selected && (item.currency !== 'USDC' || item.netAmount <= 0)),
+        [items]
+    );
+    const canContinue = payableCount > 0 && !hasNonPayableSelected;
 
     const handleToggleItem = (id: string) => {
         setItems(prev =>
@@ -86,21 +122,41 @@ export default function RunPayrollPage() {
 
     const handleToggleAll = () => {
         const newValue = !allSelected;
-        setItems(prev => prev.map(item => ({ ...item, selected: newValue })));
+        setItems(prev => prev.map(item => (
+            newValue
+                ? (item.currency === 'USDC' && item.netAmount > 0
+                    ? { ...item, selected: true }
+                    : { ...item, selected: false })
+                : { ...item, selected: false }
+        )));
     };
 
     const handleProceedToConfirm = () => {
-        if (selectedCount > 0) {
+        if (canContinue) {
             setStep('confirm');
         }
     };
 
     const handleExecutePayroll = async () => {
-        setIsProcessing(true);
-        // Simulate blockchain transaction
-        await new Promise(resolve => setTimeout(resolve, 2500));
-        setIsProcessing(false);
-        setStep('success');
+        if (payableItems.length === 0 || hasNonPayableSelected) return;
+
+        // Generate unique payroll ID
+        const payrollId = generatePayrollId(`${companyId}-${Date.now()}`);
+        const tokenAddress = getTokenAddress('USDC') as `0x${string}`;
+
+        // Prepare payment items for contract
+        const payments = payableItems.map(item => ({
+            recipient: item.walletAddress as `0x${string}`,
+            amount: parseTokenAmount(item.netAmount.toString(), 'USDC'),
+        }));
+
+        // Execute contract call
+        writeContract({
+            address: getCheqqPayrollAddress(),
+            abi: CHEQQ_PAYROLL_ABI,
+            functionName: 'executePayroll',
+            args: [payrollId, tokenAddress, payments],
+        });
     };
 
     const handleBack = () => {
@@ -113,7 +169,7 @@ export default function RunPayrollPage() {
 
     // Calculate totals
     const totals = useMemo(() => {
-        const selected = items.filter(item => item.selected);
+        const selected = payableItems;
         return {
             usdc: {
                 gross: selected.filter(i => i.currency === 'USDC').reduce((sum, i) => sum + i.grossAmount, 0),
@@ -124,7 +180,7 @@ export default function RunPayrollPage() {
                 net: selected.filter(i => i.currency === 'IDRX').reduce((sum, i) => sum + i.netAmount, 0),
             },
         };
-    }, [items]);
+    }, [payableItems]);
 
     const formatAmount = (amount: number, currency: string) => {
         return new Intl.NumberFormat('en-US', {
@@ -132,6 +188,11 @@ export default function RunPayrollPage() {
             maximumFractionDigits: 2,
         }).format(amount) + ` ${currency}`;
     };
+
+    const isProcessing = isWritePending || isConfirming;
+    const explorerUrl = txHash
+        ? `https://sepolia.basescan.org/tx/${txHash}`
+        : undefined;
 
     return (
         <div className={styles.dashboardLayout}>
@@ -175,8 +236,29 @@ export default function RunPayrollPage() {
                         </div>
                     </div>
 
+                    {/* Loading State */}
+                    {loading && (
+                        <div className={styles.loadingState}>
+                            <Loader2 size={32} className={styles.spinner} />
+                            <span>Loading employees...</span>
+                        </div>
+                    )}
+
+                    {/* No Employees */}
+                    {!loading && items.length === 0 && step === 'select' && (
+                        <div className={styles.emptyState}>
+                            <p>No employees found. Add employees first to run payroll.</p>
+                            <button
+                                className="btn btn-primary"
+                                onClick={() => router.push('/dashboard/employees/new')}
+                            >
+                                Add Employee
+                            </button>
+                        </div>
+                    )}
+
                     {/* Step Content */}
-                    {step === 'select' && (
+                    {!loading && items.length > 0 && step === 'select' && (
                         <>
                             {/* Period Selector */}
                             <div className={styles.periodSelector}>
@@ -208,6 +290,13 @@ export default function RunPayrollPage() {
                                 />
                             </div>
 
+                            {hasNonPayableSelected && (
+                                <div className={styles.notice}>
+                                    Only USDC employees with a positive net payout can be executed on-chain right now.
+                                    Deselect IDRX or zero-net employees to continue.
+                                </div>
+                            )}
+
                             {/* Actions */}
                             <div className={styles.actions}>
                                 <span>
@@ -223,7 +312,7 @@ export default function RunPayrollPage() {
                                     <button
                                         className="btn btn-primary"
                                         onClick={handleProceedToConfirm}
-                                        disabled={selectedCount === 0}
+                                        disabled={!canContinue}
                                     >
                                         Continue
                                         <ArrowRight size={18} />
@@ -240,8 +329,8 @@ export default function RunPayrollPage() {
                             </div>
                             <h2>Confirm Payroll</h2>
                             <p>
-                                You are about to execute payroll for {selectedCount} employees.
-                                This action will transfer funds from your treasury.
+                                You are about to execute payroll for {payableCount} employees.
+                                This will call the CheqqPayroll smart contract on Base.
                             </p>
                             <div className={styles.confirmAmount}>
                                 {totals.usdc.net > 0 && (
@@ -262,19 +351,24 @@ export default function RunPayrollPage() {
                                 )}
                                 <div className={styles.confirmItem}>
                                     <span className={styles.confirmLabel}>Employees</span>
-                                    <span className={styles.confirmValue}>{selectedCount}</span>
+                                    <span className={styles.confirmValue}>{payableCount}</span>
                                 </div>
                             </div>
                             <div className={styles.confirmButtons}>
-                                <button className="btn btn-outline" onClick={handleBack}>
+                                <button className="btn btn-outline" onClick={handleBack} disabled={isProcessing}>
                                     Go Back
                                 </button>
                                 <button
                                     className="btn btn-primary"
                                     onClick={handleExecutePayroll}
-                                    disabled={isProcessing}
+                                    disabled={isProcessing || payableCount === 0}
                                 >
-                                    {isProcessing ? 'Processing...' : 'Execute Payroll'}
+                                    {isProcessing ? (
+                                        <>
+                                            <Loader2 size={18} className={styles.spinner} />
+                                            {isConfirming ? 'Confirming...' : 'Signing...'}
+                                        </>
+                                    ) : 'Execute Payroll'}
                                 </button>
                             </div>
                         </div>
@@ -287,19 +381,21 @@ export default function RunPayrollPage() {
                             </div>
                             <h2>Payroll Complete!</h2>
                             <p>
-                                Successfully disbursed salaries to {selectedCount} employees.
+                                Successfully disbursed salaries to {payableCount} employees.
                                 All transactions have been confirmed on Base.
                             </p>
-                            <div className={styles.txHash}>
-                                Transaction: {txHash}
-                                <a
-                                    href={`https://basescan.org/tx/${txHash}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                >
-                                    <ExternalLink size={14} />
-                                </a>
-                            </div>
+                            {txHash && (
+                                <div className={styles.txHash}>
+                                    Transaction: {txHash.slice(0, 10)}...{txHash.slice(-8)}
+                                    <a
+                                        href={explorerUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        <ExternalLink size={14} />
+                                    </a>
+                                </div>
+                            )}
                             <div className={styles.confirmButtons}>
                                 <button
                                     className="btn btn-outline"
