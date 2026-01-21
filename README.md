@@ -124,6 +124,8 @@ Open `http://localhost:3000`
 - `/api/invoices` — Invoice creation and management
 - `/api/payments/status` — Payment status updates
 - `/api/webhooks/payment` — Payment confirmation webhooks
+- `/api/transfers` — On-chain USDC/token transfers
+- `/api/offramp` — Fiat off-ramp quotes and withdrawals
 
 ## Database Schema
 
@@ -162,6 +164,8 @@ npm run lint     # Run ESLint
 - [x] B2C APIs (Withdrawals, Earnings, Payout Settings)
 - [x] DeFi yield integration (simulated)
 - [x] Dashboard API integration (live data)
+- [x] On-chain USDC transfers (CDP SDK)
+- [x] Fiat off-ramp integration (simulated)
 - [ ] Smart contract deployment for batch payroll
 - [ ] Real on-chain transactions
 - [ ] Fiat off-ramp integration
