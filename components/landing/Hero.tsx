@@ -1,9 +1,18 @@
-import { ArrowRight, Play } from 'lucide-react';
+'use client';
+
+import { ArrowRight } from 'lucide-react';
+import { Spotlight } from '@/components/ui/spotlight';
+import { FlipWords } from '@/components/ui/flip-words';
 import styles from './Hero.module.css';
+
+const flipWords = ['DeFi', 'Invoicing', 'Payroll', 'Treasury'];
 
 export default function Hero() {
     return (
         <section className={styles.hero}>
+            {/* Spotlight Effect */}
+            <Spotlight className={styles.spotlight} />
+
             <div className={`container ${styles.heroContainer}`}>
                 <div className={styles.heroContent}>
                     {/* Badge */}
@@ -12,9 +21,9 @@ export default function Hero() {
                         Built on Base • Base Indonesia Hackathon 2026
                     </div>
 
-                    {/* Headline */}
+                    {/* Headline with FlipWords */}
                     <h1 className={styles.headline}>
-                        Payroll & DeFi.{' '}
+                        <FlipWords words={flipWords} className={styles.flipWord} /> & More.{' '}
                         <span className="text-gradient">Unified on Base.</span>
                     </h1>
 
@@ -27,8 +36,8 @@ export default function Hero() {
 
                     {/* CTAs */}
                     <div className={styles.ctas}>
-                        <a href="/dashboard" className="btn btn-primary">
-                            Launch App <ArrowRight size={18} />
+                        <a href="/get-started" className="btn btn-primary">
+                            Get Started <ArrowRight size={18} />
                         </a>
                         <a href="#how-it-works" className="btn btn-outline">
                             How It Works

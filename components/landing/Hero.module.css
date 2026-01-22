@@ -26,6 +26,18 @@
     letter-spacing: -0.03em;
 }
 
+.flipWord {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 700;
+}
+
+.spotlight {
+    z-index: 0;
+}
+
 .subheadline {
     font-size: 1.125rem;
     color: var(--text-muted);
