@@ -2,6 +2,11 @@
     background: var(--bg-cream);
 }
 
+.wobbleContainer {
+    flex: 1;
+    max-width: 360px;
+}
+
 .stepsContainer {
     display: flex;
     justify-content: center;

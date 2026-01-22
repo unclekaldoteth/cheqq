@@ -1,4 +1,7 @@
-import { Wallet, FileText, TrendingUp, Building2, User, Mail } from 'lucide-react';
+'use client';
+
+import { FileText, TrendingUp, Building2, User, Mail } from 'lucide-react';
+import { WobbleCard } from '@/components/ui/wobble-card';
 import styles from './HowItWorks.module.css';
 
 const steps = [
@@ -35,9 +38,9 @@ export default function HowItWorks() {
                     </p>
                 </div>
 
-                {/* B2B vs B2C Cards */}
+                {/* B2B vs B2C Cards with WobbleCard */}
                 <div className={styles.audienceCards}>
-                    <div className={styles.audienceCard}>
+                    <WobbleCard containerClassName={styles.wobbleContainer}>
                         <div className={styles.audienceIcon}><Building2 size={32} /></div>
                         <h3>For Companies (B2B)</h3>
                         <ul className={styles.audienceList}>
@@ -46,8 +49,8 @@ export default function HowItWorks() {
                             <li>Treasury DeFi yield</li>
                             <li>Invoice management</li>
                         </ul>
-                    </div>
-                    <div className={styles.audienceCard}>
+                    </WobbleCard>
+                    <WobbleCard containerClassName={styles.wobbleContainer}>
                         <div className={styles.audienceIcon}><User size={32} /></div>
                         <h3>For Freelancers (B2C)</h3>
                         <ul className={styles.audienceList}>
@@ -56,7 +59,7 @@ export default function HowItWorks() {
                             <li>Withdraw to bank (IDR)</li>
                             <li>Track earnings</li>
                         </ul>
-                    </div>
+                    </WobbleCard>
                 </div>
 
                 <div className={styles.stepsContainer}>
