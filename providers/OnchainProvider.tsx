@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { PrivyProvider } from '@privy-io/react-auth';
 import { WagmiProvider, createConfig } from '@privy-io/wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -8,28 +8,31 @@ import { OnchainKitProvider } from '@coinbase/onchainkit';
 import { http } from 'wagmi';
 import { baseSepolia, base } from 'wagmi/chains';
 
-const queryClient = new QueryClient();
-
 const chain = process.env.NEXT_PUBLIC_CHAIN === 'base' ? base : baseSepolia;
 
-// Wagmi config for Privy integration
-const wagmiConfig = createConfig({
-    chains: [chain],
-    transports: {
-        [baseSepolia.id]: http(),
-        [base.id]: http(),
-    },
-});
+// Create wagmi config (stable reference)
+function makeWagmiConfig() {
+    return createConfig({
+        chains: [chain],
+        transports: {
+            [baseSepolia.id]: http(),
+            [base.id]: http(),
+        },
+    });
+}
 
 interface OnchainProviderProps {
     children: ReactNode;
 }
 
 export function OnchainProvider({ children }: OnchainProviderProps) {
+    // Create stable instances that persist across renders
+    const [queryClient] = useState(() => new QueryClient());
+    const [wagmiConfig] = useState(() => makeWagmiConfig());
+
     const privyAppId = process.env.NEXT_PUBLIC_PRIVY_APP_ID;
 
-    // Fallback wrapper when Privy is not configured
-    // This ensures WagmiProvider is always available for hooks
+    // Inner content wrapper with all providers
     const innerContent = (
         <QueryClientProvider client={queryClient}>
             <WagmiProvider config={wagmiConfig}>
