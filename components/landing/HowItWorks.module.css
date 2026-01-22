@@ -9,6 +9,82 @@
     margin-top: var(--space-2xl);
 }
 
+/* B2B vs B2C Cards */
+.audienceCards {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-xl);
+    margin-top: var(--space-xl);
+    margin-bottom: var(--space-xl);
+}
+
+.audienceCard {
+    background: var(--card-bg);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-xl);
+    padding: var(--space-xl);
+    flex: 1;
+    max-width: 360px;
+    text-align: center;
+    transition: all var(--transition-base);
+}
+
+.audienceCard:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-4px);
+}
+
+.audienceIcon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto var(--space-md);
+    border-radius: var(--radius-md);
+    background: var(--gradient-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.audienceCard h3 {
+    font-size: 1.25rem;
+    margin-bottom: var(--space-md);
+    color: var(--text-primary);
+}
+
+.audienceList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    text-align: left;
+}
+
+.audienceList li {
+    padding: var(--space-xs) 0;
+    font-size: 0.9375rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.audienceList li::before {
+    content: '✓';
+    color: var(--success);
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .audienceCards {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .audienceCard {
+        max-width: 100%;
+    }
+}
+
 .step {
     position: relative;
     display: flex;

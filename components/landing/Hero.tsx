@@ -9,7 +9,7 @@ export default function Hero() {
                     {/* Badge */}
                     <div className="badge">
                         <span>🚀</span>
-                        Built on Base • Base Indonesia Hackathon 2025
+                        Built on Base • Base Indonesia Hackathon 2026
                     </div>
 
                     {/* Headline */}
@@ -31,7 +31,7 @@ export default function Hero() {
                             Launch App <ArrowRight size={18} />
                         </a>
                         <a href="#how-it-works" className="btn btn-outline">
-                            <Play size={18} /> Watch Demo
+                            How It Works
                         </a>
                     </div>
 

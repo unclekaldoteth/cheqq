@@ -134,7 +134,7 @@ export default function Footer() {
                 <div className={styles.footerBottom}>
                     <p>© {new Date().getFullYear()} Cheqq. All rights reserved.</p>
                     <p className={styles.hackathonBadge}>
-                        🇮🇩 Built for Base Indonesia Hackathon 2025
+                        🇮🇩 Built for Base Indonesia Hackathon 2026
                     </p>
                 </div>
             </div>

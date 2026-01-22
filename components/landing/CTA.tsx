@@ -27,7 +27,7 @@ export default function CTA() {
                             <span className={styles.statEmoji}>🚀</span>
                             <div>
                                 <span className={styles.statLabel}>Base Indonesia Hackathon</span>
-                                <span className={styles.statValue}>2025</span>
+                                <span className={styles.statValue}>2026</span>
                             </div>
                         </div>
                     </div>

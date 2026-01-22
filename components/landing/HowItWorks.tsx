@@ -1,24 +1,24 @@
-import { Wallet, FileText, TrendingUp } from 'lucide-react';
+import { Wallet, FileText, TrendingUp, Building2, User, Mail } from 'lucide-react';
 import styles from './HowItWorks.module.css';
 
 const steps = [
     {
         number: '01',
-        icon: <Wallet size={28} />,
-        title: 'Connect',
-        description: 'Link your wallet and set up your company profile. No seed phrases to manage — we use smart account abstraction for seamless onboarding.',
+        icon: <Mail size={28} />,
+        title: 'Sign Up',
+        description: 'Create an account with just your email — no wallet needed. We automatically create a smart wallet for you using Privy.',
     },
     {
         number: '02',
         icon: <FileText size={28} />,
         title: 'Manage',
-        description: 'Create invoices, add employees, and set up payroll schedules. Everything syncs in real-time with instant stablecoin settlements.',
+        description: 'Companies: Create invoices, add employees, and run batch payroll. Freelancers: Send invoices and track payments.',
     },
     {
         number: '03',
         icon: <TrendingUp size={28} />,
         title: 'Grow',
-        description: 'Deposit treasury funds into DeFi protocols to earn yield. Offer salary advances to employees using their future payroll as collateral.',
+        description: 'Companies: Earn yield on treasury via DeFi. Freelancers: Withdraw earnings to bank (IDR) or crypto wallet.',
     },
 ];
 
@@ -30,8 +30,33 @@ export default function HowItWorks() {
                     <span className="badge">How It Works</span>
                     <h2>Get started in minutes, not days</h2>
                     <p>
-                        Skip the paperwork. Connect your wallet and start managing your business finances instantly.
+                        One platform for Companies (B2B) and Freelancers (B2C).
+                        Sign up with email and start managing your finances instantly.
                     </p>
+                </div>
+
+                {/* B2B vs B2C Cards */}
+                <div className={styles.audienceCards}>
+                    <div className={styles.audienceCard}>
+                        <div className={styles.audienceIcon}><Building2 size={32} /></div>
+                        <h3>For Companies (B2B)</h3>
+                        <ul className={styles.audienceList}>
+                            <li>Batch payroll in USDC/IDRX</li>
+                            <li>Employee salary advances</li>
+                            <li>Treasury DeFi yield</li>
+                            <li>Invoice management</li>
+                        </ul>
+                    </div>
+                    <div className={styles.audienceCard}>
+                        <div className={styles.audienceIcon}><User size={32} /></div>
+                        <h3>For Freelancers (B2C)</h3>
+                        <ul className={styles.audienceList}>
+                            <li>Create and send invoices</li>
+                            <li>Accept crypto payments</li>
+                            <li>Withdraw to bank (IDR)</li>
+                            <li>Track earnings</li>
+                        </ul>
+                    </div>
                 </div>
 
                 <div className={styles.stepsContainer}>
@@ -54,7 +79,7 @@ export default function HowItWorks() {
                 </div>
 
                 <div className={styles.ctaContainer}>
-                    <a href="/dashboard" className="btn btn-primary">
+                    <a href="/get-started" className="btn btn-primary">
                         Get Started Now
                     </a>
                 </div>

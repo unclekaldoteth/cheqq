@@ -185,4 +185,4 @@ npm run lint     # Run ESLint
 
 ## License
 
-Base Indonesia Hackathon 2025
+Base Indonesia Hackathon 2026
