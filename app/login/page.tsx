@@ -1,13 +1,45 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { usePrivy } from '@privy-io/react-auth';
 import { Loader2, Mail, Wallet } from 'lucide-react';
 import styles from './page.module.css';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { usePrivy } from '@privy-io/react-auth';
+
+const hasPrivyAppId = Boolean(process.env.NEXT_PUBLIC_PRIVY_APP_ID);
 
 export default function LoginPage() {
+    if (!hasPrivyAppId) {
+        return <MissingPrivyConfig />;
+    }
+
+    return <PrivyLogin />;
+}
+
+function MissingPrivyConfig() {
+    return (
+        <div className={styles.container}>
+            <div className={styles.card}>
+                <Link href="/" className={styles.logo}>
+                    <span className={styles.logoIcon}>◆</span>
+                    Cheqq
+                </Link>
+
+                <h1 className={styles.title}>Login Unavailable</h1>
+                <p className={styles.subtitle}>
+                    Privy is not configured. Set NEXT_PUBLIC_PRIVY_APP_ID in your environment.
+                </p>
+
+                <Link href="/get-started" className={styles.registerButton}>
+                    Go to Get Started
+                </Link>
+            </div>
+        </div>
+    );
+}
+
+function PrivyLogin() {
     const router = useRouter();
     const { ready, authenticated, user, login, logout } = usePrivy();
     const [isChecking, setIsChecking] = useState(false);
