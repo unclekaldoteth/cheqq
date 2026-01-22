@@ -28,9 +28,31 @@ interface OnchainProviderProps {
 export function OnchainProvider({ children }: OnchainProviderProps) {
     const privyAppId = process.env.NEXT_PUBLIC_PRIVY_APP_ID;
 
+    // Fallback wrapper when Privy is not configured
+    // This ensures WagmiProvider is always available for hooks
+    const innerContent = (
+        <QueryClientProvider client={queryClient}>
+            <WagmiProvider config={wagmiConfig}>
+                <OnchainKitProvider
+                    apiKey={process.env.NEXT_PUBLIC_ONCHAINKIT_CDP_KEY}
+                    chain={chain}
+                    config={{
+                        appearance: {
+                            name: 'Cheqq',
+                            mode: 'auto',
+                            theme: 'default',
+                        },
+                    }}
+                >
+                    {children}
+                </OnchainKitProvider>
+            </WagmiProvider>
+        </QueryClientProvider>
+    );
+
+    // If Privy is not configured, return without PrivyProvider
     if (!privyAppId) {
-        console.warn('NEXT_PUBLIC_PRIVY_APP_ID not set');
-        return <>{children}</>;
+        return innerContent;
     }
 
     return (
@@ -52,23 +74,7 @@ export function OnchainProvider({ children }: OnchainProviderProps) {
                 supportedChains: [chain],
             }}
         >
-            <QueryClientProvider client={queryClient}>
-                <WagmiProvider config={wagmiConfig}>
-                    <OnchainKitProvider
-                        apiKey={process.env.NEXT_PUBLIC_ONCHAINKIT_CDP_KEY}
-                        chain={chain}
-                        config={{
-                            appearance: {
-                                name: 'Cheqq',
-                                mode: 'auto',
-                                theme: 'default',
-                            },
-                        }}
-                    >
-                        {children}
-                    </OnchainKitProvider>
-                </WagmiProvider>
-            </QueryClientProvider>
+            {innerContent}
         </PrivyProvider>
     );
 }
