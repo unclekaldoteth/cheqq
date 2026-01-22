@@ -3,21 +3,22 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAccount, useDisconnect } from 'wagmi';
-import { Loader2 } from 'lucide-react';
-import { WalletButtons } from '@/components/wallet/WalletButtons';
+import { usePrivy } from '@privy-io/react-auth';
+import { Loader2, Mail, Wallet } from 'lucide-react';
 import styles from './page.module.css';
 
 export default function LoginPage() {
     const router = useRouter();
-    const { isConnected, address } = useAccount();
-    const { disconnect } = useDisconnect();
+    const { ready, authenticated, user, login, logout } = usePrivy();
     const [isChecking, setIsChecking] = useState(false);
     const [notRegistered, setNotRegistered] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    // Get wallet address from Privy user
+    const address = user?.wallet?.address;
+
     useEffect(() => {
-        if (!isConnected || !address) {
+        if (!ready || !authenticated || !address) {
             setNotRegistered(false);
             setError(null);
             return;
@@ -40,10 +41,8 @@ export default function LoginPage() {
                 const data = await response.json();
 
                 if (data.registered) {
-                    // Wallet is registered, redirect to dashboard
                     router.push(data.redirectTo);
                 } else {
-                    // Not registered - show message but don't auto-redirect
                     setNotRegistered(true);
                 }
             } catch (err) {
@@ -55,11 +54,33 @@ export default function LoginPage() {
         };
 
         checkWallet();
-    }, [isConnected, address, router]);
+    }, [ready, authenticated, address, router]);
 
-    const handleTryAnotherWallet = () => {
-        disconnect();
+    const handleLogout = () => {
+        logout();
     };
+
+    const handleEmailLogin = () => {
+        login({ loginMethods: ['email'] });
+    };
+
+    const handleWalletLogin = () => {
+        login({ loginMethods: ['wallet'] });
+    };
+
+    // Show loading while Privy initializes
+    if (!ready) {
+        return (
+            <div className={styles.container}>
+                <div className={styles.card}>
+                    <div className={styles.checking}>
+                        <Loader2 className={styles.spinner} size={32} />
+                        <p>Loading...</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className={styles.container}>
@@ -71,36 +92,38 @@ export default function LoginPage() {
 
                 <h1 className={styles.title}>Welcome Back</h1>
                 <p className={styles.subtitle}>
-                    Connect your wallet to sign in
+                    Sign in with email or connect your wallet
                 </p>
 
                 <div className={styles.walletSection}>
                     {isChecking ? (
                         <div className={styles.checking}>
                             <Loader2 className={styles.spinner} size={32} />
-                            <p>Verifying wallet...</p>
+                            <p>Verifying account...</p>
                         </div>
-                    ) : isConnected ? (
+                    ) : authenticated ? (
                         <div className={styles.connected}>
                             <div className={styles.walletInfo}>
-                                <span className={styles.walletLabel}>Connected</span>
+                                <span className={styles.walletLabel}>
+                                    {user?.email?.address ? 'Email' : 'Connected'}
+                                </span>
                                 <span className={styles.walletAddress}>
-                                    {address?.slice(0, 6)}...{address?.slice(-4)}
+                                    {user?.email?.address || `${address?.slice(0, 6)}...${address?.slice(-4)}`}
                                 </span>
                             </div>
 
                             {notRegistered && (
                                 <div className={styles.notRegistered}>
-                                    <p>This wallet is not registered.</p>
+                                    <p>This account is not registered.</p>
                                     <div className={styles.notRegisteredActions}>
                                         <Link href="/get-started" className={styles.registerButton}>
                                             Register Now
                                         </Link>
                                         <button
-                                            onClick={handleTryAnotherWallet}
+                                            onClick={handleLogout}
                                             className={styles.tryAnotherButton}
                                         >
-                                            Try Another Wallet
+                                            Try Another Account
                                         </button>
                                     </div>
                                 </div>
@@ -110,20 +133,37 @@ export default function LoginPage() {
 
                             {!notRegistered && !error && (
                                 <button
-                                    onClick={handleTryAnotherWallet}
+                                    onClick={handleLogout}
                                     className={styles.disconnectButton}
                                 >
-                                    Connect Different Wallet
+                                    Sign Out
                                 </button>
                             )}
                         </div>
                     ) : (
-                        <WalletButtons />
-                    )}
-                </div>
+                        <>
+                            {/* Primary: Email Login */}
+                            <button
+                                onClick={handleEmailLogin}
+                                className={styles.emailButton}
+                            >
+                                <Mail size={20} />
+                                Continue with Email
+                            </button>
 
-                <div className={styles.divider}>
-                    <span>or</span>
+                            <div className={styles.divider}>
+                                <span>or continue with wallet</span>
+                            </div>
+
+                            <button
+                                onClick={handleWalletLogin}
+                                className={styles.connectButton}
+                            >
+                                <Wallet size={20} />
+                                Continue with Wallet
+                            </button>
+                        </>
+                    )}
                 </div>
 
                 <Link href="/get-started" className={styles.registerLink}>
@@ -131,7 +171,7 @@ export default function LoginPage() {
                 </Link>
 
                 <p className={styles.footer}>
-                    Secure wallet authentication · Powered by Base
+                    {authenticated ? 'Secure authentication' : 'Email or wallet · Powered by Privy'}
                 </p>
             </div>
         </div>

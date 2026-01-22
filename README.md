@@ -21,6 +21,7 @@ Cheqq is a BASE Blockchain web application for borderless payroll, invoicing, an
 - **Framework:** Next.js 16.1.0 (App Router)
 - **Frontend:** React 19.2.3, TypeScript, CSS Modules
 - **Database:** PostgreSQL (Supabase) + Prisma ORM
+- **Auth:** Privy (email + embedded wallets)
 - **Wallet:** OnchainKit, WalletConnect
 - **Network:** Base Sepolia (testnet) / Base (mainnet)
 - **Payments:** USDC, IDRX stablecoins
@@ -43,6 +44,9 @@ npm install
 Create `.env.local` with:
 
 ```env
+# Privy
+NEXT_PUBLIC_PRIVY_APP_ID=your-privy-app-id
+
 # OnchainKit
 NEXT_PUBLIC_ONCHAINKIT_CDP_KEY=your-key
 NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME=Cheqq
@@ -77,7 +81,7 @@ Open `http://localhost:3000`
 ### Public
 - `/` — Landing page
 - `/get-started` — Role selection (Company or Freelancer)
-- `/login` — Wallet-based login for returning users
+- `/login` — Email or wallet-based login (Privy)
 - `/register/company` — Company registration with KYB
 - `/register/freelancer` — Freelancer registration with KYC
 - `/pay/[invoiceId]` — Payment page with USDC/IDRX support
