@@ -4,7 +4,6 @@ import { PrismaClient } from '@prisma/client';
 
 // PrismaClient singleton for Next.js
 declare global {
-    // eslint-disable-next-line no-var
     var __prisma: PrismaClient | undefined;
 }
 
@@ -38,7 +37,7 @@ export function getPrisma(): PrismaClient {
 
 // For backwards compatibility - but this should NOT be used at module level
 // Only use getPrisma() function in API routes
-export default {
+const prisma = {
     get company() { return getPrisma().company; },
     get employee() { return getPrisma().employee; },
     get payrollRun() { return getPrisma().payrollRun; },
@@ -53,3 +52,5 @@ export default {
     $disconnect: () => getPrisma().$disconnect(),
     $transaction: (...args: Parameters<PrismaClient['$transaction']>) => getPrisma().$transaction(...args),
 };
+
+export default prisma;

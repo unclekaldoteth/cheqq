@@ -23,17 +23,6 @@ interface PayrollItem {
     netAmount: number;
 }
 
-interface Loan {
-    monthlyDeduction: string | number;
-}
-
-interface Employee {
-    id: string;
-    walletAddress: string;
-    salary: string | number;
-    loans: Loan[];
-}
-
 // GET /api/payroll - List payroll runs
 export async function GET(request: Request) {
     try {

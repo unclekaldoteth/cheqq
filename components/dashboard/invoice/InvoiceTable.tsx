@@ -1,6 +1,6 @@
 'use client';
 
-import { MoreHorizontal, ExternalLink, Copy, Eye } from 'lucide-react';
+import { MoreHorizontal, Copy, Eye } from 'lucide-react';
 import InvoiceStatus, { type InvoiceStatusType } from './InvoiceStatus';
 import styles from './InvoiceTable.module.css';
 

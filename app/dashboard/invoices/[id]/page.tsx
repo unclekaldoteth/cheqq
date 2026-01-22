@@ -1,9 +1,9 @@
 'use client';
 
-import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Copy, ExternalLink, Send, Download } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft, Copy, ExternalLink, Send } from 'lucide-react';
 import { Sidebar, TopBar } from '@/components/dashboard';
-import { InvoiceStatus, InvoiceCard, type InvoiceStatusType } from '@/components/dashboard/invoice';
+import { InvoiceStatus, type InvoiceStatusType } from '@/components/dashboard/invoice';
 import styles from './page.module.css';
 
 // Mock invoice data
@@ -29,7 +29,6 @@ const mockInvoice = {
 
 export default function InvoiceDetailPage() {
     const router = useRouter();
-    const params = useParams();
 
     const formatDate = (date: string) => {
         return new Date(date).toLocaleDateString('en-US', {

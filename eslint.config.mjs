@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Vendored contracts repo (not part of app lint scope).
+    "lib/openzeppelin-contracts/**",
   ]),
 ]);
 

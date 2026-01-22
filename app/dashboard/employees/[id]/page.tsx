@@ -1,7 +1,7 @@
 'use client';
 
-import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Edit2, Mail, Wallet, Calendar, DollarSign, CreditCard } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft, Edit2, DollarSign, CreditCard } from 'lucide-react';
 import { Sidebar, TopBar } from '@/components/dashboard';
 import styles from './page.module.css';
 
@@ -30,7 +30,6 @@ const mockEmployee = {
 
 export default function EmployeeDetailPage() {
     const router = useRouter();
-    const params = useParams();
 
     const formatDate = (date: string) => {
         return new Date(date).toLocaleDateString('en-US', {
@@ -46,10 +45,6 @@ export default function EmployeeDetailPage() {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
         }).format(amount);
-    };
-
-    const truncateAddress = (address: string) => {
-        return `${address.slice(0, 10)}...${address.slice(-8)}`;
     };
 
     const getStatusClass = (status: string) => {

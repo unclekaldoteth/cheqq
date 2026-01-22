@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Building, Wallet, Calendar, Bell, Shield, CreditCard } from 'lucide-react';
+import { Building, Wallet, Calendar, Bell } from 'lucide-react';
 import { Sidebar, TopBar } from '@/components/dashboard';
 import styles from './page.module.css';
 
@@ -14,7 +14,7 @@ export default function SettingsPage() {
     // Form states
     const [companyName, setCompanyName] = useState('Acme Corp');
     const [companyEmail, setCompanyEmail] = useState('admin@acmecorp.com');
-    const [walletAddress, setWalletAddress] = useState('0x1234...abcd');
+    const [walletAddress] = useState('0x1234...abcd');
     const [payrollDay, setPayrollDay] = useState('last');
     const [autoPayroll, setAutoPayroll] = useState(true);
     const [emailNotifications, setEmailNotifications] = useState(true);

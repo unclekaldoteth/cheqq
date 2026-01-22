@@ -74,7 +74,7 @@ export default function PaymentPage() {
                     amount: loadedInvoice.amount?.toString?.() || amountParam,
                     currency: normalizeCurrency(loadedInvoice.currency),
                 });
-            } catch (error) {
+            } catch {
                 if (isMounted) {
                     setInvoice(fallbackInvoice);
                 }

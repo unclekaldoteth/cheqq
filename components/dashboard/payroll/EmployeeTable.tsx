@@ -1,6 +1,6 @@
 'use client';
 
-import { MoreHorizontal, Mail, Wallet, Edit2 } from 'lucide-react';
+import { MoreHorizontal, Wallet, Edit2 } from 'lucide-react';
 import styles from './EmployeeTable.module.css';
 
 export interface Employee {
@@ -30,13 +30,6 @@ export default function EmployeeTable({ employees, onEdit, onViewDetails }: Empl
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
         }).format(amount) + ` ${currency}`;
-    };
-
-    const formatDate = (date: string) => {
-        return new Date(date).toLocaleDateString('en-US', {
-            month: 'short',
-            year: 'numeric',
-        });
     };
 
     const truncateAddress = (address: string) => {
