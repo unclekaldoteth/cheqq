@@ -20,6 +20,7 @@ Cheqq is a BASE Blockchain web application for borderless payroll, invoicing, an
 
 - **Framework:** Next.js 16.1.0 (App Router)
 - **Frontend:** React 19.2.3, TypeScript, CSS Modules
+- **Animations:** Framer Motion + Aceternity UI components
 - **Database:** PostgreSQL (Supabase) + Prisma ORM
 - **Auth:** Privy (email + embedded wallets)
 - **Wallet:** OnchainKit, WalletConnect
@@ -152,10 +153,26 @@ Open `http://localhost:3000`
 
 ## Authentication Flow
 
-1. **New Users:** Click "Launch App" → Choose role → Complete KYB/KYC → Dashboard
-2. **Returning Users:** Click "Sign In" → Connect wallet → Auto-redirect to dashboard
+1. **Email Signup:** Enter email → OTP verification → Auto smart wallet creation (Privy)
+2. **Wallet Login:** Connect external wallet (MetaMask, Coinbase, etc.)
+3. **New Users:** Choose role (Company/Freelancer) → Complete registration → Dashboard
+4. **Returning Users:** Auto-redirect to appropriate dashboard
 
 Wallet address is used as the unique identifier. Users cannot switch between Company and Freelancer roles.
+
+## UI Components
+
+Premium Aceternity UI components in `components/ui/`:
+
+| Component | Effect |
+|-----------|--------|
+| `spotlight.tsx` | Mouse-following gradient |
+| `flip-words.tsx` | Animated word cycling |
+| `3d-card.tsx` | 3D perspective tilt |
+| `hover-border-gradient.tsx` | Animated gradient buttons |
+| `floating-navbar.tsx` | Hide/show on scroll |
+| `bento-grid.tsx` | Modern grid layout |
+| `wobble-card.tsx` | 3D tilt on hover |
 
 ## Scripts
 
@@ -181,6 +198,9 @@ npm run lint     # Run ESLint
 - [x] Smart contract deployment (CheqqPayroll on Base Sepolia)
 - [x] Payroll UI → Smart Contract integration
 - [x] Withdraw UI → Real balance + Off-ramp integration
+- [x] Privy email signup + embedded wallets
+- [x] Aceternity UI components (animations)
+- [x] Supabase RLS security policies
 - [ ] Production deployment (mainnet)
 
 ## License
