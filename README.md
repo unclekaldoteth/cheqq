@@ -60,6 +60,11 @@ NEXT_PUBLIC_CHAIN=base-sepolia
 
 # Supabase Database
 DATABASE_URL="postgresql://..."
+
+# Supabase Storage (KYC/KYB uploads)
+SUPABASE_URL="https://your-project.supabase.co"
+SUPABASE_SERVICE_ROLE_KEY="your-service-role-key"
+SUPABASE_STORAGE_BUCKET="kyc-documents"
 ```
 
 ### Database Setup
@@ -181,6 +186,7 @@ npm run dev      # Development server
 npm run build    # Production build
 npm run start    # Serve production build
 npm run lint     # Run ESLint
+node scripts/lowercase-wallets.mjs # Normalize wallet casing in DB
 ```
 
 ## Roadmap

@@ -260,6 +260,16 @@
     cursor: pointer;
 }
 
+.uploadSuccess {
+    border-color: #22c55e;
+    background: rgba(34, 197, 94, 0.1);
+}
+
+.uploadSuccess:hover {
+    border-color: #22c55e;
+    background: rgba(34, 197, 94, 0.15);
+}
+
 /* Wallet Section */
 .walletSection {
     text-align: center;

@@ -71,13 +71,16 @@ export default function FreelancerRegisterPage() {
         setSubmitError(null);
 
         try {
+            const payload = new FormData();
+            for (const [key, value] of Object.entries(formData)) {
+                if (value === null) continue;
+                payload.append(key, value);
+            }
+            payload.append('walletAddress', address);
+
             const response = await fetch('/api/freelancers', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    ...formData,
-                    walletAddress: address,
-                }),
+                body: payload,
             });
 
             if (!response.ok) {
@@ -249,13 +252,23 @@ export default function FreelancerRegisterPage() {
                             </div>
                             <div className={styles.inputGroup}>
                                 <label>Upload ID Document</label>
-                                <div className={styles.uploadArea}>
-                                    <Upload size={32} />
-                                    <p>Drag & drop or click to upload</p>
-                                    <span>Photo of your ID (front side)</span>
+                                <div className={`${styles.uploadArea} ${formData.idDocument ? styles.uploadSuccess : ''}`}>
+                                    {formData.idDocument ? (
+                                        <>
+                                            <Check size={32} color="#22c55e" />
+                                            <p style={{ color: '#22c55e', fontWeight: 600 }}>Document Uploaded</p>
+                                            <span>{formData.idDocument.name}</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Upload size={32} />
+                                            <p>Drag & drop or click to upload</p>
+                                            <span>Photo of your ID (front side)</span>
+                                        </>
+                                    )}
                                     <input
                                         type="file"
-                                        accept=".pdf,.jpg,.png"
+                                        accept=".pdf,.jpg,.jpeg,.png"
                                         onChange={(e) => updateFormData('idDocument', e.target.files?.[0] || null)}
                                         className={styles.fileInput}
                                     />

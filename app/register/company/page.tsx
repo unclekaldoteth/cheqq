@@ -74,13 +74,16 @@ export default function CompanyRegisterPage() {
 
         // In production, submit to API
         try {
+            const payload = new FormData();
+            for (const [key, value] of Object.entries(formData)) {
+                if (value === null) continue;
+                payload.append(key, value);
+            }
+            payload.append('walletAddress', address);
+
             const response = await fetch('/api/companies', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    ...formData,
-                    walletAddress: address,
-                }),
+                body: payload,
             });
 
             if (!response.ok) {
@@ -243,13 +246,23 @@ export default function CompanyRegisterPage() {
                             </div>
                             <div className={styles.inputGroup}>
                                 <label>Upload Business Document</label>
-                                <div className={styles.uploadArea}>
-                                    <Upload size={32} />
-                                    <p>Drag & drop or click to upload</p>
-                                    <span>SIUP, NIB, or Company Certificate</span>
+                                <div className={`${styles.uploadArea} ${formData.kybDocument ? styles.uploadSuccess : ''}`}>
+                                    {formData.kybDocument ? (
+                                        <>
+                                            <Check size={32} color="#22c55e" />
+                                            <p style={{ color: '#22c55e', fontWeight: 600 }}>Document Uploaded</p>
+                                            <span>{formData.kybDocument.name}</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Upload size={32} />
+                                            <p>Drag & drop or click to upload</p>
+                                            <span>SIUP, NIB, or Company Certificate</span>
+                                        </>
+                                    )}
                                     <input
                                         type="file"
-                                        accept=".pdf,.jpg,.png"
+                                        accept=".pdf,.jpg,.jpeg,.png"
                                         onChange={(e) => updateFormData('kybDocument', e.target.files?.[0] || null)}
                                         className={styles.fileInput}
                                     />

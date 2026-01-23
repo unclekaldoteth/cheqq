@@ -24,10 +24,7 @@ export async function GET(request: Request) {
         // Check if wallet belongs to a company
         const company = await prisma.company.findFirst({
             where: {
-                walletAddress: {
-                    mode: 'insensitive',
-                    equals: address
-                }
+                walletAddress: address,
             },
             select: {
                 id: true,
@@ -48,10 +45,7 @@ export async function GET(request: Request) {
         // Check if wallet belongs to a freelancer
         const freelancer = await prisma.freelancer.findFirst({
             where: {
-                walletAddress: {
-                    mode: 'insensitive',
-                    equals: address
-                }
+                walletAddress: address,
             },
             select: {
                 id: true,
