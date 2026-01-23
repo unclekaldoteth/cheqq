@@ -1,7 +1,6 @@
 'use client';
 
 import { createContext, useContext, useState, useRef, ReactNode } from 'react';
-import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 const MouseEnterContext = createContext<
@@ -108,13 +107,15 @@ export function CardItem({
 }) {
     const context = useContext(MouseEnterContext);
     const isMouseEntered = context ? context[0] : false;
+    const toCssValue = (value: number | string, unit: string) =>
+        typeof value === 'number' ? `${value}${unit}` : value;
 
     return (
         <Component
             className={cn('w-fit transition duration-200 ease-linear', className)}
             style={{
                 transform: isMouseEntered
-                    ? `translateX(${translateX}px) translateY(${translateY}px) translateZ(${translateZ}px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg)`
+                    ? `translateX(${toCssValue(translateX, 'px')}) translateY(${toCssValue(translateY, 'px')}) translateZ(${toCssValue(translateZ, 'px')}) rotateX(${toCssValue(rotateX, 'deg')}) rotateY(${toCssValue(rotateY, 'deg')}) rotateZ(${toCssValue(rotateZ, 'deg')})`
                     : 'translateX(0px) translateY(0px) translateZ(0px) rotateX(0deg) rotateY(0deg) rotateZ(0deg)',
             }}
             {...rest}

@@ -18,23 +18,28 @@ export function HoverBorderGradient({
     as: Component = 'button',
     ...props
 }: HoverBorderGradientProps) {
+    const isButton = Component === 'button';
+    const componentProps =
+        isButton && !('type' in props) ? { type: 'button' } : {};
+
     return (
         <Component
             className={cn(
-                'relative flex rounded-full border border-transparent bg-black/10 dark:bg-white/10 content-center items-center justify-center overflow-hidden p-[1px] transition duration-500',
+                'group relative flex rounded-full border border-transparent bg-black/10 dark:bg-white/10 content-center items-center justify-center overflow-hidden p-[1px] transition duration-500',
                 containerClassName
             )}
+            {...componentProps}
             {...props}
         >
             <div
-                className="absolute inset-0 -z-10"
+                className="absolute inset-0 -z-10 pointer-events-none"
                 style={{
                     background:
                         'conic-gradient(from 90deg at 50% 50%, #0052FF 0%, #00C6FF 50%, #0052FF 100%)',
                 }}
             />
             <motion.div
-                className="absolute inset-0 -z-10 opacity-0 hover:opacity-100 transition-opacity"
+                className="absolute inset-0 -z-10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
                 style={{
                     background:
                         'conic-gradient(from 90deg at 50% 50%, #0052FF 0%, #7C3AED 25%, #00C6FF 50%, #7C3AED 75%, #0052FF 100%)',

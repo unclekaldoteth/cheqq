@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
@@ -17,7 +17,7 @@ interface FloatingNavProps {
 
 export function FloatingNav({ navItems, className }: FloatingNavProps) {
     const [visible, setVisible] = useState(true);
-    const [lastScrollY, setLastScrollY] = useState(0);
+    const lastScrollY = useRef(0);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -25,18 +25,18 @@ export function FloatingNav({ navItems, className }: FloatingNavProps) {
 
             if (currentScrollY < 100) {
                 setVisible(true);
-            } else if (currentScrollY > lastScrollY) {
+            } else if (currentScrollY > lastScrollY.current) {
                 setVisible(false);
             } else {
                 setVisible(true);
             }
 
-            setLastScrollY(currentScrollY);
+            lastScrollY.current = currentScrollY;
         };
 
         window.addEventListener('scroll', handleScroll, { passive: true });
         return () => window.removeEventListener('scroll', handleScroll);
-    }, [lastScrollY]);
+    }, []);
 
     return (
         <AnimatePresence mode="wait">

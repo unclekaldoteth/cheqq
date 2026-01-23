@@ -15,25 +15,32 @@ export function FlipWords({
     duration = 3000,
     className,
 }: FlipWordsProps) {
+    const wordsCount = words.length;
     const [currentIndex, setCurrentIndex] = useState(0);
-    const [isAnimating, setIsAnimating] = useState(false);
 
     const startAnimation = useCallback(() => {
-        setIsAnimating(true);
-        setCurrentIndex((prev) => (prev + 1) % words.length);
-    }, [words.length]);
+        if (wordsCount < 2) return;
+        setCurrentIndex((prev) => (prev + 1) % wordsCount);
+    }, [wordsCount]);
 
     useEffect(() => {
+        if (wordsCount < 2) {
+            return;
+        }
         const interval = setInterval(() => {
             startAnimation();
         }, duration);
 
         return () => clearInterval(interval);
-    }, [duration, startAnimation]);
+    }, [duration, startAnimation, wordsCount]);
+
+    if (!wordsCount) {
+        return null;
+    }
 
     return (
         <AnimatePresence
-            onExitComplete={() => setIsAnimating(false)}
+            mode="wait"
         >
             <motion.span
                 key={words[currentIndex]}
