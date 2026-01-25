@@ -9,6 +9,7 @@ import { WagmiProvider as BaseWagmiProvider, createConfig as createWagmiConfig, 
 import type { WagmiProviderProps } from 'wagmi';
 import { baseSepolia, base } from 'wagmi/chains';
 import { coinbaseWallet } from 'wagmi/connectors';
+import { SessionExpiredModal } from '@/components/auth/SessionExpiredModal';
 
 const chain = process.env.NEXT_PUBLIC_CHAIN === 'base' ? base : baseSepolia;
 const wagmiTransports = {
@@ -99,6 +100,7 @@ export function OnchainProvider({ children }: OnchainProviderProps) {
                 supportedChains: [chain],
             }}
         >
+            <SessionExpiredModal />
             {baseProviders(PrivyWagmiProvider, privyWagmiConfig)}
         </PrivyProvider>
     );

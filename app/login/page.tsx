@@ -89,6 +89,9 @@ function PrivyLogin() {
     }, [ready, authenticated, address, router]);
 
     const handleLogout = () => {
+        if (typeof window !== 'undefined') {
+            sessionStorage.setItem('cheqq:manual-logout', '1');
+        }
         logout();
     };
 
