@@ -1,12 +1,14 @@
 'use client';
 
-import { ReactNode, useState } from 'react';
+import { ReactNode, useState, type ComponentType, type PropsWithChildren } from 'react';
 import { PrivyProvider } from '@privy-io/react-auth';
 import { WagmiProvider as PrivyWagmiProvider, createConfig as createPrivyConfig } from '@privy-io/wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { OnchainKitProvider } from '@coinbase/onchainkit';
 import { WagmiProvider as BaseWagmiProvider, createConfig as createWagmiConfig, http } from 'wagmi';
+import type { WagmiProviderProps } from 'wagmi';
 import { baseSepolia, base } from 'wagmi/chains';
+import { coinbaseWallet } from 'wagmi/connectors';
 
 const chain = process.env.NEXT_PUBLIC_CHAIN === 'base' ? base : baseSepolia;
 const wagmiTransports = {
@@ -27,6 +29,13 @@ function makeFallbackWagmiConfig() {
         chains: [chain],
         transports: wagmiTransports,
         ssr: true,
+        // Use Coinbase Smart Wallet to avoid MetaMask/extension conflicts
+        connectors: [
+            coinbaseWallet({
+                appName: 'Cheqq',
+                preference: 'smartWalletOnly', // Avoid injected wallet conflicts
+            }),
+        ],
     });
 }
 
@@ -42,7 +51,10 @@ export function OnchainProvider({ children }: OnchainProviderProps) {
 
     const privyAppId = process.env.NEXT_PUBLIC_PRIVY_APP_ID;
 
-    const baseProviders = (Provider: typeof BaseWagmiProvider | typeof PrivyWagmiProvider, config: typeof fallbackWagmiConfig) => (
+    const baseProviders = (
+        Provider: ComponentType<PropsWithChildren<WagmiProviderProps>>,
+        config: WagmiProviderProps['config'],
+    ) => (
         <QueryClientProvider client={queryClient}>
             <Provider config={config}>
                 <OnchainKitProvider

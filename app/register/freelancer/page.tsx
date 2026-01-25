@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { User, ArrowRight, ArrowLeft, Check, Upload, Shield, Linkedin, Github, Twitter, Globe, Star } from 'lucide-react';
+import { User, ArrowRight, ArrowLeft, Check, Upload, Shield, Linkedin, Github, Twitter, Star, ExternalLink } from 'lucide-react';
 import { ConnectWallet, Wallet } from '@coinbase/onchainkit/wallet';
-import { useAccount } from 'wagmi';
+import { useAccount, useDisconnect } from 'wagmi';
+import { usePrivy, useLogin, useLinkAccount } from '@privy-io/react-auth';
 import styles from '../register.module.css';
 
 interface FormData {
@@ -16,12 +17,15 @@ interface FormData {
     idNumber: string;
     idDocument: File | null;
     profession: string;
-    // Social connections (optional)
-    linkedinUrl: string;
-    githubUrl: string;
-    twitterUrl: string;
-    portfolioUrl: string;
     bio: string;
+}
+
+type ValidationErrors = Partial<Record<keyof FormData, string>>;
+
+interface LinkedAccounts {
+    linkedin: string | null;
+    github: string | null;
+    twitter: string | null;
 }
 
 const steps = [
@@ -31,23 +35,42 @@ const steps = [
     { id: 4, title: 'Connect Wallet', description: 'Payment setup' },
 ];
 
+// Validation helpers
+const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
 // Reputation score calculation
-function calculateReputationBoost(formData: FormData): number {
+function calculateReputationBoost(linkedAccounts: LinkedAccounts, bio: string): number {
     let score = 0;
-    if (formData.linkedinUrl) score += 15;
-    if (formData.githubUrl) score += 15;
-    if (formData.twitterUrl) score += 10;
-    if (formData.portfolioUrl) score += 10;
-    if (formData.bio && formData.bio.length >= 50) score += 10;
+    if (linkedAccounts.linkedin) score += 15;
+    if (linkedAccounts.github) score += 15;
+    if (linkedAccounts.twitter) score += 10;
+    if (bio && bio.length >= 50) score += 10;
     return score;
 }
 
 export default function FreelancerRegisterPage() {
     const router = useRouter();
     const { isConnected, address } = useAccount();
+    const { disconnect } = useDisconnect();
+    const { user, authenticated } = usePrivy();
+    const { login } = useLogin();
+    const { linkTwitter, linkGithub, linkLinkedIn } = useLinkAccount({
+        onSuccess: () => {
+            // Account linked successfully
+        },
+        onError: (error) => {
+            console.error('Link account error:', error);
+        },
+    });
+
     const [currentStep, setCurrentStep] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
+    const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
+    const [sessionWalletConnected, setSessionWalletConnected] = useState(false);
+    const [hasUserInitiatedConnect, setHasUserInitiatedConnect] = useState(false);
+    const autoDisconnectedRef = useRef(false);
+
     const [formData, setFormData] = useState<FormData>({
         fullName: '',
         email: '',
@@ -57,20 +80,75 @@ export default function FreelancerRegisterPage() {
         idNumber: '',
         idDocument: null,
         profession: '',
-        linkedinUrl: '',
-        githubUrl: '',
-        twitterUrl: '',
-        portfolioUrl: '',
         bio: '',
     });
 
+    // Extract linked accounts from Privy user
+    const linkedAccounts: LinkedAccounts = {
+        linkedin: user?.linkedAccounts?.find(a => a.type === 'linkedin_oauth')?.subject || null,
+        github: user?.linkedAccounts?.find(a => a.type === 'github_oauth')?.subject || null,
+        twitter: user?.linkedAccounts?.find(a => a.type === 'twitter_oauth')?.subject || null,
+    };
+
+    // Disconnect auto-connected wallets until the user explicitly connects in this session
+    useEffect(() => {
+        if (!isConnected) return;
+
+        if (hasUserInitiatedConnect) {
+            setSessionWalletConnected(true);
+            return;
+        }
+
+        if (!autoDisconnectedRef.current) {
+            autoDisconnectedRef.current = true;
+            disconnect();
+        }
+    }, [disconnect, hasUserInitiatedConnect, isConnected]);
+
     const updateFormData = (field: keyof FormData, value: string | File | null) => {
         setSubmitError(null);
+        // Clear validation error for this field
+        setValidationErrors(prev => ({ ...prev, [field]: undefined }));
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
+    const validateStep = useCallback((step: number): boolean => {
+        const errors: ValidationErrors = {};
+
+        if (step === 1) {
+            if (!formData.fullName || formData.fullName.trim().length < 2) {
+                errors.fullName = 'Full name is required (min 2 characters)';
+            }
+            if (!formData.email) {
+                errors.email = 'Email is required';
+            } else if (!isValidEmail(formData.email)) {
+                errors.email = 'Invalid email format';
+            }
+            if (!formData.country) {
+                errors.country = 'Please select a country';
+            }
+        }
+
+        if (step === 3) {
+            if (!formData.idType) {
+                errors.idType = 'Please select ID type';
+            }
+            if (!formData.idNumber || formData.idNumber.trim().length < 3) {
+                errors.idNumber = 'ID number is required (min 3 characters)';
+            }
+        }
+
+        setValidationErrors(errors);
+        return Object.keys(errors).length === 0;
+    }, [formData]);
+
     const handleNext = () => {
         setSubmitError(null);
+
+        if (!validateStep(currentStep)) {
+            return;
+        }
+
         if (currentStep < 4) {
             setCurrentStep(currentStep + 1);
         }
@@ -78,6 +156,7 @@ export default function FreelancerRegisterPage() {
 
     const handleBack = () => {
         setSubmitError(null);
+        setValidationErrors({});
         if (currentStep > 1) {
             setCurrentStep(currentStep - 1);
         }
@@ -85,7 +164,8 @@ export default function FreelancerRegisterPage() {
 
     const handleSubmit = async () => {
         if (isSubmitting) return;
-        if (!address) {
+
+        if (!sessionWalletConnected || !address) {
             setSubmitError('Please connect your wallet to continue.');
             return;
         }
@@ -100,6 +180,11 @@ export default function FreelancerRegisterPage() {
                 payload.append(key, value);
             }
             payload.append('walletAddress', address);
+
+            // Add linked social accounts
+            if (linkedAccounts.linkedin) payload.append('linkedinUrl', `https://linkedin.com/in/${linkedAccounts.linkedin}`);
+            if (linkedAccounts.github) payload.append('githubUrl', `https://github.com/${linkedAccounts.github}`);
+            if (linkedAccounts.twitter) payload.append('twitterUrl', `https://twitter.com/${linkedAccounts.twitter}`);
 
             const response = await fetch('/api/freelancers', {
                 method: 'POST',
@@ -132,13 +217,33 @@ export default function FreelancerRegisterPage() {
             case 3:
                 return formData.idType && formData.idNumber;
             case 4:
-                return isConnected;
+                return sessionWalletConnected && isConnected;
             default:
                 return false;
         }
     };
 
-    const reputationBoost = calculateReputationBoost(formData);
+    const reputationBoost = calculateReputationBoost(linkedAccounts, formData.bio);
+
+    const handleLinkSocial = async (platform: 'linkedin' | 'github' | 'twitter') => {
+        if (!authenticated) {
+            // Need to login first
+            login();
+            return;
+        }
+
+        switch (platform) {
+            case 'linkedin':
+                linkLinkedIn();
+                break;
+            case 'github':
+                linkGithub();
+                break;
+            case 'twitter':
+                linkTwitter();
+                break;
+        }
+    };
 
     return (
         <div className={styles.container}>
@@ -181,8 +286,11 @@ export default function FreelancerRegisterPage() {
                                     value={formData.fullName}
                                     onChange={(e) => updateFormData('fullName', e.target.value)}
                                     placeholder="John Doe"
-                                    className={styles.input}
+                                    className={`${styles.input} ${validationErrors.fullName ? styles.inputError : ''}`}
                                 />
+                                {validationErrors.fullName && (
+                                    <span className={styles.fieldError}>{validationErrors.fullName}</span>
+                                )}
                             </div>
                             <div className={styles.inputRow}>
                                 <div className={styles.inputGroup}>
@@ -192,8 +300,11 @@ export default function FreelancerRegisterPage() {
                                         value={formData.email}
                                         onChange={(e) => updateFormData('email', e.target.value)}
                                         placeholder="you@email.com"
-                                        className={styles.input}
+                                        className={`${styles.input} ${validationErrors.email ? styles.inputError : ''}`}
                                     />
+                                    {validationErrors.email && (
+                                        <span className={styles.fieldError}>{validationErrors.email}</span>
+                                    )}
                                 </div>
                                 <div className={styles.inputGroup}>
                                     <label>Phone</label>
@@ -212,7 +323,7 @@ export default function FreelancerRegisterPage() {
                                     <select
                                         value={formData.country}
                                         onChange={(e) => updateFormData('country', e.target.value)}
-                                        className={styles.input}
+                                        className={`${styles.input} ${validationErrors.country ? styles.inputError : ''}`}
                                     >
                                         <option value="">Select country</option>
                                         <option value="ID">Indonesia</option>
@@ -221,6 +332,9 @@ export default function FreelancerRegisterPage() {
                                         <option value="US">United States</option>
                                         <option value="OTHER">Other</option>
                                     </select>
+                                    {validationErrors.country && (
+                                        <span className={styles.fieldError}>{validationErrors.country}</span>
+                                    )}
                                 </div>
                                 <div className={styles.inputGroup}>
                                     <label>Profession</label>
@@ -248,7 +362,7 @@ export default function FreelancerRegisterPage() {
                                 <Star size={24} color="#22c55e" />
                                 <div>
                                     <h3>Boost Your Reputation</h3>
-                                    <p>Link your social profiles to increase trust with clients. <em>(Optional)</em></p>
+                                    <p>Connect your social profiles to increase trust with clients. <em>(Optional)</em></p>
                                 </div>
                             </div>
 
@@ -259,52 +373,70 @@ export default function FreelancerRegisterPage() {
                                 </div>
                             )}
 
-                            <div className={styles.inputGroup}>
-                                <label><Linkedin size={16} style={{ marginRight: 8, verticalAlign: 'middle' }} />LinkedIn URL</label>
-                                <input
-                                    type="url"
-                                    value={formData.linkedinUrl}
-                                    onChange={(e) => updateFormData('linkedinUrl', e.target.value)}
-                                    placeholder="https://linkedin.com/in/johndoe"
-                                    className={styles.input}
-                                />
+                            {/* Social Connect Buttons */}
+                            <div className={styles.socialConnectGrid}>
+                                <button
+                                    type="button"
+                                    onClick={() => handleLinkSocial('linkedin')}
+                                    className={`${styles.socialConnectButton} ${linkedAccounts.linkedin ? styles.socialConnected : ''}`}
+                                    disabled={!!linkedAccounts.linkedin}
+                                >
+                                    <Linkedin size={20} />
+                                    <div className={styles.socialConnectInfo}>
+                                        <span className={styles.socialConnectLabel}>
+                                            {linkedAccounts.linkedin ? 'LinkedIn Connected' : 'Connect LinkedIn'}
+                                        </span>
+                                        {linkedAccounts.linkedin ? (
+                                            <span className={styles.socialConnectUsername}>@{linkedAccounts.linkedin}</span>
+                                        ) : (
+                                            <span className={styles.socialConnectPoints}>+15 pts</span>
+                                        )}
+                                    </div>
+                                    {linkedAccounts.linkedin ? <Check size={18} color="#22c55e" /> : <ExternalLink size={16} />}
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => handleLinkSocial('github')}
+                                    className={`${styles.socialConnectButton} ${linkedAccounts.github ? styles.socialConnected : ''}`}
+                                    disabled={!!linkedAccounts.github}
+                                >
+                                    <Github size={20} />
+                                    <div className={styles.socialConnectInfo}>
+                                        <span className={styles.socialConnectLabel}>
+                                            {linkedAccounts.github ? 'GitHub Connected' : 'Connect GitHub'}
+                                        </span>
+                                        {linkedAccounts.github ? (
+                                            <span className={styles.socialConnectUsername}>@{linkedAccounts.github}</span>
+                                        ) : (
+                                            <span className={styles.socialConnectPoints}>+15 pts</span>
+                                        )}
+                                    </div>
+                                    {linkedAccounts.github ? <Check size={18} color="#22c55e" /> : <ExternalLink size={16} />}
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => handleLinkSocial('twitter')}
+                                    className={`${styles.socialConnectButton} ${linkedAccounts.twitter ? styles.socialConnected : ''}`}
+                                    disabled={!!linkedAccounts.twitter}
+                                >
+                                    <Twitter size={20} />
+                                    <div className={styles.socialConnectInfo}>
+                                        <span className={styles.socialConnectLabel}>
+                                            {linkedAccounts.twitter ? 'Twitter Connected' : 'Connect Twitter'}
+                                        </span>
+                                        {linkedAccounts.twitter ? (
+                                            <span className={styles.socialConnectUsername}>@{linkedAccounts.twitter}</span>
+                                        ) : (
+                                            <span className={styles.socialConnectPoints}>+10 pts</span>
+                                        )}
+                                    </div>
+                                    {linkedAccounts.twitter ? <Check size={18} color="#22c55e" /> : <ExternalLink size={16} />}
+                                </button>
                             </div>
 
-                            <div className={styles.inputRow}>
-                                <div className={styles.inputGroup}>
-                                    <label><Github size={16} style={{ marginRight: 8, verticalAlign: 'middle' }} />GitHub URL</label>
-                                    <input
-                                        type="url"
-                                        value={formData.githubUrl}
-                                        onChange={(e) => updateFormData('githubUrl', e.target.value)}
-                                        placeholder="https://github.com/johndoe"
-                                        className={styles.input}
-                                    />
-                                </div>
-                                <div className={styles.inputGroup}>
-                                    <label><Twitter size={16} style={{ marginRight: 8, verticalAlign: 'middle' }} />Twitter/X URL</label>
-                                    <input
-                                        type="url"
-                                        value={formData.twitterUrl}
-                                        onChange={(e) => updateFormData('twitterUrl', e.target.value)}
-                                        placeholder="https://twitter.com/johndoe"
-                                        className={styles.input}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className={styles.inputGroup}>
-                                <label><Globe size={16} style={{ marginRight: 8, verticalAlign: 'middle' }} />Portfolio Website</label>
-                                <input
-                                    type="url"
-                                    value={formData.portfolioUrl}
-                                    onChange={(e) => updateFormData('portfolioUrl', e.target.value)}
-                                    placeholder="https://johndoe.com"
-                                    className={styles.input}
-                                />
-                            </div>
-
-                            <div className={styles.inputGroup}>
+                            <div className={styles.inputGroup} style={{ marginTop: 24 }}>
                                 <label>Professional Bio <span style={{ color: 'rgba(255,255,255,0.5)', fontWeight: 400 }}>(50+ chars = +10 pts)</span></label>
                                 <textarea
                                     value={formData.bio}
@@ -335,7 +467,7 @@ export default function FreelancerRegisterPage() {
                                     <select
                                         value={formData.idType}
                                         onChange={(e) => updateFormData('idType', e.target.value)}
-                                        className={styles.input}
+                                        className={`${styles.input} ${validationErrors.idType ? styles.inputError : ''}`}
                                     >
                                         <option value="">Select ID type</option>
                                         <option value="ktp">KTP (Indonesia)</option>
@@ -343,6 +475,9 @@ export default function FreelancerRegisterPage() {
                                         <option value="nric">NRIC (Singapore)</option>
                                         <option value="other">Other National ID</option>
                                     </select>
+                                    {validationErrors.idType && (
+                                        <span className={styles.fieldError}>{validationErrors.idType}</span>
+                                    )}
                                 </div>
                                 <div className={styles.inputGroup}>
                                     <label>ID Number *</label>
@@ -351,8 +486,11 @@ export default function FreelancerRegisterPage() {
                                         value={formData.idNumber}
                                         onChange={(e) => updateFormData('idNumber', e.target.value)}
                                         placeholder="Enter ID number"
-                                        className={styles.input}
+                                        className={`${styles.input} ${validationErrors.idNumber ? styles.inputError : ''}`}
                                     />
+                                    {validationErrors.idNumber && (
+                                        <span className={styles.fieldError}>{validationErrors.idNumber}</span>
+                                    )}
                                 </div>
                             </div>
                             <div className={styles.inputGroup}>
@@ -388,7 +526,7 @@ export default function FreelancerRegisterPage() {
                                 <h3>Connect Your Wallet</h3>
                                 <p>Receive payments directly to your crypto wallet.</p>
 
-                                {isConnected ? (
+                                {sessionWalletConnected && isConnected ? (
                                     <div className={styles.walletConnected}>
                                         <Check size={24} color="#22c55e" />
                                         <div>
@@ -399,9 +537,11 @@ export default function FreelancerRegisterPage() {
                                         </div>
                                     </div>
                                 ) : (
-                                    <Wallet>
-                                        <ConnectWallet className={styles.connectButton} />
-                                    </Wallet>
+                                    <div onClick={() => setHasUserInitiatedConnect(true)}>
+                                        <Wallet>
+                                            <ConnectWallet className={styles.connectButton} />
+                                        </Wallet>
+                                    </div>
                                 )}
 
                                 <div className={styles.withdrawNote}>
