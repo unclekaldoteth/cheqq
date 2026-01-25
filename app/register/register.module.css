@@ -402,3 +402,21 @@
 .submitButton:hover {
     background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
 }
+
+/* Reputation Boost Indicator */
+.reputationBoost {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(245, 158, 11, 0.15);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+}
+
+.reputationBoost span {
+    font-size: 14px;
+    font-weight: 600;
+    color: #f59e0b;
+}

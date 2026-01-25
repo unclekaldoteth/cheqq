@@ -9,8 +9,8 @@ remappings = [
 optimizer = true
 optimizer_runs = 200
 
-# Solidity compiler version
-solc = "0.8.20"
+# Solidity compiler version (updated for OpenZeppelin EIP712)
+solc = "0.8.24"
 
 # Base network configurations
 [rpc_endpoints]

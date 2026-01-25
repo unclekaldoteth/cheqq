@@ -35,22 +35,38 @@ export function getPrisma(): PrismaClient {
     return client;
 }
 
-// For backwards compatibility - but this should NOT be used at module level
-// Only use getPrisma() function in API routes
-const prisma = {
+// Prisma client proxy - lazy initialization to avoid build-time errors
+// Add all models here for type-safe access
+export const prisma = {
+    // B2B Models
     get company() { return getPrisma().company; },
     get employee() { return getPrisma().employee; },
     get payrollRun() { return getPrisma().payrollRun; },
     get payrollItem() { return getPrisma().payrollItem; },
     get loan() { return getPrisma().loan; },
     get treasuryBalance() { return getPrisma().treasuryBalance; },
+
+    // B2C Models
     get freelancer() { return getPrisma().freelancer; },
     get invoice() { return getPrisma().invoice; },
     get payment() { return getPrisma().payment; },
     get withdrawal() { return getPrisma().withdrawal; },
+
+    // KYC/KYB Verification Models
+    get kycCredential() { return getPrisma().kycCredential; },
+    get kybCredential() { return getPrisma().kybCredential; },
+    get companyWalletRole() { return getPrisma().companyWalletRole; },
+    get permitNonce() { return getPrisma().permitNonce; },
+    get kycSalt() { return getPrisma().kycSalt; },
+    get auditLog() { return getPrisma().auditLog; },
+    get blockedSubject() { return getPrisma().blockedSubject; },
+
+    // Prisma client methods
     $connect: () => getPrisma().$connect(),
     $disconnect: () => getPrisma().$disconnect(),
     $transaction: (...args: Parameters<PrismaClient['$transaction']>) => getPrisma().$transaction(...args),
+    $queryRaw: <T = unknown>(...args: Parameters<PrismaClient['$queryRaw']>) => getPrisma().$queryRaw<T>(...args),
+    $executeRaw: (...args: Parameters<PrismaClient['$executeRaw']>) => getPrisma().$executeRaw(...args),
 };
 
 export default prisma;

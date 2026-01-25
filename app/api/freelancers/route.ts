@@ -151,6 +151,22 @@ export async function POST(request: Request) {
             }
         }
 
+        // Extract social fields (optional)
+        const profession = readStringField(body, 'profession').trim() || null;
+        const linkedinUrl = readStringField(body, 'linkedinUrl').trim() || null;
+        const githubUrl = readStringField(body, 'githubUrl').trim() || null;
+        const twitterUrl = readStringField(body, 'twitterUrl').trim() || null;
+        const portfolioUrl = readStringField(body, 'portfolioUrl').trim() || null;
+        const bio = readStringField(body, 'bio').trim() || null;
+
+        // Calculate reputation score based on social links
+        let reputationScore = 0;
+        if (linkedinUrl) reputationScore += 15;
+        if (githubUrl) reputationScore += 15;
+        if (twitterUrl) reputationScore += 10;
+        if (portfolioUrl) reputationScore += 10;
+        if (bio && bio.length >= 50) reputationScore += 10;
+
         // Create freelancer
         const freelancer = await prisma.freelancer.create({
             data: {
@@ -158,6 +174,13 @@ export async function POST(request: Request) {
                 email,
                 walletAddress,
                 idDocumentUrl,
+                profession,
+                linkedinUrl,
+                githubUrl,
+                twitterUrl,
+                portfolioUrl,
+                bio,
+                reputationScore,
             },
         });
 

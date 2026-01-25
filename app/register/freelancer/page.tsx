@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { User, ArrowRight, ArrowLeft, Check, Upload, Shield } from 'lucide-react';
+import { User, ArrowRight, ArrowLeft, Check, Upload, Shield, Linkedin, Github, Twitter, Globe, Star } from 'lucide-react';
 import { ConnectWallet, Wallet } from '@coinbase/onchainkit/wallet';
 import { useAccount } from 'wagmi';
 import styles from '../register.module.css';
@@ -16,13 +16,31 @@ interface FormData {
     idNumber: string;
     idDocument: File | null;
     profession: string;
+    // Social connections (optional)
+    linkedinUrl: string;
+    githubUrl: string;
+    twitterUrl: string;
+    portfolioUrl: string;
+    bio: string;
 }
 
 const steps = [
     { id: 1, title: 'Personal Info', description: 'Basic details' },
-    { id: 2, title: 'KYC Verification', description: 'Identity check' },
-    { id: 3, title: 'Connect Wallet', description: 'Payment setup' },
+    { id: 2, title: 'Social Links', description: 'Boost reputation' },
+    { id: 3, title: 'KYC Verification', description: 'Identity check' },
+    { id: 4, title: 'Connect Wallet', description: 'Payment setup' },
 ];
+
+// Reputation score calculation
+function calculateReputationBoost(formData: FormData): number {
+    let score = 0;
+    if (formData.linkedinUrl) score += 15;
+    if (formData.githubUrl) score += 15;
+    if (formData.twitterUrl) score += 10;
+    if (formData.portfolioUrl) score += 10;
+    if (formData.bio && formData.bio.length >= 50) score += 10;
+    return score;
+}
 
 export default function FreelancerRegisterPage() {
     const router = useRouter();
@@ -39,6 +57,11 @@ export default function FreelancerRegisterPage() {
         idNumber: '',
         idDocument: null,
         profession: '',
+        linkedinUrl: '',
+        githubUrl: '',
+        twitterUrl: '',
+        portfolioUrl: '',
+        bio: '',
     });
 
     const updateFormData = (field: keyof FormData, value: string | File | null) => {
@@ -48,7 +71,7 @@ export default function FreelancerRegisterPage() {
 
     const handleNext = () => {
         setSubmitError(null);
-        if (currentStep < 3) {
+        if (currentStep < 4) {
             setCurrentStep(currentStep + 1);
         }
     };
@@ -105,13 +128,17 @@ export default function FreelancerRegisterPage() {
             case 1:
                 return formData.fullName && formData.email && formData.country;
             case 2:
-                return formData.idType && formData.idNumber;
+                return true; // Social links are optional
             case 3:
+                return formData.idType && formData.idNumber;
+            case 4:
                 return isConnected;
             default:
                 return false;
         }
     };
+
+    const reputationBoost = calculateReputationBoost(formData);
 
     return (
         <div className={styles.container}>
@@ -217,6 +244,84 @@ export default function FreelancerRegisterPage() {
 
                     {currentStep === 2 && (
                         <div className={styles.formStep}>
+                            <div className={styles.kybNotice} style={{ background: 'rgba(34, 197, 94, 0.15)', borderColor: 'rgba(34, 197, 94, 0.3)' }}>
+                                <Star size={24} color="#22c55e" />
+                                <div>
+                                    <h3>Boost Your Reputation</h3>
+                                    <p>Link your social profiles to increase trust with clients. <em>(Optional)</em></p>
+                                </div>
+                            </div>
+
+                            {reputationBoost > 0 && (
+                                <div className={styles.reputationBoost}>
+                                    <Star size={18} color="#f59e0b" />
+                                    <span>+{reputationBoost} reputation points</span>
+                                </div>
+                            )}
+
+                            <div className={styles.inputGroup}>
+                                <label><Linkedin size={16} style={{ marginRight: 8, verticalAlign: 'middle' }} />LinkedIn URL</label>
+                                <input
+                                    type="url"
+                                    value={formData.linkedinUrl}
+                                    onChange={(e) => updateFormData('linkedinUrl', e.target.value)}
+                                    placeholder="https://linkedin.com/in/johndoe"
+                                    className={styles.input}
+                                />
+                            </div>
+
+                            <div className={styles.inputRow}>
+                                <div className={styles.inputGroup}>
+                                    <label><Github size={16} style={{ marginRight: 8, verticalAlign: 'middle' }} />GitHub URL</label>
+                                    <input
+                                        type="url"
+                                        value={formData.githubUrl}
+                                        onChange={(e) => updateFormData('githubUrl', e.target.value)}
+                                        placeholder="https://github.com/johndoe"
+                                        className={styles.input}
+                                    />
+                                </div>
+                                <div className={styles.inputGroup}>
+                                    <label><Twitter size={16} style={{ marginRight: 8, verticalAlign: 'middle' }} />Twitter/X URL</label>
+                                    <input
+                                        type="url"
+                                        value={formData.twitterUrl}
+                                        onChange={(e) => updateFormData('twitterUrl', e.target.value)}
+                                        placeholder="https://twitter.com/johndoe"
+                                        className={styles.input}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className={styles.inputGroup}>
+                                <label><Globe size={16} style={{ marginRight: 8, verticalAlign: 'middle' }} />Portfolio Website</label>
+                                <input
+                                    type="url"
+                                    value={formData.portfolioUrl}
+                                    onChange={(e) => updateFormData('portfolioUrl', e.target.value)}
+                                    placeholder="https://johndoe.com"
+                                    className={styles.input}
+                                />
+                            </div>
+
+                            <div className={styles.inputGroup}>
+                                <label>Professional Bio <span style={{ color: 'rgba(255,255,255,0.5)', fontWeight: 400 }}>(50+ chars = +10 pts)</span></label>
+                                <textarea
+                                    value={formData.bio}
+                                    onChange={(e) => updateFormData('bio', e.target.value)}
+                                    placeholder="Tell clients about your expertise, experience, and what makes you stand out..."
+                                    className={styles.textarea}
+                                    rows={3}
+                                />
+                                <span style={{ fontSize: 12, color: formData.bio.length >= 50 ? '#22c55e' : 'rgba(255,255,255,0.4)' }}>
+                                    {formData.bio.length}/50 characters
+                                </span>
+                            </div>
+                        </div>
+                    )}
+
+                    {currentStep === 3 && (
+                        <div className={styles.formStep}>
                             <div className={styles.kybNotice}>
                                 <Shield size={24} />
                                 <div>
@@ -277,7 +382,7 @@ export default function FreelancerRegisterPage() {
                         </div>
                     )}
 
-                    {currentStep === 3 && (
+                    {currentStep === 4 && (
                         <div className={styles.formStep}>
                             <div className={styles.walletSection}>
                                 <h3>Connect Your Wallet</h3>
@@ -318,7 +423,7 @@ export default function FreelancerRegisterPage() {
                         </button>
                     )}
 
-                    {currentStep < 3 ? (
+                    {currentStep < 4 ? (
                         <button
                             onClick={handleNext}
                             disabled={!canProceed()}
