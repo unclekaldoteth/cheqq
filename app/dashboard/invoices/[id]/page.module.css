@@ -214,6 +214,50 @@
     color: var(--primary-blue);
 }
 
+.loadingState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-md);
+    padding: var(--space-3xl);
+    color: var(--text-muted);
+    min-height: 320px;
+}
+
+.errorState {
+    text-align: center;
+    padding: var(--space-3xl);
+    color: var(--text-muted);
+}
+
+.errorState h2 {
+    margin-bottom: var(--space-sm);
+    color: var(--text-dark);
+}
+
+.noActivity {
+    padding: var(--space-md) 0;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    text-align: center;
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+    color: var(--primary-blue);
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 /* Timeline */
 .timeline {
     display: flex;

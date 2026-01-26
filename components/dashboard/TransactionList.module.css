@@ -115,3 +115,33 @@
     font-size: 0.75rem;
     color: var(--text-light);
 }
+
+.loadingState {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-xl);
+    color: var(--text-muted);
+    min-height: 140px;
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+}
+
+.emptyState {
+    padding: var(--space-xl);
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    text-align: center;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}

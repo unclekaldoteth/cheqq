@@ -255,6 +255,7 @@
 
 .activityItem {
     display: flex;
+    align-items: center;
     gap: var(--space-md);
     padding: var(--space-md) 0;
     border-bottom: 1px solid var(--border-light);
@@ -289,6 +290,56 @@
 .activityDate {
     font-size: 0.8125rem;
     color: var(--text-muted);
+}
+
+.activityAmount {
+    margin-left: auto;
+    font-size: 0.875rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.noActivity {
+    padding: var(--space-md) 0;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+.loadingState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-md);
+    padding: var(--space-3xl);
+    color: var(--text-muted);
+    min-height: 320px;
+}
+
+.errorState {
+    text-align: center;
+    padding: var(--space-3xl);
+    color: var(--text-muted);
+}
+
+.errorState h2 {
+    margin-bottom: var(--space-sm);
+    color: var(--text-dark);
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+    color: var(--primary-blue);
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* Responsive */

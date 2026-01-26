@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Plus, Filter, Search } from 'lucide-react';
+import { Plus, Filter, Search, Loader2 } from 'lucide-react';
 import { Sidebar, TopBar } from '@/components/dashboard';
 import {
     InvoiceStats,
@@ -12,71 +12,89 @@ import {
 } from '@/components/dashboard/invoice';
 import styles from './page.module.css';
 
-// Mock data for demonstration
-const mockInvoices: Invoice[] = [
-    {
-        id: '1',
-        invoiceNumber: 'INV-2024-001',
-        clientName: 'TechCorp Indonesia',
-        clientEmail: 'finance@techcorp.id',
-        amount: 15000,
-        currency: 'USDC',
-        status: 'paid',
-        dueDate: '2024-01-15',
-        createdAt: '2024-01-01',
-    },
-    {
-        id: '2',
-        invoiceNumber: 'INV-2024-002',
-        clientName: 'Digital Solutions',
-        clientEmail: 'billing@digitalsolutions.com',
-        amount: 8500,
-        currency: 'USDC',
-        status: 'pending',
-        dueDate: '2024-01-25',
-        createdAt: '2024-01-05',
-    },
-    {
-        id: '3',
-        invoiceNumber: 'INV-2024-003',
-        clientName: 'StartUp Labs',
-        clientEmail: 'accounts@startuplabs.io',
-        amount: 25000000,
-        currency: 'IDRX',
-        status: 'pending',
-        dueDate: '2024-01-30',
-        createdAt: '2024-01-10',
-    },
-    {
-        id: '4',
-        invoiceNumber: 'INV-2024-004',
-        clientName: 'Global Ventures',
-        clientEmail: 'pay@globalventures.com',
-        amount: 5200,
-        currency: 'USDC',
-        status: 'overdue',
-        dueDate: '2024-01-05',
-        createdAt: '2023-12-20',
-    },
-    {
-        id: '5',
-        invoiceNumber: 'INV-2024-005',
-        clientName: 'Creative Agency',
-        clientEmail: 'hello@creativeagency.co',
-        amount: 3750,
-        currency: 'USDC',
-        status: 'draft',
-        dueDate: '2024-02-01',
-        createdAt: '2024-01-12',
-    },
-];
+interface InvoiceFromAPI {
+    id: string;
+    clientName: string;
+    clientEmail: string;
+    description: string;
+    amount: string | number;
+    currency: string;
+    status: string;
+    dueDate: string;
+    createdAt: string;
+    paidAt?: string | null;
+}
 
 export default function InvoicesPage() {
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('all');
+    const [invoices, setInvoices] = useState<Invoice[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    const filteredInvoices = mockInvoices.filter((invoice) => {
+    // Get companyId from localStorage
+    const [companyId] = useState(() => {
+        if (typeof window === 'undefined') return null;
+        return localStorage.getItem('companyId');
+    });
+
+    useEffect(() => {
+        if (!companyId) {
+            setInvoices([]);
+            setLoading(false);
+            return;
+        }
+
+        const controller = new AbortController();
+        let isActive = true;
+
+        const fetchInvoices = async () => {
+            setLoading(true);
+            try {
+                const params = new URLSearchParams({ companyId });
+                const res = await fetch(`/api/invoices?${params.toString()}`, {
+                    signal: controller.signal,
+                });
+                if (!res.ok) throw new Error('Failed to fetch invoices');
+                const data = await res.json();
+
+                if (isActive) {
+                    // Transform API response to match Invoice interface
+                    const transformed: Invoice[] = (data.invoices || []).map((inv: InvoiceFromAPI) => ({
+                        id: inv.id,
+                        invoiceNumber: `INV-${inv.id.slice(-8).toUpperCase()}`,
+                        clientName: inv.clientName,
+                        clientEmail: inv.clientEmail,
+                        amount: Number(inv.amount),
+                        currency: inv.currency as 'USDC' | 'IDRX',
+                        status: inv.status.toLowerCase() as Invoice['status'],
+                        dueDate: inv.dueDate.split('T')[0],
+                        createdAt: inv.createdAt.split('T')[0],
+                    }));
+                    setInvoices(transformed);
+                }
+            } catch (error) {
+                if (error instanceof Error && error.name === 'AbortError') return;
+                console.error('Failed to fetch invoices:', error);
+                if (isActive) {
+                    setInvoices([]);
+                }
+            } finally {
+                if (isActive) {
+                    setLoading(false);
+                }
+            }
+        };
+
+        fetchInvoices();
+
+        return () => {
+            isActive = false;
+            controller.abort();
+        };
+    }, [companyId]);
+
+    const filteredInvoices = invoices.filter((invoice) => {
         const matchesSearch =
             invoice.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
             invoice.invoiceNumber.toLowerCase().includes(searchQuery.toLowerCase());
@@ -86,16 +104,16 @@ export default function InvoicesPage() {
 
     // Calculate stats
     const stats = {
-        totalOutstanding: mockInvoices
+        totalOutstanding: invoices
             .filter((i) => i.status === 'pending' || i.status === 'overdue')
             .filter((i) => i.currency === 'USDC')
             .reduce((sum, i) => sum + i.amount, 0),
-        paidThisMonth: mockInvoices
+        paidThisMonth: invoices
             .filter((i) => i.status === 'paid')
             .filter((i) => i.currency === 'USDC')
             .reduce((sum, i) => sum + i.amount, 0),
-        pendingCount: mockInvoices.filter((i) => i.status === 'pending').length,
-        overdueCount: mockInvoices.filter((i) => i.status === 'overdue').length,
+        pendingCount: invoices.filter((i) => i.status === 'pending').length,
+        overdueCount: invoices.filter((i) => i.status === 'overdue').length,
     };
 
     const handleViewInvoice = (id: string) => {
@@ -107,6 +125,33 @@ export default function InvoicesPage() {
         navigator.clipboard.writeText(link);
         // Could add toast notification here
     };
+
+    if (loading) {
+        return (
+            <div className={styles.dashboardLayout}>
+                <Sidebar />
+                <div className={styles.mainContent}>
+                    <TopBar />
+                    <main className={styles.main}>
+                        <div className={styles.pageHeader}>
+                            <div>
+                                <h1>Invoices</h1>
+                                <p>Create, track, and manage your invoices</p>
+                            </div>
+                            <Link href="/dashboard/invoices/new" className="btn btn-primary">
+                                <Plus size={18} />
+                                New Invoice
+                            </Link>
+                        </div>
+                        <div className={styles.loadingState}>
+                            <Loader2 size={32} className={styles.spinner} />
+                            <span>Loading invoices...</span>
+                        </div>
+                    </main>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className={styles.dashboardLayout}>
