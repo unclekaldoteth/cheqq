@@ -1,0 +1,31 @@
+{
+    "accountAssociation": {
+        "header": "",
+        "payload": "",
+        "signature": ""
+    },
+    "miniapp": {
+        "version": "1",
+        "name": "Cheqq",
+        "homeUrl": "https://cheqq.endhonesa.com",
+        "iconUrl": "https://cheqq.endhonesa.com/icon.png",
+        "splashImageUrl": "https://cheqq.endhonesa.com/splash.png",
+        "splashBackgroundColor": "#0052FF",
+        "subtitle": "Payroll & DeFi on Base",
+        "description": "The all-in-one platform for invoice management, borderless payroll, and DeFi yield generation. Built on Base for the future of business finance.",
+        "screenshotUrls": [],
+        "primaryCategory": "finance",
+        "tags": [
+            "payroll",
+            "invoice",
+            "defi",
+            "stablecoin",
+            "payments"
+        ],
+        "heroImageUrl": "https://cheqq.endhonesa.com/hero.png",
+        "tagline": "Payroll & DeFi. Unified on Base.",
+        "ogTitle": "Cheqq - Payroll & DeFi on Base",
+        "ogDescription": "Invoice, payroll, and treasury management with DeFi yields. Built on Base.",
+        "ogImageUrl": "https://cheqq.endhonesa.com/og.png"
+    }
+}

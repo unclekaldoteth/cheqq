@@ -12,6 +12,23 @@ export const metadata: Metadata = {
     description: "The all-in-one platform for invoice management, borderless payroll, and DeFi yield generation.",
     type: "website",
   },
+  other: {
+    'base:app_id': '697b8de6748a9bde7c61ac0d',
+    'fc:miniapp': JSON.stringify({
+      version: 'next',
+      imageUrl: 'https://cheqq.endhonesa.com/og.png',
+      button: {
+        title: 'Launch Cheqq',
+        action: {
+          type: 'launch_miniapp',
+          name: 'Cheqq',
+          url: 'https://cheqq.endhonesa.com',
+          splashImageUrl: 'https://cheqq.endhonesa.com/splash.png',
+          splashBackgroundColor: '#0052FF',
+        },
+      },
+    }),
+  },
 };
 
 export default function RootLayout({

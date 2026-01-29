@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useState, type ComponentType, type PropsWithChildren } from 'react';
+import { ReactNode, useState, useEffect, type ComponentType, type PropsWithChildren } from 'react';
 import { PrivyProvider } from '@privy-io/react-auth';
 import { WagmiProvider as PrivyWagmiProvider, createConfig as createPrivyConfig } from '@privy-io/wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -10,6 +10,7 @@ import type { WagmiProviderProps } from 'wagmi';
 import { baseSepolia, base } from 'wagmi/chains';
 import { coinbaseWallet } from 'wagmi/connectors';
 import { SessionExpiredModal } from '@/components/auth/SessionExpiredModal';
+import { sdk } from '@farcaster/miniapp-sdk';
 
 const chain = process.env.NEXT_PUBLIC_CHAIN === 'base' ? base : baseSepolia;
 const wagmiTransports = {
@@ -49,6 +50,11 @@ export function OnchainProvider({ children }: OnchainProviderProps) {
     const [queryClient] = useState(() => new QueryClient());
     const [privyWagmiConfig] = useState(() => makePrivyWagmiConfig());
     const [fallbackWagmiConfig] = useState(() => makeFallbackWagmiConfig());
+
+    // Signal Base Mini App that the app is ready to be displayed
+    useEffect(() => {
+        sdk.actions.ready();
+    }, []);
 
     const privyAppId = process.env.NEXT_PUBLIC_PRIVY_APP_ID;
 
