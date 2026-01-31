@@ -23,6 +23,13 @@ function makePrivyWagmiConfig() {
     return createPrivyConfig({
         chains: [chain],
         transports: wagmiTransports,
+        // Need connectors for OnchainKit's ConnectWallet to work
+        connectors: [
+            coinbaseWallet({
+                appName: 'Cheqq',
+                preference: 'all', // Allow both smart wallet and browser extension
+            }),
+        ],
     });
 }
 
