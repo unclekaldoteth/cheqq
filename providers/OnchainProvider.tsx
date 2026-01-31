@@ -53,7 +53,16 @@ export function OnchainProvider({ children }: OnchainProviderProps) {
 
     // Signal Base Mini App that the app is ready to be displayed
     useEffect(() => {
-        sdk.actions.ready();
+        // Only call ready() in browser and wrap in try-catch to handle 
+        // cases where the app is not running inside a Farcaster frame
+        if (typeof window !== 'undefined') {
+            try {
+                sdk.actions.ready();
+            } catch (error) {
+                // Silently ignore - not running in a Farcaster frame
+                console.debug('Farcaster SDK not available:', error);
+            }
+        }
     }, []);
 
     const privyAppId = process.env.NEXT_PUBLIC_PRIVY_APP_ID;
