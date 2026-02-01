@@ -8,7 +8,7 @@ import { OnchainKitProvider } from '@coinbase/onchainkit';
 import { WagmiProvider as BaseWagmiProvider, createConfig as createWagmiConfig, http } from 'wagmi';
 import type { WagmiProviderProps } from 'wagmi';
 import { baseSepolia, base } from 'wagmi/chains';
-import { coinbaseWallet } from 'wagmi/connectors';
+import { coinbaseWallet, walletConnect, injected } from 'wagmi/connectors';
 import { SessionExpiredModal } from '@/components/auth/SessionExpiredModal';
 import { sdk } from '@farcaster/miniapp-sdk';
 
@@ -18,16 +18,35 @@ const wagmiTransports = {
     [base.id]: http(),
 };
 
+const walletConnectProjectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || '';
+
 // Create wagmi config (stable reference)
 function makePrivyWagmiConfig() {
     return createPrivyConfig({
         chains: [chain],
         transports: wagmiTransports,
-        // Need connectors for OnchainKit's ConnectWallet to work
+        // Multiple connectors for OnchainKit's ConnectWallet to work with various wallets
         connectors: [
             coinbaseWallet({
                 appName: 'Cheqq',
                 preference: 'all', // Allow both smart wallet and browser extension
+            }),
+            // WalletConnect supports 300+ wallets (MetaMask, Trust, Rainbow, etc.)
+            ...(walletConnectProjectId ? [
+                walletConnect({
+                    projectId: walletConnectProjectId,
+                    showQrModal: true,
+                    metadata: {
+                        name: 'Cheqq',
+                        description: 'Payroll & DeFi. Unified on Base.',
+                        url: typeof window !== 'undefined' ? window.location.origin : 'https://cheqq.app',
+                        icons: ['/favicon.ico'],
+                    },
+                }),
+            ] : []),
+            // Injected connector for browser extension wallets
+            injected({
+                shimDisconnect: true,
             }),
         ],
     });
@@ -38,11 +57,26 @@ function makeFallbackWagmiConfig() {
         chains: [chain],
         transports: wagmiTransports,
         ssr: true,
-        // Use Coinbase Smart Wallet to avoid MetaMask/extension conflicts
+        // Multiple connectors for wallet connection
         connectors: [
             coinbaseWallet({
                 appName: 'Cheqq',
-                preference: 'smartWalletOnly', // Avoid injected wallet conflicts
+                preference: 'all',
+            }),
+            ...(walletConnectProjectId ? [
+                walletConnect({
+                    projectId: walletConnectProjectId,
+                    showQrModal: true,
+                    metadata: {
+                        name: 'Cheqq',
+                        description: 'Payroll & DeFi. Unified on Base.',
+                        url: typeof window !== 'undefined' ? window.location.origin : 'https://cheqq.app',
+                        icons: ['/favicon.ico'],
+                    },
+                }),
+            ] : []),
+            injected({
+                shimDisconnect: true,
             }),
         ],
     });
