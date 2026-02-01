@@ -55,10 +55,18 @@ function warnMissingWalletConnect() {
     }
 }
 
-function makeWagmiConnectors() {
+// Cache connectors at module level to prevent double initialization
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let cachedConnectors: any[] | null = null;
+
+function getWagmiConnectors() {
+    if (cachedConnectors) {
+        return cachedConnectors;
+    }
+
     warnMissingWalletConnect();
 
-    return [
+    cachedConnectors = [
         coinbaseWallet({
             appName: 'Cheqq',
             preference: 'all', // Allow both smart wallet and browser extension
@@ -76,27 +84,38 @@ function makeWagmiConnectors() {
             shimDisconnect: true,
         }),
     ];
+
+    return cachedConnectors;
 }
 
-// Create wagmi config (stable reference)
-function makePrivyWagmiConfig() {
-    return createPrivyConfig({
+// Cache configs at module level to prevent recreation
+let cachedPrivyConfig: ReturnType<typeof createPrivyConfig> | null = null;
+let cachedFallbackConfig: ReturnType<typeof createWagmiConfig> | null = null;
+
+function getPrivyWagmiConfig() {
+    if (cachedPrivyConfig) {
+        return cachedPrivyConfig;
+    }
+    cachedPrivyConfig = createPrivyConfig({
         chains: [chain],
         transports: wagmiTransports,
         ssr: true,
-        // Multiple connectors for OnchainKit's ConnectWallet to work with various wallets
-        connectors: makeWagmiConnectors(),
+        connectors: getWagmiConnectors(),
     });
+    return cachedPrivyConfig;
 }
 
-function makeFallbackWagmiConfig() {
-    return createWagmiConfig({
+function getFallbackWagmiConfig() {
+    if (cachedFallbackConfig) {
+        return cachedFallbackConfig;
+    }
+    cachedFallbackConfig = createWagmiConfig({
         chains: [chain],
         transports: wagmiTransports,
         ssr: true,
-        // Multiple connectors for wallet connection
-        connectors: makeWagmiConnectors(),
+        connectors: getWagmiConnectors(),
     });
+    return cachedFallbackConfig;
 }
 
 interface OnchainProviderProps {
@@ -106,8 +125,8 @@ interface OnchainProviderProps {
 export function OnchainProvider({ children }: OnchainProviderProps) {
     // Create stable instances that persist across renders
     const [queryClient] = useState(() => new QueryClient());
-    const [privyWagmiConfig] = useState(() => makePrivyWagmiConfig());
-    const [fallbackWagmiConfig] = useState(() => makeFallbackWagmiConfig());
+    const [privyWagmiConfig] = useState(() => getPrivyWagmiConfig());
+    const [fallbackWagmiConfig] = useState(() => getFallbackWagmiConfig());
 
     // Signal Base Mini App that the app is ready to be displayed
     useEffect(() => {
