@@ -2,9 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { User, ArrowRight, ArrowLeft, Check, Upload, Shield, Linkedin, Github, Twitter, Star, ExternalLink } from 'lucide-react';
-import { ConnectWallet, Wallet } from '@coinbase/onchainkit/wallet';
-import { useAccount, useDisconnect } from 'wagmi';
+import { User, ArrowRight, ArrowLeft, Check, Upload, Shield, Linkedin, Github, Twitter, Star, ExternalLink, Wallet } from 'lucide-react';
 import { usePrivy, useLogin, useLinkAccount } from '@privy-io/react-auth';
 import styles from '../register.module.css';
 
@@ -50,9 +48,7 @@ function calculateReputationBoost(linkedAccounts: LinkedAccounts, bio: string): 
 
 export default function FreelancerRegisterPage() {
     const router = useRouter();
-    const { isConnected, address } = useAccount();
-    const { disconnect } = useDisconnect();
-    const { user, authenticated } = usePrivy();
+    const { user, authenticated, ready } = usePrivy();
     const { login } = useLogin();
     const { linkTwitter, linkGithub, linkLinkedIn } = useLinkAccount({
         onSuccess: () => {
@@ -63,13 +59,14 @@ export default function FreelancerRegisterPage() {
         },
     });
 
+    // Wallet state from Privy
+    const address = user?.wallet?.address;
+    const isConnected = authenticated && !!address;
+
     const [currentStep, setCurrentStep] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
-    const [sessionWalletConnected, setSessionWalletConnected] = useState(false);
-    const [hasUserInitiatedConnect, setHasUserInitiatedConnect] = useState(false);
-    const autoDisconnectedRef = useRef(false);
 
     const [formData, setFormData] = useState<FormData>({
         fullName: '',
@@ -89,21 +86,6 @@ export default function FreelancerRegisterPage() {
         github: user?.linkedAccounts?.find(a => a.type === 'github_oauth')?.subject || null,
         twitter: user?.linkedAccounts?.find(a => a.type === 'twitter_oauth')?.subject || null,
     };
-
-    // Disconnect auto-connected wallets until the user explicitly connects in this session
-    useEffect(() => {
-        if (!isConnected) return;
-
-        if (hasUserInitiatedConnect) {
-            setSessionWalletConnected(true);
-            return;
-        }
-
-        if (!autoDisconnectedRef.current) {
-            autoDisconnectedRef.current = true;
-            disconnect();
-        }
-    }, [disconnect, hasUserInitiatedConnect, isConnected]);
 
     const updateFormData = (field: keyof FormData, value: string | File | null) => {
         setSubmitError(null);
@@ -165,7 +147,7 @@ export default function FreelancerRegisterPage() {
     const handleSubmit = async () => {
         if (isSubmitting) return;
 
-        if (!sessionWalletConnected || !address) {
+        if (!isConnected || !address) {
             setSubmitError('Please connect your wallet to continue.');
             return;
         }
@@ -217,7 +199,7 @@ export default function FreelancerRegisterPage() {
             case 3:
                 return formData.idType && formData.idNumber;
             case 4:
-                return sessionWalletConnected && isConnected;
+                return isConnected;
             default:
                 return false;
         }
@@ -526,7 +508,7 @@ export default function FreelancerRegisterPage() {
                                 <h3>Connect Your Wallet</h3>
                                 <p>Receive payments directly to your crypto wallet.</p>
 
-                                {sessionWalletConnected && isConnected ? (
+                                {isConnected ? (
                                     <div className={styles.walletConnected}>
                                         <Check size={24} color="#22c55e" />
                                         <div>
@@ -537,11 +519,14 @@ export default function FreelancerRegisterPage() {
                                         </div>
                                     </div>
                                 ) : (
-                                    <div onClick={() => setHasUserInitiatedConnect(true)}>
-                                        <Wallet>
-                                            <ConnectWallet className={styles.connectButton} />
-                                        </Wallet>
-                                    </div>
+                                    <button
+                                        onClick={() => login({ loginMethods: ['wallet'] })}
+                                        className={styles.connectButton}
+                                        disabled={!ready}
+                                    >
+                                        <Wallet size={20} />
+                                        Connect Wallet
+                                    </button>
                                 )}
 
                                 <div className={styles.withdrawNote}>

@@ -2,9 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Building2, ArrowRight, ArrowLeft, Check, Upload } from 'lucide-react';
-import { ConnectWallet, Wallet } from '@coinbase/onchainkit/wallet';
-import { useAccount } from 'wagmi';
+import { Building2, ArrowRight, ArrowLeft, Check, Upload, Wallet } from 'lucide-react';
+import { usePrivy } from '@privy-io/react-auth';
 import styles from '../register.module.css';
 
 interface FormData {
@@ -27,7 +26,9 @@ const steps = [
 
 export default function CompanyRegisterPage() {
     const router = useRouter();
-    const { isConnected, address } = useAccount();
+    const { ready, authenticated, user, login } = usePrivy();
+    const address = user?.wallet?.address;
+    const isConnected = authenticated && !!address;
     const [currentStep, setCurrentStep] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
@@ -288,9 +289,14 @@ export default function CompanyRegisterPage() {
                                         </div>
                                     </div>
                                 ) : (
-                                    <Wallet>
-                                        <ConnectWallet className={styles.connectButton} />
-                                    </Wallet>
+                                    <button
+                                        onClick={() => login({ loginMethods: ['wallet'] })}
+                                        className={styles.connectButton}
+                                        disabled={!ready}
+                                    >
+                                        <Wallet size={20} />
+                                        Connect Wallet
+                                    </button>
                                 )}
                             </div>
                         </div>
