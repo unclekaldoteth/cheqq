@@ -8,7 +8,7 @@ import { OnchainKitProvider } from '@coinbase/onchainkit';
 import { WagmiProvider as BaseWagmiProvider, createConfig as createWagmiConfig, http } from 'wagmi';
 import type { WagmiProviderProps } from 'wagmi';
 import { baseSepolia, base } from 'wagmi/chains';
-import { coinbaseWallet, walletConnect, injected } from 'wagmi/connectors';
+import { coinbaseWallet, injected } from 'wagmi/connectors';
 import { SessionExpiredModal } from '@/components/auth/SessionExpiredModal';
 import { sdk } from '@farcaster/miniapp-sdk';
 
@@ -55,7 +55,8 @@ function warnMissingWalletConnect() {
     }
 }
 
-// Cache connectors at module level to prevent double initialization
+// Get connectors - using Coinbase Wallet and injected only
+// Privy handles wallet connection through its own modal
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let cachedConnectors: any[] | null = null;
 
@@ -64,21 +65,11 @@ function getWagmiConnectors() {
         return cachedConnectors;
     }
 
-    warnMissingWalletConnect();
-
     cachedConnectors = [
         coinbaseWallet({
             appName: 'Cheqq',
             preference: 'all', // Allow both smart wallet and browser extension
         }),
-        // WalletConnect supports 300+ wallets (MetaMask, Trust, Rainbow, etc.)
-        ...(walletConnectProjectId ? [
-            walletConnect({
-                projectId: walletConnectProjectId,
-                showQrModal: typeof window !== 'undefined',
-                metadata: makeWalletConnectMetadata(),
-            }),
-        ] : []),
         // Injected connector for browser extension wallets
         injected({
             shimDisconnect: true,
