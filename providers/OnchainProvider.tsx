@@ -19,36 +19,73 @@ const wagmiTransports = {
 };
 
 const walletConnectProjectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || '';
+const fallbackAppUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+
+function getAppUrl() {
+    if (typeof window !== 'undefined' && window.location?.origin) {
+        return window.location.origin;
+    }
+    return fallbackAppUrl;
+}
+
+function getAppIconUrl(appUrl: string) {
+    try {
+        return new URL('/favicon.ico', appUrl).toString();
+    } catch {
+        return `${fallbackAppUrl}/favicon.ico`;
+    }
+}
+
+function makeWalletConnectMetadata() {
+    const appUrl = getAppUrl();
+    return {
+        name: 'Cheqq',
+        description: 'Payroll & DeFi. Unified on Base.',
+        url: appUrl,
+        icons: [getAppIconUrl(appUrl)],
+    };
+}
+
+// Log warning once on client for missing WalletConnect project ID
+let hasWarnedWalletConnect = false;
+function warnMissingWalletConnect() {
+    if (!hasWarnedWalletConnect && typeof window !== 'undefined' && !walletConnectProjectId) {
+        console.warn('NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID not set, WalletConnect disabled');
+        hasWarnedWalletConnect = true;
+    }
+}
+
+function makeWagmiConnectors() {
+    warnMissingWalletConnect();
+
+    return [
+        coinbaseWallet({
+            appName: 'Cheqq',
+            preference: 'all', // Allow both smart wallet and browser extension
+        }),
+        // WalletConnect supports 300+ wallets (MetaMask, Trust, Rainbow, etc.)
+        ...(walletConnectProjectId ? [
+            walletConnect({
+                projectId: walletConnectProjectId,
+                showQrModal: typeof window !== 'undefined',
+                metadata: makeWalletConnectMetadata(),
+            }),
+        ] : []),
+        // Injected connector for browser extension wallets
+        injected({
+            shimDisconnect: true,
+        }),
+    ];
+}
 
 // Create wagmi config (stable reference)
 function makePrivyWagmiConfig() {
     return createPrivyConfig({
         chains: [chain],
         transports: wagmiTransports,
+        ssr: true,
         // Multiple connectors for OnchainKit's ConnectWallet to work with various wallets
-        connectors: [
-            coinbaseWallet({
-                appName: 'Cheqq',
-                preference: 'all', // Allow both smart wallet and browser extension
-            }),
-            // WalletConnect supports 300+ wallets (MetaMask, Trust, Rainbow, etc.)
-            ...(walletConnectProjectId ? [
-                walletConnect({
-                    projectId: walletConnectProjectId,
-                    showQrModal: true,
-                    metadata: {
-                        name: 'Cheqq',
-                        description: 'Payroll & DeFi. Unified on Base.',
-                        url: typeof window !== 'undefined' ? window.location.origin : 'https://cheqq.app',
-                        icons: ['/favicon.ico'],
-                    },
-                }),
-            ] : []),
-            // Injected connector for browser extension wallets
-            injected({
-                shimDisconnect: true,
-            }),
-        ],
+        connectors: makeWagmiConnectors(),
     });
 }
 
@@ -58,27 +95,7 @@ function makeFallbackWagmiConfig() {
         transports: wagmiTransports,
         ssr: true,
         // Multiple connectors for wallet connection
-        connectors: [
-            coinbaseWallet({
-                appName: 'Cheqq',
-                preference: 'all',
-            }),
-            ...(walletConnectProjectId ? [
-                walletConnect({
-                    projectId: walletConnectProjectId,
-                    showQrModal: true,
-                    metadata: {
-                        name: 'Cheqq',
-                        description: 'Payroll & DeFi. Unified on Base.',
-                        url: typeof window !== 'undefined' ? window.location.origin : 'https://cheqq.app',
-                        icons: ['/favicon.ico'],
-                    },
-                }),
-            ] : []),
-            injected({
-                shimDisconnect: true,
-            }),
-        ],
+        connectors: makeWagmiConnectors(),
     });
 }
 
