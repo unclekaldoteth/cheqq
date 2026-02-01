@@ -319,6 +319,38 @@
     padding: 16px 24px;
     font-size: 16px;
     font-weight: 600;
+    color: white;
+    background: linear-gradient(135deg, #0052FF 0%, #0038FF 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(0, 82, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.connectButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 82, 255, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.2);
+    background: linear-gradient(135deg, #1a65ff 0%, #0047fa 100%);
+}
+
+.connectButton:active {
+    transform: translateY(0);
+}
+
+.connectButton:disabled {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.4);
+    box-shadow: none;
+    cursor: not-allowed;
+    border: none;
 }
 
 .withdrawNote {
