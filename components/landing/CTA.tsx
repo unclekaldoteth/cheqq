@@ -16,7 +16,7 @@ export default function CTA() {
                             <a href="/get-started" className="btn btn-primary">
                                 Launch App <ArrowRight size={18} />
                             </a>
-                            <a href="https://t.me/cheqq" className="btn btn-outline" style={{ background: 'white' }}>
+                            <a href="https://t.me/GangSadar" className="btn btn-outline" style={{ background: 'white' }}>
                                 Join Community
                             </a>
                         </div>
@@ -33,6 +33,6 @@ export default function CTA() {
                     </div>
                 </div>
             </div>
-        </section>
+        </section >
     );
 }
