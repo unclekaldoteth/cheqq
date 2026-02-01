@@ -1,6 +1,3 @@
-// Prisma schema for Cheqq - Payroll & Invoice Platform
-// Supports both B2B (Company) and B2C (Freelancer) flows
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,180 +6,263 @@ datasource db {
   provider = "postgresql"
 }
 
-// ================== B2B MODELS ==================
-
 model Company {
-  id              String        @id @default(cuid())
+  id              String              @id @default(cuid())
   name            String
-  email           String        @unique
-  walletAddress   String?       // Treasury wallet
+  email           String              @unique
+  walletAddress   String?
   kybDocumentUrl  String?
   logo            String?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  walletRoles     CompanyWalletRole[]
   employees       Employee[]
-  invoices        Invoice[]     @relation("CompanyInvoices")
+  invoices        Invoice[]           @relation("CompanyInvoices")
+  kybCredentials  KybCredential[]
   payrollRuns     PayrollRun[]
   treasuryBalance TreasuryBalance[]
-  kybCredentials  KybCredential[]
-  walletRoles     CompanyWalletRole[]
 }
 
 model Employee {
-  id              String        @id @default(cuid())
-  companyId       String
-  name            String
-  email           String
-  walletAddress   String
-  salary          Decimal       @db.Decimal(18, 2)
-  currency        Currency      @default(USDC)
-  status          EmployeeStatus @default(ACTIVE)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-
-  company         Company       @relation(fields: [companyId], references: [id])
-  payrollItems    PayrollItem[]
-  loans           Loan[]
+  id            String         @id @default(cuid())
+  companyId     String
+  name          String
+  email         String
+  walletAddress String
+  salary        Decimal        @db.Decimal(18, 2)
+  currency      Currency       @default(USDC)
+  status        EmployeeStatus @default(ACTIVE)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  company       Company        @relation(fields: [companyId], references: [id])
+  loans         Loan[]
+  payrollItems  PayrollItem[]
 }
 
 model PayrollRun {
-  id              String        @id @default(cuid())
-  companyId       String
-  totalAmount     Decimal       @db.Decimal(18, 2)
-  currency        Currency      @default(USDC)
-  status          PayrollStatus @default(PENDING)
-  txHash          String?
-  scheduledAt     DateTime?
-  executedAt      DateTime?
-  createdAt       DateTime      @default(now())
-
-  company         Company       @relation(fields: [companyId], references: [id])
-  items           PayrollItem[]
+  id          String        @id @default(cuid())
+  companyId   String
+  totalAmount Decimal       @db.Decimal(18, 2)
+  currency    Currency      @default(USDC)
+  status      PayrollStatus @default(PENDING)
+  txHash      String?
+  scheduledAt DateTime?
+  executedAt  DateTime?
+  createdAt   DateTime      @default(now())
+  items       PayrollItem[]
+  company     Company       @relation(fields: [companyId], references: [id])
 }
 
 model PayrollItem {
-  id              String        @id @default(cuid())
-  payrollRunId    String
-  employeeId      String
-  grossAmount     Decimal       @db.Decimal(18, 2)
-  loanDeduction   Decimal       @default(0) @db.Decimal(18, 2)
-  netAmount       Decimal       @db.Decimal(18, 2)
-  txHash          String?
-  status          PaymentStatus @default(PENDING)
-
-  payrollRun      PayrollRun    @relation(fields: [payrollRunId], references: [id])
-  employee        Employee      @relation(fields: [employeeId], references: [id])
+  id            String        @id @default(cuid())
+  payrollRunId  String
+  employeeId    String
+  grossAmount   Decimal       @db.Decimal(18, 2)
+  loanDeduction Decimal       @default(0) @db.Decimal(18, 2)
+  netAmount     Decimal       @db.Decimal(18, 2)
+  txHash        String?
+  status        PaymentStatus @default(PENDING)
+  employee      Employee      @relation(fields: [employeeId], references: [id])
+  payrollRun    PayrollRun    @relation(fields: [payrollRunId], references: [id])
 }
 
 model Loan {
-  id              String        @id @default(cuid())
-  employeeId      String
-  amount          Decimal       @db.Decimal(18, 2)
-  remainingAmount Decimal       @db.Decimal(18, 2)
-  monthlyDeduction Decimal      @db.Decimal(18, 2)
-  currency        Currency      @default(USDC)
-  status          LoanStatus    @default(ACTIVE)
-  approvedAt      DateTime?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-
-  employee        Employee      @relation(fields: [employeeId], references: [id])
+  id               String     @id @default(cuid())
+  employeeId       String
+  amount           Decimal    @db.Decimal(18, 2)
+  remainingAmount  Decimal    @db.Decimal(18, 2)
+  monthlyDeduction Decimal    @db.Decimal(18, 2)
+  currency         Currency   @default(USDC)
+  status           LoanStatus @default(ACTIVE)
+  approvedAt       DateTime?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  employee         Employee   @relation(fields: [employeeId], references: [id])
 }
 
 model TreasuryBalance {
-  id              String        @id @default(cuid())
-  companyId       String
-  currency        Currency
-  balance         Decimal       @db.Decimal(18, 6)
-  yieldEarned     Decimal       @default(0) @db.Decimal(18, 6)
-  updatedAt       DateTime      @updatedAt
-
-  company         Company       @relation(fields: [companyId], references: [id])
+  id          String   @id @default(cuid())
+  companyId   String
+  currency    Currency
+  balance     Decimal  @db.Decimal(18, 6)
+  yieldEarned Decimal  @default(0) @db.Decimal(18, 6)
+  updatedAt   DateTime @updatedAt
+  company     Company  @relation(fields: [companyId], references: [id])
 
   @@unique([companyId, currency])
 }
 
-// ================== B2C MODELS ==================
-
 model Freelancer {
-  id              String        @id @default(cuid())
+  id              String          @id @default(cuid())
   name            String
-  email           String        @unique
+  email           String          @unique
   walletAddress   String
   idDocumentUrl   String?
-  
-  // Social connections (optional - boosts reputation)
   profession      String?
   linkedinUrl     String?
   githubUrl       String?
   twitterUrl      String?
   portfolioUrl    String?
-  bio             String?       // Brief professional note
-  
-  // Reputation scoring
-  reputationScore Int           @default(0)   // 0-100 based on verifications
-  
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-
-  invoices        Invoice[]     @relation("FreelancerInvoices")
-  withdrawals     Withdrawal[]
+  bio             String?
+  reputationScore Int             @default(0)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  invoices        Invoice[]       @relation("FreelancerInvoices")
   kycCredentials  KycCredential[]
+  withdrawals     Withdrawal[]
 }
 
-// ================== SHARED MODELS ==================
-
 model Invoice {
-  id              String        @id @default(cuid())
-  companyId       String?       // For B2B
-  freelancerId    String?       // For B2C
-  clientName      String
-  clientEmail     String
-  description     String
-  amount          Decimal       @db.Decimal(18, 2)
-  currency        Currency      @default(USDC)
-  status          InvoiceStatus @default(DRAFT)
-  dueDate         DateTime
-  paidAt          DateTime?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-
-  company         Company?      @relation("CompanyInvoices", fields: [companyId], references: [id])
-  freelancer      Freelancer?   @relation("FreelancerInvoices", fields: [freelancerId], references: [id])
-  payments        Payment[]
+  id           String        @id @default(cuid())
+  companyId    String?
+  freelancerId String?
+  clientName   String
+  clientEmail  String
+  description  String
+  amount       Decimal       @db.Decimal(18, 2)
+  currency     Currency      @default(USDC)
+  status       InvoiceStatus @default(DRAFT)
+  dueDate      DateTime
+  paidAt       DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  company      Company?      @relation("CompanyInvoices", fields: [companyId], references: [id])
+  freelancer   Freelancer?   @relation("FreelancerInvoices", fields: [freelancerId], references: [id])
+  payments     Payment[]
 }
 
 model Payment {
-  id              String        @id @default(cuid())
-  invoiceId       String
-  amount          Decimal       @db.Decimal(18, 2)
-  currency        Currency
-  status          PaymentStatus @default(PENDING)
-  txHash          String?
-  payerAddress    String?
-  createdAt       DateTime      @default(now())
-  confirmedAt     DateTime?
-
-  invoice         Invoice       @relation(fields: [invoiceId], references: [id])
+  id           String        @id @default(cuid())
+  invoiceId    String
+  amount       Decimal       @db.Decimal(18, 2)
+  currency     Currency
+  status       PaymentStatus @default(PENDING)
+  txHash       String?
+  payerAddress String?
+  createdAt    DateTime      @default(now())
+  confirmedAt  DateTime?
+  invoice      Invoice       @relation(fields: [invoiceId], references: [id])
 }
 
 model Withdrawal {
-  id              String        @id @default(cuid())
+  id              String         @id @default(cuid())
   freelancerId    String
-  amount          Decimal       @db.Decimal(18, 2)
+  amount          Decimal        @db.Decimal(18, 2)
   currency        Currency
   destinationType WithdrawalType
-  destination     String        // Bank account or wallet address
-  status          PaymentStatus @default(PENDING)
+  destination     String
+  status          PaymentStatus  @default(PENDING)
   txHash          String?
-  createdAt       DateTime      @default(now())
+  createdAt       DateTime       @default(now())
   completedAt     DateTime?
-
-  freelancer      Freelancer    @relation(fields: [freelancerId], references: [id])
+  freelancer      Freelancer     @relation(fields: [freelancerId], references: [id])
 }
 
-// ================== ENUMS ==================
+model KycCredential {
+  id             String      @id @default(cuid())
+  freelancerId   String
+  walletAddress  String
+  level          Int         @default(1)
+  dataRoot       String
+  attestationUid String?
+  chainId        Int
+  expiresAt      DateTime
+  revokedAt      DateTime?
+  provider       KycProvider @default(MANUAL)
+  providerRefId  String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  freelancer     Freelancer  @relation(fields: [freelancerId], references: [id])
+
+  @@unique([freelancerId, chainId])
+  @@index([walletAddress])
+  @@index([attestationUid])
+}
+
+model KybCredential {
+  id             String      @id @default(cuid())
+  companyId      String
+  companyHash    String
+  level          Int         @default(1)
+  dataRoot       String
+  attestationUid String?
+  chainId        Int
+  expiresAt      DateTime
+  revokedAt      DateTime?
+  provider       KycProvider @default(MANUAL)
+  providerRefId  String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  company        Company     @relation(fields: [companyId], references: [id])
+
+  @@unique([companyId, chainId])
+  @@index([companyHash])
+  @@index([attestationUid])
+}
+
+model CompanyWalletRole {
+  id             String      @id @default(cuid())
+  companyId      String
+  walletAddress  String
+  role           CompanyRole @default(OPERATOR)
+  attestationUid String?
+  chainId        Int
+  grantedBy      String?
+  revokedAt      DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  company        Company     @relation(fields: [companyId], references: [id])
+
+  @@unique([companyId, walletAddress, chainId])
+  @@index([walletAddress])
+}
+
+model PermitNonce {
+  id             String    @id @default(cuid())
+  subjectAddress String
+  chainId        Int
+  nonce          BigInt
+  usedAt         DateTime?
+  permitHash     String?
+  action         String?
+  createdAt      DateTime  @default(now())
+
+  @@unique([subjectAddress, chainId, nonce])
+  @@index([subjectAddress, chainId])
+}
+
+model KycSalt {
+  id          String      @id @default(cuid())
+  subjectType SubjectType
+  subjectId   String
+  saltNonce   Int         @default(1)
+  createdAt   DateTime    @default(now())
+
+  @@unique([subjectType, subjectId])
+}
+
+model AuditLog {
+  id             String   @id @default(cuid())
+  eventType      String
+  subjectAddress String?
+  action         String?
+  metadata       Json?
+  ipAddress      String?
+  userAgent      String?
+  createdAt      DateTime @default(now())
+
+  @@index([subjectAddress])
+  @@index([eventType, createdAt])
+}
+
+model BlockedSubject {
+  id             String    @id @default(cuid())
+  subjectAddress String    @unique
+  reason         String
+  blockedBy      String?
+  blockedUntil   DateTime?
+  createdAt      DateTime  @default(now())
+}
 
 enum Currency {
   USDC
@@ -231,148 +311,17 @@ enum WithdrawalType {
   CRYPTO
 }
 
-// ================== KYC/KYB VERIFICATION MODELS ==================
-
-// KYC Credential for Freelancers
-model KycCredential {
-  id              String        @id @default(cuid())
-  freelancerId    String
-  walletAddress   String
-  level           Int           @default(1) // 1=Basic, 2=Standard, 3=Enhanced
-  dataRoot        String        // Merkle root of PII commitment
-  attestationUid  String?       // EAS attestation UID
-  chainId         Int
-  expiresAt       DateTime
-  revokedAt       DateTime?
-  
-  // KYC Provider abstraction (for future third-party integration)
-  provider        KycProvider   @default(MANUAL)
-  providerRefId   String?       // External provider reference ID
-  
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-
-  freelancer      Freelancer    @relation(fields: [freelancerId], references: [id])
-
-  @@unique([freelancerId, chainId])
-  @@index([walletAddress])
-  @@index([attestationUid])
-}
-
-// KYB Credential for Companies
-model KybCredential {
-  id              String        @id @default(cuid())
-  companyId       String
-  companyHash     String        // keccak256(name + registrationNumber)
-  level           Int           @default(1) // 1=Basic, 2=Verified, 3=Enterprise
-  dataRoot        String        // Merkle root of company docs commitment
-  attestationUid  String?       // EAS attestation UID
-  chainId         Int
-  expiresAt       DateTime
-  revokedAt       DateTime?
-  
-  // KYB Provider abstraction (for future third-party integration)
-  provider        KycProvider   @default(MANUAL)
-  providerRefId   String?       // External provider reference ID
-  
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-
-  company         Company       @relation(fields: [companyId], references: [id])
-
-  @@unique([companyId, chainId])
-  @@index([companyHash])
-  @@index([attestationUid])
-}
-
-// Company Wallet Roles (linked to KYB via attestation)
-model CompanyWalletRole {
-  id              String        @id @default(cuid())
-  companyId       String
-  walletAddress   String
-  role            CompanyRole   @default(OPERATOR)
-  attestationUid  String?       // EAS attestation UID
-  chainId         Int
-  grantedBy       String?       // Wallet that granted this role
-  revokedAt       DateTime?
-  
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-
-  company         Company       @relation(fields: [companyId], references: [id])
-
-  @@unique([companyId, walletAddress, chainId])
-  @@index([walletAddress])
-}
-
-// Permit Nonces for replay protection
-model PermitNonce {
-  id              String        @id @default(cuid())
-  subjectAddress  String
-  chainId         Int
-  nonce           BigInt
-  usedAt          DateTime?
-  permitHash      String?
-  action          String?
-  
-  createdAt       DateTime      @default(now())
-
-  @@unique([subjectAddress, chainId, nonce])
-  @@index([subjectAddress, chainId])
-}
-
-// KYC/KYB Salt for DataRoot computation
-model KycSalt {
-  id              String        @id @default(cuid())
-  subjectType     SubjectType
-  subjectId       String
-  saltNonce       Int           @default(1)
-  
-  createdAt       DateTime      @default(now())
-
-  @@unique([subjectType, subjectId])
-}
-
-// Audit Logs for security monitoring
-model AuditLog {
-  id              String        @id @default(cuid())
-  eventType       String        // 'permit_issued', 'kyc_submitted', etc.
-  subjectAddress  String?
-  action          String?
-  metadata        Json?
-  ipAddress       String?
-  userAgent       String?
-  
-  createdAt       DateTime      @default(now())
-
-  @@index([subjectAddress])
-  @@index([eventType, createdAt])
-}
-
-// Blocked Subjects for fraud prevention
-model BlockedSubject {
-  id              String        @id @default(cuid())
-  subjectAddress  String        @unique
-  reason          String
-  blockedBy       String?       // Admin wallet that blocked
-  blockedUntil    DateTime?     // NULL = permanent
-  
-  createdAt       DateTime      @default(now())
-}
-
-// ================== NEW ENUMS ==================
-
 enum KycProvider {
-  MANUAL          // In-house manual review
-  SUMSUB          // Future: Sumsub integration
-  JUMIO           // Future: Jumio integration
-  PERSONA         // Future: Persona integration
+  MANUAL
+  SUMSUB
+  JUMIO
+  PERSONA
 }
 
 enum CompanyRole {
-  OWNER           // 1: Full control, can revoke KYB
-  ADMIN           // 2: Can manage operators, run payroll
-  OPERATOR        // 3: Can initiate transactions
+  OWNER
+  ADMIN
+  OPERATOR
 }
 
 enum SubjectType {
