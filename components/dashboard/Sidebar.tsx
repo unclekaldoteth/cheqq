@@ -12,6 +12,7 @@ import {
     ChevronLeft,
     ChevronRight
 } from 'lucide-react';
+import Image from 'next/image';
 import styles from './Sidebar.module.css';
 
 const menuItems = [
@@ -30,7 +31,7 @@ export default function Sidebar() {
         <aside className={`${styles.sidebar} ${collapsed ? styles.collapsed : ''}`}>
             <div className={styles.sidebarHeader}>
                 <Link href="/" className={styles.logo}>
-                    <span className={styles.logoIcon}>◆</span>
+                    <Image src="/logo.png" alt="Cheqq" width={32} height={32} className={styles.logoImage} />
                     {!collapsed && <span>Cheqq</span>}
                 </Link>
             </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { Building2, User, ArrowRight } from 'lucide-react';
 import styles from './page.module.css';
 
@@ -31,7 +32,7 @@ export default function GetStartedPage() {
             <div className={styles.content}>
                 <div className={styles.header}>
                     <Link href="/" className={styles.logo}>
-                        <span className={styles.logoIcon}>◆</span>
+                        <Image src="/logo.png" alt="Cheqq" width={48} height={48} className={styles.logoImage} />
                         Cheqq
                     </Link>
                     <h1 className={styles.title}>Get Started</h1>

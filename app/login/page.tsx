@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { Loader2, Mail, Wallet } from 'lucide-react';
 import styles from './page.module.css';
 import { useEffect, useState } from 'react';
@@ -22,7 +23,7 @@ function MissingPrivyConfig() {
         <div className={styles.container}>
             <div className={styles.card}>
                 <Link href="/" className={styles.logo}>
-                    <span className={styles.logoIcon}>◆</span>
+                    <Image src="/logo.png" alt="Cheqq" width={48} height={48} className={styles.logoImage} />
                     Cheqq
                 </Link>
 
@@ -121,7 +122,7 @@ function PrivyLogin() {
         <div className={styles.container}>
             <div className={styles.card}>
                 <Link href="/" className={styles.logo}>
-                    <span className={styles.logoIcon}>◆</span>
+                    <Image src="/logo.png" alt="Cheqq" width={48} height={48} className={styles.logoImage} />
                     Cheqq
                 </Link>
 

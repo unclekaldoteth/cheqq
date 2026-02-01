@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Menu, X, ChevronDown } from 'lucide-react';
 import styles from './Navbar.module.css';
 
@@ -14,7 +15,7 @@ export default function Navbar() {
             <div className={`container ${styles.navContainer}`}>
                 {/* Logo */}
                 <Link href="/" className={styles.logo}>
-                    <span className={styles.logoIcon}>◆</span>
+                    <Image src="/logo.png" alt="Cheqq" width={32} height={32} className={styles.logoImage} />
                     Cheqq
                 </Link>
 

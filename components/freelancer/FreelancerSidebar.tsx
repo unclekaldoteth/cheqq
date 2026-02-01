@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import Image from 'next/image';
 import { LayoutDashboard, FileText, ArrowDownLeft, ArrowUpRight, Settings, ChevronLeft } from 'lucide-react';
 import styles from './FreelancerSidebar.module.css';
 
@@ -19,7 +20,7 @@ export default function FreelancerSidebar() {
     return (
         <aside className={styles.sidebar}>
             <div className={styles.logo}>
-                <span className={styles.logoIcon}>◆</span>
+                <Image src="/logo.png" alt="Cheqq" width={32} height={32} className={styles.logoImage} />
                 <span className={styles.logoText}>Cheqq</span>
                 <span className={styles.badge}>Freelancer</span>
             </div>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { ConnectWallet, Wallet } from '@coinbase/onchainkit/wallet';
+import Image from 'next/image';
 import { useAccount } from 'wagmi';
 import { createInvoicePayment } from '@/lib/payments';
 import { TOKENS, formatCurrency, type SupportedCurrency } from '@/lib/tokens';
@@ -179,7 +180,7 @@ export default function PaymentPage() {
         <div className={styles.container}>
             <div className={styles.card}>
                 <div className={styles.logo}>
-                    <span className={styles.logoIcon}>💰</span>
+                    <Image src="/logo.png" alt="Cheqq" width={48} height={48} className={styles.logoImage} />
                     <span className={styles.logoText}>Cheqq</span>
                 </div>
 
