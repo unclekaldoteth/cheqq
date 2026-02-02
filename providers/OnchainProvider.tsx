@@ -1,11 +1,11 @@
 'use client';
 
-import { ReactNode, useState, useEffect, type ComponentType, type PropsWithChildren } from 'react';
-import { PrivyProvider } from '@privy-io/react-auth';
-import { WagmiProvider as PrivyWagmiProvider, createConfig as createPrivyConfig, type SetActiveWalletForWagmiType } from '@privy-io/wagmi';
+import { ReactNode, useState, useEffect, useRef, type ComponentType, type PropsWithChildren } from 'react';
+import { PrivyProvider, usePrivy, useWallets } from '@privy-io/react-auth';
+import { WagmiProvider as PrivyWagmiProvider, createConfig as createPrivyConfig, useSetActiveWallet, type SetActiveWalletForWagmiType } from '@privy-io/wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { OnchainKitProvider } from '@coinbase/onchainkit';
-import { WagmiProvider as BaseWagmiProvider, createConfig as createWagmiConfig, http } from 'wagmi';
+import { WagmiProvider as BaseWagmiProvider, createConfig as createWagmiConfig, http, useAccount } from 'wagmi';
 import type { WagmiProviderProps } from 'wagmi';
 import { baseSepolia, base } from 'wagmi/chains';
 import { coinbaseWallet, injected } from 'wagmi/connectors';
@@ -27,6 +27,39 @@ const selectActiveWalletForWagmi: SetActiveWalletForWagmiType = ({ wallets, user
     }
     return wallets[0];
 };
+
+function PrivyWagmiSync() {
+    const { user, authenticated, ready } = usePrivy();
+    const { wallets, ready: walletsReady } = useWallets();
+    const { address, status } = useAccount();
+    const { setActiveWallet } = useSetActiveWallet();
+    const syncingRef = useRef<string | null>(null);
+
+    useEffect(() => {
+        if (!ready || !authenticated || !walletsReady) return;
+
+        const targetAddress = user?.wallet?.address?.trim().toLowerCase();
+        if (!targetAddress) return;
+
+        if (status === 'connected' && address?.toLowerCase() === targetAddress) {
+            syncingRef.current = targetAddress;
+            return;
+        }
+
+        const wallet = wallets.find(candidate => candidate.address?.toLowerCase() === targetAddress);
+        if (!wallet) return;
+
+        if (syncingRef.current === targetAddress) return;
+        syncingRef.current = targetAddress;
+
+        setActiveWallet(wallet).catch((error) => {
+            console.warn('Failed to sync Privy wallet to wagmi:', error);
+            syncingRef.current = null;
+        });
+    }, [ready, authenticated, walletsReady, user?.wallet?.address, wallets, status, address, setActiveWallet]);
+
+    return null;
+}
 
 // Get connectors - using Coinbase Wallet and injected only
 // Privy handles wallet connection through its own modal
@@ -111,6 +144,7 @@ export function OnchainProvider({ children }: OnchainProviderProps) {
         Provider: ComponentType<PropsWithChildren<WagmiProviderProps>>,
         config: WagmiProviderProps['config'],
         providerProps?: Record<string, unknown>,
+        extraContent?: ReactNode,
     ) => (
         <QueryClientProvider client={queryClient}>
             <Provider config={config} {...providerProps}>
@@ -125,6 +159,7 @@ export function OnchainProvider({ children }: OnchainProviderProps) {
                         },
                     }}
                 >
+                    {extraContent}
                     {children}
                 </OnchainKitProvider>
             </Provider>
@@ -159,7 +194,7 @@ export function OnchainProvider({ children }: OnchainProviderProps) {
             <SessionExpiredModal />
             {baseProviders(PrivyWagmiProvider, privyWagmiConfig, {
                 setActiveWalletForWagmi: selectActiveWalletForWagmi,
-            })}
+            }, <PrivyWagmiSync />)}
         </PrivyProvider>
     );
 }
