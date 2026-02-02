@@ -3,37 +3,99 @@
     align-items: center;
 }
 
+/* Avatar in the trigger button */
 .avatar {
-    width: 32px;
-    height: 32px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
 }
 
+/* Name/Address in the trigger button */
 .name {
     font-weight: 500;
-    color: var(--text-primary);
+    font-size: 0.875rem;
+    color: var(--text-dark, #1a1a1a);
 }
 
+/* Identity section in dropdown */
 .identity {
-    padding: 12px;
-    border-bottom: 1px solid var(--border-color, #e5e7eb);
+    padding: 16px;
+    background: var(--bg-cream, #fff);
+    border-bottom: 1px solid var(--border-light, #f0f0f0);
 }
 
-/* Override OnchainKit default styles to match Cheqq design */
+/* Override OnchainKit default styles */
+
+/* 1. Main Connect Button / Trigger */
 .walletWrapper :global([data-testid="ockConnectWallet_Container"]) {
-    background: var(--primary-gradient, linear-gradient(135deg, #0052FF 0%, #0066FF 100%));
-    border-radius: 8px;
-    padding: 8px 16px;
+    background: var(--bg-cream, #ffffff);
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: var(--radius-md, 8px);
+    padding: 6px 12px;
     font-weight: 500;
     transition: all 0.2s ease;
+    cursor: pointer;
+    box-shadow: none;
+    color: var(--text-dark, #1a1a1a);
+    height: 40px;
+    /* Match TopBar button height */
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .walletWrapper :global([data-testid="ockConnectWallet_Container"]:hover) {
+    background: var(--bg-cream, #ffffff);
+    border-color: var(--primary-blue, #0052FF);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 82, 255, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
+/* 2. Connected State Specifics */
 .walletWrapper :global([data-testid="ockConnectWallet_Container"][data-connected="true"]) {
-    background: var(--surface-secondary, #f8f9fa);
-    color: var(--text-primary, #1a1a1a);
+    background: var(--bg-cream, #ffffff);
+    color: var(--text-dark, #1a1a1a);
+}
+
+/* 3. Text Styles inside button */
+.walletWrapper :global([data-testid="ockIdentity_Text"]) {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-dark, #1a1a1a);
+}
+
+/* 4. Dropdown Container */
+/* Note: OnchainKit renders dropdown in a portal, so we might need global overrides or ensure this key targets it correctly if scoped */
+.walletWrapper :global([data-testid="ockWalletDropdown_Container"]) {
+    border: 1px solid var(--border-light, #e5e7eb);
+    border-radius: var(--radius-lg, 12px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    background: #ffffff;
+    overflow: hidden;
+    margin-top: 8px;
+}
+
+/* 5. Dropdown Items */
+.walletWrapper :global([data-testid="ockWalletDropdownItem"]) {
+    padding: 12px 16px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary, #4b5563);
+    transition: all 0.2s ease;
+}
+
+.walletWrapper :global([data-testid="ockWalletDropdownItem"]:hover) {
+    background-color: var(--bg-hover, #f9fafb);
+    color: var(--primary-blue, #0052FF);
+}
+
+/* 6. Disconnect Button - Make it Red */
+.walletWrapper :global([data-testid="ockWalletDropdownDisconnect"]) {
+    color: #EF4444;
+}
+
+.walletWrapper :global([data-testid="ockWalletDropdownDisconnect"]:hover) {
+    background-color: #FEF2F2;
+    /* Light red bg */
+    color: #DC2626;
 }
