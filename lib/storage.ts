@@ -29,7 +29,7 @@ const getSupabaseConfig = () => {
     return {
         supabaseUrl: supabaseUrl.replace(/\/$/, ''),
         serviceKey,
-        bucket,
+        bucket: bucket.trim() || DEFAULT_BUCKET,
     };
 };
 
@@ -50,6 +50,19 @@ type UploadOptions = {
     ownerKey: string;
 };
 
+const createUploadId = () => {
+    if (typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID();
+    }
+    return crypto.randomBytes(16).toString('hex');
+};
+
+const isBucketMissing = (status: number, message: string) => {
+    if (status === 404) return true;
+    const normalized = message.toLowerCase();
+    return normalized.includes('bucket') && normalized.includes('not found');
+};
+
 export const uploadDocumentToSupabase = async (
     file: File,
     { folder, ownerKey }: UploadOptions
@@ -57,10 +70,8 @@ export const uploadDocumentToSupabase = async (
     const { supabaseUrl, serviceKey, bucket } = getSupabaseConfig();
     const safeOwner = sanitizeSegment(ownerKey || 'unknown');
     const safeName = sanitizeSegment(file.name || 'document');
-    const uniqueName = `${crypto.randomUUID()}-${safeName || 'document'}`;
+    const uniqueName = `${createUploadId()}-${safeName || 'document'}`;
     const path = `${sanitizeSegment(folder)}/${safeOwner}/${uniqueName}`;
-    const uploadUrl = `${supabaseUrl}/storage/v1/object/${bucket}/${path}`;
-
     const buffer = Buffer.from(await file.arrayBuffer());
     const headers = {
         Authorization: `Bearer ${serviceKey}`,
@@ -69,28 +80,39 @@ export const uploadDocumentToSupabase = async (
         'x-upsert': 'true',
     };
 
-    let response = await fetch(uploadUrl, {
-        method: 'POST',
-        headers,
-        body: buffer,
-    });
-
-    if (response.status === 405) {
-        response = await fetch(uploadUrl, {
-            method: 'PUT',
+    const attemptUpload = async (bucketName: string) => {
+        const uploadUrl = `${supabaseUrl}/storage/v1/object/${bucketName}/${path}`;
+        let response = await fetch(uploadUrl, {
+            method: 'POST',
             headers,
             body: buffer,
         });
+
+        if (response.status === 405) {
+            response = await fetch(uploadUrl, {
+                method: 'PUT',
+                headers,
+                body: buffer,
+            });
+        }
+
+        const text = response.ok ? '' : await response.text().catch(() => '');
+        return { response, text, bucketName };
+    };
+
+    let result = await attemptUpload(bucket);
+    if (!result.response.ok && bucket !== DEFAULT_BUCKET && isBucketMissing(result.response.status, result.text)) {
+        console.warn(`Supabase bucket "${bucket}" not found. Falling back to "${DEFAULT_BUCKET}".`);
+        result = await attemptUpload(DEFAULT_BUCKET);
     }
 
-    if (!response.ok) {
-        const text = await response.text().catch(() => '');
+    if (!result.response.ok) {
         throw new Error(
-            `Supabase upload failed (${response.status}) ${text || response.statusText}`
+            `Supabase upload failed (${result.response.status}) ${result.text || result.response.statusText}`
         );
     }
 
-    const publicUrl = `${supabaseUrl}/storage/v1/object/public/${bucket}/${path}`;
+    const publicUrl = `${supabaseUrl}/storage/v1/object/public/${result.bucketName}/${path}`;
 
     return { path, publicUrl };
 };
