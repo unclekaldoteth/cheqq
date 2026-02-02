@@ -1,13 +1,27 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { ConnectWallet, Wallet } from '@coinbase/onchainkit/wallet';
 import Image from 'next/image';
-import { useAccount } from 'wagmi';
+import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { parseUnits } from 'viem';
 import { createInvoicePayment } from '@/lib/payments';
-import { TOKENS, formatCurrency, type SupportedCurrency } from '@/lib/tokens';
+import { TOKENS, formatCurrency, type SupportedCurrency, getTokenAddress } from '@/lib/tokens';
 import styles from './page.module.css';
+
+// Minimal ERC20 ABI for transfer
+const ERC20_ABI = [
+    {
+        name: 'transfer',
+        type: 'function',
+        inputs: [
+            { name: 'to', type: 'address' },
+            { name: 'amount', type: 'uint256' },
+        ],
+        outputs: [{ name: '', type: 'bool' }],
+    },
+] as const;
 
 interface Invoice {
     id: string;
@@ -46,6 +60,13 @@ export default function PaymentPage() {
     const [paymentComplete, setPaymentComplete] = useState(false);
     const [isPaying, setIsPaying] = useState(false);
     const [paymentError, setPaymentError] = useState<string | null>(null);
+
+    // Wagmi hooks for IDRX ERC20 transfer
+    const { data: txHash, writeContract, isPending: isWritePending, error: writeError } = useWriteContract();
+    const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+        hash: txHash,
+    });
+    const pendingPaymentRef = useRef<{ amount: string; currency: SupportedCurrency } | null>(null);
 
     useEffect(() => {
         let isMounted = true;
@@ -104,17 +125,53 @@ export default function PaymentPage() {
     const parsedAmount = Number.parseFloat(payableAmount);
     const hasValidAmount = Number.isFinite(parsedAmount) && parsedAmount > 0;
 
-    const handlePay = async () => {
+    // Handle IDRX transaction confirmation
+    const updatePaymentStatus = useCallback(async (transactionHash: string) => {
+        try {
+            const pending = pendingPaymentRef.current;
+            await fetch('/api/payments/status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    invoiceId,
+                    amount: pending?.amount || payableAmount,
+                    currency: pending?.currency || selectedCurrency,
+                    status: 'COMPLETED',
+                    txHash: transactionHash,
+                    payerAddress: address || null,
+                }),
+            });
+            setPaymentComplete(true);
+        } catch (err) {
+            console.error('Failed to update payment status:', err);
+            setPaymentError('Payment confirmed but status update failed.');
+        } finally {
+            pendingPaymentRef.current = null;
+            setIsPaying(false);
+        }
+    }, [invoiceId, selectedCurrency, address, payableAmount]);
+
+    useEffect(() => {
+        if (isConfirmed && txHash) {
+            updatePaymentStatus(txHash);
+        }
+    }, [isConfirmed, txHash, updatePaymentStatus]);
+
+    useEffect(() => {
+        if (writeError) {
+            setPaymentError('Transaction failed: ' + (writeError.message || 'Unknown error'));
+            setIsPaying(false);
+            pendingPaymentRef.current = null;
+        }
+    }, [writeError]);
+
+    const handlePayUSDC = async () => {
         if (!recipientAddress) {
             setPaymentError('Recipient wallet is not configured for this invoice.');
             return;
         }
         if (!hasValidAmount) {
             setPaymentError('Invoice amount is invalid.');
-            return;
-        }
-        if (selectedCurrency !== 'USDC') {
-            setPaymentError('Only USDC payments are supported right now.');
             return;
         }
 
@@ -130,7 +187,7 @@ export default function PaymentPage() {
                 body: JSON.stringify({
                     invoiceId,
                     amount: payableAmount,
-                    currency: selectedCurrency,
+                    currency: 'USDC',
                     status: 'COMPLETED',
                     txHash: payment.id,
                     payerAddress: address || null,
@@ -146,12 +203,55 @@ export default function PaymentPage() {
         }
     };
 
+    const handlePayIDRX = async () => {
+        if (!recipientAddress) {
+            setPaymentError('Recipient wallet is not configured for this invoice.');
+            return;
+        }
+        if (!hasValidAmount) {
+            setPaymentError('Invoice amount is invalid.');
+            return;
+        }
+
+        setIsPaying(true);
+        setPaymentError(null);
+
+        try {
+            const tokenAddress = getTokenAddress('IDRX');
+            const decimals = TOKENS.IDRX.decimals;
+            const amountInSmallestUnit = parseUnits(payableAmount, decimals);
+            pendingPaymentRef.current = { amount: payableAmount, currency: 'IDRX' };
+
+            writeContract({
+                address: tokenAddress as `0x${string}`,
+                abi: ERC20_ABI,
+                functionName: 'transfer',
+                args: [recipientAddress as `0x${string}`, amountInSmallestUnit],
+            });
+        } catch (error) {
+            console.error('IDRX payment failed:', error);
+            setPaymentError('Failed to initiate IDRX transfer. Please try again.');
+            setIsPaying(false);
+            pendingPaymentRef.current = null;
+        }
+    };
+
+    const handlePay = () => {
+        if (selectedCurrency === 'USDC') {
+            handlePayUSDC();
+        } else {
+            handlePayIDRX();
+        }
+    };
+
     const getDisplayAmount = () => {
         if (selectedCurrency === 'IDRX') {
             return formatCurrency(payableAmount, 'IDRX');
         }
         return `$${payableAmount} USDC`;
     };
+
+    const isProcessing = isPaying || isWritePending || isConfirming;
 
     if (!invoice) {
         return (
@@ -217,11 +317,6 @@ export default function PaymentPage() {
                                 </button>
                             ))}
                         </div>
-                        {selectedCurrency === 'IDRX' && (
-                            <p className={styles.notice}>
-                                IDRX payments are coming soon.
-                            </p>
-                        )}
                     </div>
 
                     <div className={styles.divider}></div>
@@ -242,11 +337,13 @@ export default function PaymentPage() {
                     <div className={styles.checkoutSection}>
                         <button
                             className={styles.payButton}
-                            disabled={!hasValidAmount || !recipientAddress || isPaying || selectedCurrency !== 'USDC'}
+                            disabled={!hasValidAmount || !recipientAddress || isProcessing}
                             onClick={handlePay}
                             type="button"
                         >
-                            {isPaying ? 'Processing...' : 'Pay Invoice'}
+                            {isProcessing
+                                ? (isConfirming ? 'Confirming...' : 'Processing...')
+                                : `Pay with ${selectedCurrency}`}
                         </button>
                         {paymentError && (
                             <p className={styles.error}>{paymentError}</p>

@@ -375,6 +375,71 @@
     margin: 0;
 }
 
+/* Pending Loans Section */
+.pendingSection {
+    margin-bottom: var(--space-lg);
+    padding-bottom: var(--space-lg);
+    border-bottom: 1px solid var(--border-light);
+}
+
+.pendingTitle {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: var(--space-md);
+}
+
+.pendingLoan {
+    background: rgba(255, 159, 0, 0.05);
+    border: 1px solid rgba(255, 159, 0, 0.2);
+}
+
+/* Loan Action Buttons */
+.loanActions {
+    display: flex;
+    gap: var(--space-xs);
+}
+
+.loanActionBtn {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-md);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.loanActionBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.approveBtn {
+    background: rgba(0, 211, 149, 0.1);
+    color: #00D395;
+}
+
+.approveBtn:hover:not(:disabled) {
+    background: #00D395;
+    color: white;
+}
+
+.rejectBtn {
+    background: rgba(239, 68, 68, 0.1);
+    color: #EF4444;
+}
+
+.rejectBtn:hover:not(:disabled) {
+    background: #EF4444;
+    color: white;
+}
+
 /* Responsive */
 @media (max-width: 1200px) {
     .statsGrid {
