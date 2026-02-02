@@ -1,79 +1,100 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Plus, Search, Filter, DollarSign, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Plus, Search, Filter, DollarSign, Clock, CheckCircle, AlertTriangle, Loader2, FileText } from 'lucide-react';
 import { FreelancerSidebar, FreelancerTopBar } from '@/components/freelancer';
-import { InvoiceTable, type Invoice } from '@/components/dashboard/invoice';
+import { InvoiceTable, type Invoice, type InvoiceStatusType } from '@/components/dashboard/invoice';
 import styles from './page.module.css';
 
-// Mock data
-const mockInvoices: Invoice[] = [
-    {
-        id: '1',
-        invoiceNumber: 'INV-2024-001',
-        clientName: 'TechCorp Indonesia',
-        clientEmail: 'finance@techcorp.id',
-        amount: 2500,
-        currency: 'USDC',
-        status: 'paid',
-        dueDate: '2024-01-15',
-        createdAt: '2024-01-01',
-    },
-    {
-        id: '2',
-        invoiceNumber: 'INV-2024-002',
-        clientName: 'Digital Solutions',
-        clientEmail: 'billing@digitalsolutions.com',
-        amount: 1500,
-        currency: 'USDC',
-        status: 'pending',
-        dueDate: '2024-01-25',
-        createdAt: '2024-01-05',
-    },
-    {
-        id: '3',
-        invoiceNumber: 'INV-2024-003',
-        clientName: 'StartUp Labs',
-        clientEmail: 'accounts@startuplabs.io',
-        amount: 25000000,
-        currency: 'IDRX',
-        status: 'pending',
-        dueDate: '2024-01-30',
-        createdAt: '2024-01-10',
-    },
-    {
-        id: '4',
-        invoiceNumber: 'INV-2024-004',
-        clientName: 'Global Ventures',
-        clientEmail: 'pay@globalventures.com',
-        amount: 3200,
-        currency: 'USDC',
-        status: 'overdue',
-        dueDate: '2024-01-05',
-        createdAt: '2023-12-20',
-    },
-    {
-        id: '5',
-        invoiceNumber: 'INV-2024-005',
-        clientName: 'Creative Agency',
-        clientEmail: 'hello@creativeagency.co',
-        amount: 1800,
-        currency: 'USDC',
-        status: 'draft',
-        dueDate: '2024-02-01',
-        createdAt: '2024-01-12',
-    },
-];
+const normalizeInvoiceCurrency = (value?: string): Invoice['currency'] => {
+    if (value === 'IDRX') return 'IDRX';
+    if (value === 'ETH') return 'ETH';
+    return 'USDC';
+};
+
+const normalizeInvoiceStatus = (value?: string): InvoiceStatusType => {
+    const normalized = value?.toLowerCase();
+    if (
+        normalized === 'draft' ||
+        normalized === 'pending' ||
+        normalized === 'paid' ||
+        normalized === 'overdue' ||
+        normalized === 'cancelled'
+    ) {
+        return normalized;
+    }
+    return 'pending';
+};
 
 export default function FreelancerInvoicesPage() {
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('all');
+    const [invoices, setInvoices] = useState<Invoice[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    // Fetch invoices from API
+    useEffect(() => {
+        const freelancerId = localStorage.getItem('freelancerId');
+        if (!freelancerId) {
+            setLoading(false);
+            return;
+        }
+
+        const controller = new AbortController();
+        let isActive = true;
+
+        const fetchInvoices = async () => {
+            try {
+                const res = await fetch(`/api/invoices?freelancerId=${encodeURIComponent(freelancerId)}`, {
+                    signal: controller.signal,
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (isActive) {
+                        const mapped: Invoice[] = (data.invoices || []).map((inv: {
+                            id: string;
+                            amount: string | number;
+                            currency: string;
+                            status: string;
+                            dueDate: string;
+                            createdAt: string;
+                            clientName?: string;
+                            clientEmail?: string;
+                        }) => ({
+                            id: inv.id,
+                            invoiceNumber: `INV-${inv.id.slice(-8).toUpperCase()}`,
+                            clientName: inv.clientName || 'Client',
+                            clientEmail: inv.clientEmail || '',
+                            amount: Number(inv.amount),
+                            currency: normalizeInvoiceCurrency(inv.currency),
+                            status: normalizeInvoiceStatus(inv.status),
+                            dueDate: inv.dueDate,
+                            createdAt: inv.createdAt,
+                        }));
+                        setInvoices(mapped);
+                    }
+                }
+            } catch (error) {
+                if (error instanceof Error && error.name === 'AbortError') return;
+                console.error('Failed to fetch invoices');
+            } finally {
+                if (isActive) setLoading(false);
+            }
+        };
+
+        fetchInvoices();
+
+        return () => {
+            isActive = false;
+            controller.abort();
+        };
+    }, []);
 
     // Filter invoices
-    const filteredInvoices = mockInvoices.filter((invoice) => {
+    const filteredInvoices = invoices.filter((invoice) => {
         const matchesSearch =
             invoice.invoiceNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
             invoice.clientName.toLowerCase().includes(searchQuery.toLowerCase());
@@ -82,10 +103,10 @@ export default function FreelancerInvoicesPage() {
     });
 
     // Calculate stats
-    const totalAmount = mockInvoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + (i.currency === 'USDC' ? i.amount : 0), 0);
-    const pendingAmount = mockInvoices.filter(i => i.status === 'pending').reduce((sum, i) => sum + (i.currency === 'USDC' ? i.amount : 0), 0);
-    const paidCount = mockInvoices.filter(i => i.status === 'paid').length;
-    const overdueCount = mockInvoices.filter(i => i.status === 'overdue').length;
+    const totalAmount = invoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + (i.currency === 'USDC' ? i.amount : 0), 0);
+    const pendingAmount = invoices.filter(i => i.status === 'pending').reduce((sum, i) => sum + (i.currency === 'USDC' ? i.amount : 0), 0);
+    const paidCount = invoices.filter(i => i.status === 'paid').length;
+    const overdueCount = invoices.filter(i => i.status === 'overdue').length;
 
     const formatAmount = (amount: number) => {
         return new Intl.NumberFormat('en-US', {
@@ -103,6 +124,23 @@ export default function FreelancerInvoicesPage() {
         const link = `${window.location.origin}/pay/${id}`;
         navigator.clipboard.writeText(link);
     };
+
+    if (loading) {
+        return (
+            <div className={styles.dashboardLayout}>
+                <FreelancerSidebar />
+                <div className={styles.mainContent}>
+                    <FreelancerTopBar />
+                    <main className={styles.main}>
+                        <div className={styles.loadingState}>
+                            <Loader2 size={32} className={styles.spinner} />
+                            <span>Loading invoices...</span>
+                        </div>
+                    </main>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className={styles.dashboardLayout}>
@@ -193,12 +231,24 @@ export default function FreelancerInvoicesPage() {
                         </div>
                     </div>
 
-                    {/* Invoice Table */}
-                    <InvoiceTable
-                        invoices={filteredInvoices}
-                        onView={handleViewInvoice}
-                        onCopyLink={handleCopyLink}
-                    />
+                    {/* Invoice Table or Empty State */}
+                    {invoices.length > 0 ? (
+                        <InvoiceTable
+                            invoices={filteredInvoices}
+                            onView={handleViewInvoice}
+                            onCopyLink={handleCopyLink}
+                        />
+                    ) : (
+                        <div className={styles.emptyState}>
+                            <FileText size={48} strokeWidth={1.5} />
+                            <h3>No invoices yet</h3>
+                            <p>Create your first invoice to start getting paid</p>
+                            <Link href="/freelancer/invoices/new" className="btn btn-primary" style={{ background: '#00D395' }}>
+                                <Plus size={18} />
+                                Create Invoice
+                            </Link>
+                        </div>
+                    )}
                 </main>
             </div>
         </div>

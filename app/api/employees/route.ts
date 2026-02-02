@@ -1,8 +1,14 @@
 import { NextResponse } from 'next/server';
+import type { EmployeeStatus } from '@prisma/client';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
+
+const ALLOWED_STATUSES = ['ACTIVE', 'INACTIVE', 'TERMINATED'] as const;
+
+const isAllowedStatus = (value: string): value is typeof ALLOWED_STATUSES[number] =>
+    ALLOWED_STATUSES.includes(value as typeof ALLOWED_STATUSES[number]);
 
 // GET /api/employees - List employees for a company or get single employee by ID
 export async function GET(request: Request) {
@@ -13,6 +19,8 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id')?.trim();
         const companyId = searchParams.get('companyId')?.trim();
+        const statusParam = searchParams.get('status')?.trim();
+        const normalizedStatus = statusParam ? statusParam.toUpperCase() : null;
 
         // If id is provided, fetch single employee with full details
         if (id) {
@@ -131,10 +139,21 @@ export async function GET(request: Request) {
             );
         }
 
+        if (normalizedStatus && normalizedStatus !== 'ALL' && !isAllowedStatus(normalizedStatus)) {
+            return NextResponse.json(
+                { error: 'Invalid employee status' },
+                { status: 400 }
+            );
+        }
+
+        const statusFilter = normalizedStatus && normalizedStatus !== 'ALL'
+            ? (normalizedStatus as EmployeeStatus)
+            : undefined;
+
         const employees = await prisma.employee.findMany({
             where: {
                 companyId,
-                status: 'ACTIVE',
+                ...(statusFilter ? { status: statusFilter } : {}),
             },
             include: {
                 loans: {
@@ -152,15 +171,24 @@ export async function GET(request: Request) {
                 0
             );
             const netAmount = Math.max(0, salary - totalDeductions);
+            const loanBalance = emp.loans.reduce(
+                (sum, loan) => sum + Number(loan.remainingAmount),
+                0
+            );
             return {
                 id: emp.id,
                 name: emp.name,
                 email: emp.email,
                 walletAddress: emp.walletAddress,
+                salary,
                 grossAmount: salary,
                 loanDeduction: totalDeductions,
                 netAmount,
                 currency: emp.currency,
+                status: emp.status,
+                createdAt: emp.createdAt.toISOString(),
+                hasActiveLoan: emp.loans.length > 0,
+                loanBalance,
             };
         });
 
@@ -176,4 +204,3 @@ export async function GET(request: Request) {
         );
     }
 }
-

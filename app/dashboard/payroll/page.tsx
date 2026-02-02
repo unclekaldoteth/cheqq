@@ -1,86 +1,107 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Plus, Play, Filter, Search } from 'lucide-react';
+import { Plus, Play, Filter, Search, Loader2, UserPlus } from 'lucide-react';
 import { Sidebar, TopBar } from '@/components/dashboard';
 import { PayrollStats, EmployeeTable, type Employee } from '@/components/dashboard/payroll';
 import styles from './page.module.css';
 
-// Mock data for demonstration
-const mockEmployees: Employee[] = [
-    {
-        id: '1',
-        name: 'Sarah Chen',
-        email: 'sarah.chen@acmecorp.com',
-        walletAddress: '0x1234567890abcdef1234567890abcdef12345678',
-        salary: 5000,
-        currency: 'USDC',
-        department: 'Engineering',
-        status: 'active',
-        joinDate: '2023-06-15',
-        hasActiveLoan: true,
-        loanBalance: 1500,
-    },
-    {
-        id: '2',
-        name: 'Michael Johnson',
-        email: 'michael.j@acmecorp.com',
-        walletAddress: '0xabcdef1234567890abcdef1234567890abcdef12',
-        salary: 4500,
-        currency: 'USDC',
-        department: 'Design',
-        status: 'active',
-        joinDate: '2023-08-01',
-    },
-    {
-        id: '3',
-        name: 'Dewi Putri',
-        email: 'dewi.p@acmecorp.com',
-        walletAddress: '0x9876543210fedcba9876543210fedcba98765432',
-        salary: 75000000,
-        currency: 'IDRX',
-        department: 'Marketing',
-        status: 'active',
-        joinDate: '2024-01-10',
-        hasActiveLoan: true,
-        loanBalance: 15000000,
-    },
-    {
-        id: '4',
-        name: 'James Wilson',
-        email: 'james.w@acmecorp.com',
-        walletAddress: '0xfedcba9876543210fedcba9876543210fedcba98',
-        salary: 6000,
-        currency: 'USDC',
-        department: 'Engineering',
-        status: 'active',
-        joinDate: '2022-11-20',
-    },
-    {
-        id: '5',
-        name: 'Emily Rodriguez',
-        email: 'emily.r@acmecorp.com',
-        walletAddress: '0x5678901234abcdef5678901234abcdef56789012',
-        salary: 4000,
-        currency: 'USDC',
-        department: 'Operations',
-        status: 'pending',
-        joinDate: '2024-01-08',
-    },
-];
+const normalizeEmployeeCurrency = (value?: string): Employee['currency'] => {
+    if (value === 'IDRX') return 'IDRX';
+    return 'USDC';
+};
+
+const normalizeEmployeeStatus = (value?: string): Employee['status'] => {
+    const normalized = value?.toLowerCase();
+    if (normalized === 'active' || normalized === 'inactive' || normalized === 'pending') {
+        return normalized;
+    }
+    if (normalized === 'terminated') {
+        return 'inactive';
+    }
+    return 'active';
+};
 
 export default function PayrollPage() {
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
     const [departmentFilter, setDepartmentFilter] = useState<string>('all');
+    const [employees, setEmployees] = useState<Employee[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    // Fetch employees from API
+    useEffect(() => {
+        const companyId = localStorage.getItem('companyId');
+        if (!companyId) {
+            setLoading(false);
+            return;
+        }
+
+        const controller = new AbortController();
+        let isActive = true;
+
+        const fetchEmployees = async () => {
+            try {
+                const res = await fetch(`/api/employees?companyId=${encodeURIComponent(companyId)}&status=ACTIVE`, {
+                    signal: controller.signal,
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (isActive) {
+                        const mapped: Employee[] = (data.employees || []).map((e: {
+                            id: string;
+                            name: string;
+                            email: string;
+                            walletAddress: string;
+                            salary?: string | number;
+                            grossAmount?: string | number;
+                            netAmount?: string | number;
+                            currency?: string;
+                            department?: string;
+                            status?: string;
+                            createdAt?: string;
+                            hasActiveLoan?: boolean;
+                            loanBalance?: number;
+                            loanDeduction?: number;
+                        }) => ({
+                            id: e.id,
+                            name: e.name,
+                            email: e.email,
+                            walletAddress: e.walletAddress,
+                            salary: Number(e.salary ?? e.grossAmount ?? e.netAmount ?? 0),
+                            currency: normalizeEmployeeCurrency(e.currency),
+                            department: e.department || 'General',
+                            status: normalizeEmployeeStatus(e.status),
+                            joinDate: e.createdAt || new Date().toISOString(),
+                            hasActiveLoan: e.hasActiveLoan ?? Number(e.loanBalance ?? e.loanDeduction ?? 0) > 0,
+                            loanBalance: e.loanBalance ?? e.loanDeduction ?? 0,
+                        }));
+                        setEmployees(mapped);
+                    }
+                }
+            } catch (error) {
+                if (error instanceof Error && error.name === 'AbortError') return;
+                console.error('Failed to fetch employees');
+            } finally {
+                if (isActive) setLoading(false);
+            }
+        };
+
+        fetchEmployees();
+
+        return () => {
+            isActive = false;
+            controller.abort();
+        };
+    }, []);
 
     // Get unique departments
-    const departments = [...new Set(mockEmployees.map(e => e.department))];
+    const departments = [...new Set(employees.map(e => e.department))];
 
     // Filter employees
-    const filteredEmployees = mockEmployees.filter((employee) => {
+    const filteredEmployees = employees.filter((employee) => {
         const matchesSearch =
             employee.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             employee.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -90,13 +111,13 @@ export default function PayrollPage() {
     });
 
     // Calculate stats
-    const activeEmployees = mockEmployees.filter(e => e.status === 'active');
+    const activeEmployees = employees.filter(e => e.status === 'active');
     const usdcPayroll = activeEmployees
         .filter(e => e.currency === 'USDC')
         .reduce((sum, e) => sum + e.salary, 0);
-    const employeesWithLoans = mockEmployees.filter(e => e.hasActiveLoan).length;
+    const employeesWithLoans = employees.filter(e => e.hasActiveLoan).length;
 
-    // Next pay date (mock: last day of current month)
+    // Next pay date (last day of current month)
     const now = new Date();
     const nextPayDate = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
 
@@ -107,6 +128,23 @@ export default function PayrollPage() {
     const handleEditEmployee = (id: string) => {
         router.push(`/dashboard/employees/${id}/edit`);
     };
+
+    if (loading) {
+        return (
+            <div className={styles.dashboardLayout}>
+                <Sidebar />
+                <div className={styles.mainContent}>
+                    <TopBar />
+                    <main className={styles.main}>
+                        <div className={styles.loadingState}>
+                            <Loader2 size={32} className={styles.spinner} />
+                            <span>Loading payroll data...</span>
+                        </div>
+                    </main>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className={styles.dashboardLayout}>
@@ -134,7 +172,7 @@ export default function PayrollPage() {
 
                     {/* Stats */}
                     <PayrollStats
-                        totalEmployees={mockEmployees.length}
+                        totalEmployees={employees.length}
                         activeEmployees={activeEmployees.length}
                         totalPayroll={usdcPayroll}
                         currency="USDC"
@@ -169,12 +207,24 @@ export default function PayrollPage() {
                         </div>
                     </div>
 
-                    {/* Employee Table */}
-                    <EmployeeTable
-                        employees={filteredEmployees}
-                        onEdit={handleEditEmployee}
-                        onViewDetails={handleViewEmployee}
-                    />
+                    {/* Employee Table or Empty State */}
+                    {employees.length > 0 ? (
+                        <EmployeeTable
+                            employees={filteredEmployees}
+                            onEdit={handleEditEmployee}
+                            onViewDetails={handleViewEmployee}
+                        />
+                    ) : (
+                        <div className={styles.emptyState}>
+                            <UserPlus size={48} strokeWidth={1.5} />
+                            <h3>No employees yet</h3>
+                            <p>Add employees to start managing payroll</p>
+                            <Link href="/dashboard/employees/new" className="btn btn-primary">
+                                <Plus size={18} />
+                                Add Employee
+                            </Link>
+                        </div>
+                    )}
                 </main>
             </div>
         </div>

@@ -10,7 +10,7 @@ export interface Invoice {
     clientName: string;
     clientEmail: string;
     amount: number;
-    currency: 'USDC' | 'IDRX';
+    currency: 'USDC' | 'IDRX' | 'ETH';
     status: InvoiceStatusType;
     dueDate: string;
     createdAt: string;

@@ -36,7 +36,7 @@ export default function RunPayrollPage() {
             }
 
             try {
-                const res = await fetch(`/api/employees?companyId=${encodeURIComponent(companyId)}`);
+                const res = await fetch(`/api/employees?companyId=${encodeURIComponent(companyId)}&status=ACTIVE`);
                 if (!res.ok) throw new Error('Failed to fetch');
                 const data = await res.json();
 

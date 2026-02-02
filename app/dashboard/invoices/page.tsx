@@ -9,6 +9,7 @@ import {
     InvoiceStats,
     InvoiceTable,
     type Invoice,
+    type InvoiceStatusType,
 } from '@/components/dashboard/invoice';
 import styles from './page.module.css';
 
@@ -24,6 +25,33 @@ interface InvoiceFromAPI {
     createdAt: string;
     paidAt?: string | null;
 }
+
+const normalizeInvoiceCurrency = (value?: string): Invoice['currency'] => {
+    if (value === 'IDRX') return 'IDRX';
+    if (value === 'ETH') return 'ETH';
+    return 'USDC';
+};
+
+const normalizeInvoiceStatus = (value?: string): InvoiceStatusType => {
+    const normalized = value?.toLowerCase();
+    if (
+        normalized === 'draft' ||
+        normalized === 'pending' ||
+        normalized === 'paid' ||
+        normalized === 'overdue' ||
+        normalized === 'cancelled'
+    ) {
+        return normalized;
+    }
+    return 'pending';
+};
+
+const normalizeDate = (value?: string) => {
+    if (!value) return '';
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return '';
+    return parsed.toISOString().split('T')[0];
+};
 
 export default function InvoicesPage() {
     const router = useRouter();
@@ -66,10 +94,10 @@ export default function InvoicesPage() {
                         clientName: inv.clientName,
                         clientEmail: inv.clientEmail,
                         amount: Number(inv.amount),
-                        currency: inv.currency as 'USDC' | 'IDRX',
-                        status: inv.status.toLowerCase() as Invoice['status'],
-                        dueDate: inv.dueDate.split('T')[0],
-                        createdAt: inv.createdAt.split('T')[0],
+                        currency: normalizeInvoiceCurrency(inv.currency),
+                        status: normalizeInvoiceStatus(inv.status),
+                        dueDate: normalizeDate(inv.dueDate),
+                        createdAt: normalizeDate(inv.createdAt),
                     }));
                     setInvoices(transformed);
                 }

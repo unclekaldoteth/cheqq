@@ -1,65 +1,108 @@
 'use client';
 
-import { useState } from 'react';
-import { Search, Filter, TrendingUp, ArrowDownLeft, Calendar } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, Filter, TrendingUp, ArrowDownLeft, Calendar, Loader2, DollarSign, Link as LinkIcon } from 'lucide-react';
+import Link from 'next/link';
 import { FreelancerSidebar, FreelancerTopBar } from '@/components/freelancer';
 import styles from './page.module.css';
 
-// Mock data
-const mockPayments = [
-    {
-        id: '1',
-        title: 'Invoice #INV-2024-001',
-        client: 'TechCorp Indonesia',
-        amount: 2500,
-        currency: 'USDC',
-        status: 'completed',
-        date: '2024-01-10',
-    },
-    {
-        id: '2',
-        title: 'Invoice #INV-2023-089',
-        client: 'StartUp Labs',
-        amount: 3500,
-        currency: 'USDC',
-        status: 'completed',
-        date: '2024-01-02',
-    },
-    {
-        id: '3',
-        title: 'Invoice #INV-2023-085',
-        client: 'Digital Solutions',
-        amount: 1800,
-        currency: 'USDC',
-        status: 'completed',
-        date: '2023-12-28',
-    },
-    {
-        id: '4',
-        title: 'Invoice #INV-2023-080',
-        client: 'Creative Agency',
-        amount: 2200,
-        currency: 'USDC',
-        status: 'completed',
-        date: '2023-12-15',
-    },
-    {
-        id: '5',
-        title: 'Invoice #INV-2024-002',
-        client: 'Global Ventures',
-        amount: 1500,
-        currency: 'USDC',
-        status: 'pending',
-        date: '2024-01-12',
-    },
-];
+type PaymentStatus = 'completed' | 'pending' | 'failed';
+
+interface Payment {
+    id: string;
+    title: string;
+    client: string;
+    amount: number;
+    currency: string;
+    status: PaymentStatus;
+    date: string;
+}
+
+const parsePaymentDate = (value?: string) => {
+    if (!value) return null;
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const normalizePaymentStatus = (value?: string): PaymentStatus => {
+    const normalized = value?.toLowerCase();
+    if (normalized === 'completed') return 'completed';
+    if (normalized === 'failed') return 'failed';
+    return 'pending';
+};
 
 export default function PaymentsPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('all');
+    const [payments, setPayments] = useState<Payment[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    // Fetch payments from API
+    useEffect(() => {
+        const freelancerId = localStorage.getItem('freelancerId');
+        if (!freelancerId) {
+            setLoading(false);
+            return;
+        }
+
+        const controller = new AbortController();
+        let isActive = true;
+
+        const fetchPayments = async () => {
+            try {
+                const res = await fetch(`/api/invoices?freelancerId=${encodeURIComponent(freelancerId)}`, {
+                    signal: controller.signal,
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (isActive) {
+                        const mapped: Payment[] = (data.invoices || []).flatMap((invoice: {
+                            id: string;
+                            clientName?: string;
+                            paidAt?: string;
+                            createdAt?: string;
+                            payments?: Array<{
+                                id: string;
+                                amount: string | number;
+                                currency: string;
+                                status: string;
+                                createdAt?: string;
+                                confirmedAt?: string;
+                            }>;
+                        }) => {
+                            const invoiceTitle = `Invoice #${invoice.id.slice(-8).toUpperCase()}`;
+                            const baseDate = invoice.paidAt || invoice.createdAt || '';
+                            return (invoice.payments || []).map((payment) => ({
+                                id: payment.id,
+                                title: invoiceTitle,
+                                client: invoice.clientName || 'Client',
+                                amount: Number(payment.amount),
+                                currency: payment.currency,
+                                status: normalizePaymentStatus(payment.status),
+                                date: payment.confirmedAt || payment.createdAt || baseDate,
+                            }));
+                        });
+                        setPayments(mapped);
+                    }
+                }
+            } catch (error) {
+                if (error instanceof Error && error.name === 'AbortError') return;
+                console.error('Failed to fetch payments');
+            } finally {
+                if (isActive) setLoading(false);
+            }
+        };
+
+        fetchPayments();
+
+        return () => {
+            isActive = false;
+            controller.abort();
+        };
+    }, []);
 
     // Filter payments
-    const filteredPayments = mockPayments.filter((payment) => {
+    const filteredPayments = payments.filter((payment) => {
         const matchesSearch =
             payment.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
             payment.client.toLowerCase().includes(searchQuery.toLowerCase());
@@ -68,11 +111,19 @@ export default function PaymentsPage() {
     });
 
     // Calculate stats
-    const totalReceived = mockPayments.filter(p => p.status === 'completed').reduce((sum, p) => sum + p.amount, 0);
-    const pendingAmount = mockPayments.filter(p => p.status === 'pending').reduce((sum, p) => sum + p.amount, 0);
-    const thisMonthAmount = mockPayments
-        .filter(p => p.status === 'completed' && new Date(p.date).getMonth() === 0)
-        .reduce((sum, p) => sum + p.amount, 0);
+    const totalReceived = payments.filter(p => p.status === 'completed').reduce((sum, p) => sum + p.amount, 0);
+    const pendingAmount = payments.filter(p => p.status === 'pending').reduce((sum, p) => sum + p.amount, 0);
+    const now = new Date();
+    const thisMonthAmount = payments.reduce((sum, payment) => {
+        if (payment.status !== 'completed') return sum;
+        const paymentDate = parsePaymentDate(payment.date);
+        if (!paymentDate) return sum;
+        if (paymentDate.getMonth() !== now.getMonth() || paymentDate.getFullYear() !== now.getFullYear()) {
+            return sum;
+        }
+        return sum + payment.amount;
+    }, 0);
+    const currentMonthName = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
     const formatAmount = (amount: number) => {
         return new Intl.NumberFormat('en-US', {
@@ -83,12 +134,31 @@ export default function PaymentsPage() {
     };
 
     const formatDate = (date: string) => {
-        return new Date(date).toLocaleDateString('en-US', {
+        const parsed = parsePaymentDate(date);
+        if (!parsed) return '-';
+        return parsed.toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric',
             year: 'numeric',
         });
     };
+
+    if (loading) {
+        return (
+            <div className={styles.dashboardLayout}>
+                <FreelancerSidebar />
+                <div className={styles.mainContent}>
+                    <FreelancerTopBar />
+                    <main className={styles.main}>
+                        <div className={styles.loadingState}>
+                            <Loader2 size={32} className={styles.spinner} />
+                            <span>Loading payments...</span>
+                        </div>
+                    </main>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className={styles.dashboardLayout}>
@@ -123,7 +193,7 @@ export default function PaymentsPage() {
                             <div className={styles.statContent}>
                                 <span className={styles.statLabel}>This Month</span>
                                 <span className={styles.statValue}>${formatAmount(thisMonthAmount)}</span>
-                                <span className={styles.statSubtext}>January 2024</span>
+                                <span className={styles.statSubtext}>{currentMonthName}</span>
                             </div>
                         </div>
                         <div className={`${styles.statCard} ${styles.orange}`}>
@@ -160,48 +230,61 @@ export default function PaymentsPage() {
                                 <option value="all">All Status</option>
                                 <option value="completed">Completed</option>
                                 <option value="pending">Pending</option>
+                                <option value="failed">Failed</option>
                             </select>
                         </div>
                     </div>
 
-                    {/* Payments Table */}
-                    <div className={styles.tableWrapper}>
-                        <table className={styles.table}>
-                            <thead>
-                                <tr>
-                                    <th>Payment</th>
-                                    <th>Amount</th>
-                                    <th>Date</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filteredPayments.map((payment) => (
-                                    <tr key={payment.id}>
-                                        <td>
-                                            <div className={styles.paymentInfo}>
-                                                <span className={styles.paymentTitle}>{payment.title}</span>
-                                                <span className={styles.paymentClient}>{payment.client}</span>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span className={styles.amount}>
-                                                +${formatAmount(payment.amount)} {payment.currency}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span className={styles.date}>{formatDate(payment.date)}</span>
-                                        </td>
+                    {/* Payments Table or Empty State */}
+                    {payments.length > 0 ? (
+                        <div className={styles.tableWrapper}>
+                            <table className={styles.table}>
+                                <thead>
+                                    <tr>
+                                        <th>Payment</th>
+                                        <th>Amount</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filteredPayments.map((payment) => (
+                                        <tr key={payment.id}>
+                                            <td>
+                                                <div className={styles.paymentInfo}>
+                                                    <span className={styles.paymentTitle}>{payment.title}</span>
+                                                    <span className={styles.paymentClient}>{payment.client}</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span className={styles.amount}>
+                                                    +${formatAmount(payment.amount)} {payment.currency}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span className={styles.date}>{formatDate(payment.date)}</span>
+                                            </td>
                                         <td>
                                             <span className={`${styles.statusBadge} ${styles[payment.status]}`}>
-                                                {payment.status}
+                                                {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
                                             </span>
                                         </td>
                                     </tr>
                                 ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : (
+                        <div className={styles.emptyState}>
+                            <DollarSign size={48} strokeWidth={1.5} />
+                            <h3>No payments yet</h3>
+                            <p>Create an invoice to start receiving payments</p>
+                            <Link href="/freelancer/invoices/new" className="btn btn-primary" style={{ background: '#00D395' }}>
+                                <LinkIcon size={18} />
+                                Create Invoice
+                            </Link>
+                        </div>
+                    )}
                 </main>
             </div>
         </div>
