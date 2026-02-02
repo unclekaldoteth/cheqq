@@ -30,10 +30,11 @@ const getInjectedProvider = () => {
 
     if (!ethereum) return undefined;
     if (Array.isArray(ethereum.providers) && ethereum.providers.length > 0) {
-        const rabbyProvider = ethereum.providers.find(
-            (provider) => (provider as { isRabby?: boolean }).isRabby
+        const providers = ethereum.providers as Array<EIP1193Provider & { isRabby?: boolean }>;
+        const rabbyProvider = providers.find(
+            (provider: EIP1193Provider & { isRabby?: boolean }) => provider.isRabby
         );
-        return rabbyProvider ?? ethereum.providers[0];
+        return rabbyProvider ?? providers[0];
     }
     return ethereum;
 };
