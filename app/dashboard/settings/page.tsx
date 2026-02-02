@@ -48,7 +48,6 @@ function CompanySettingsForm({ company, isSaving, onSave }: CompanySettingsFormP
                             <label>Business Description</label>
                             <textarea
                                 placeholder="Brief description of your business..."
-                                defaultValue="Technology company focused on blockchain solutions."
                             />
                         </div>
                     </div>

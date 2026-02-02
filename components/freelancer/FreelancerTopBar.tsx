@@ -19,15 +19,15 @@ export default function FreelancerTopBar() {
                 <Search size={18} className={styles.searchIcon} />
                 <input
                     type="text"
-                    placeholder="Search invoices, payments..."
+                    placeholder="Search (coming soon)..."
                     className={styles.searchInput}
+                    disabled
                 />
             </div>
 
             <div className={styles.actions}>
-                <button className={styles.iconBtn}>
+                <button className={styles.iconBtn} title="Notifications coming soon">
                     <Bell size={20} />
-                    <span className={styles.notificationDot}></span>
                 </button>
 
                 <WalletConnect />

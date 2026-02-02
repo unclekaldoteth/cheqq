@@ -43,6 +43,12 @@
     color: var(--text-light);
 }
 
+.searchInput:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: var(--bg-cream);
+}
+
 .actions {
     display: flex;
     align-items: center;
@@ -67,17 +73,6 @@
 .notificationBtn:hover {
     background: var(--bg-cream);
     color: var(--text-dark);
-}
-
-.notificationDot {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #EF4444;
-    border: 2px solid var(--card-bg);
 }
 
 .walletInfo {

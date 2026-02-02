@@ -41,6 +41,12 @@
     box-shadow: 0 0 0 3px rgba(0, 211, 149, 0.1);
 }
 
+.searchInput:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: var(--bg-cream);
+}
+
 .actions {
     display: flex;
     align-items: center;
@@ -65,17 +71,6 @@
 .iconBtn:hover {
     background: var(--border-light);
     color: var(--text-dark);
-}
-
-.notificationDot {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 8px;
-    height: 8px;
-    background: #00D395;
-    border-radius: 50%;
-    border: 2px solid var(--card-bg);
 }
 
 .walletInfo {
