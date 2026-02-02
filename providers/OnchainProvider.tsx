@@ -18,43 +18,6 @@ const wagmiTransports = {
     [base.id]: http(),
 };
 
-const walletConnectProjectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || '';
-const fallbackAppUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-
-function getAppUrl() {
-    if (typeof window !== 'undefined' && window.location?.origin) {
-        return window.location.origin;
-    }
-    return fallbackAppUrl;
-}
-
-function getAppIconUrl(appUrl: string) {
-    try {
-        return new URL('/favicon.ico', appUrl).toString();
-    } catch {
-        return `${fallbackAppUrl}/favicon.ico`;
-    }
-}
-
-function makeWalletConnectMetadata() {
-    const appUrl = getAppUrl();
-    return {
-        name: 'Cheqq',
-        description: 'Payroll & DeFi. Unified on Base.',
-        url: appUrl,
-        icons: [getAppIconUrl(appUrl)],
-    };
-}
-
-// Log warning once on client for missing WalletConnect project ID
-let hasWarnedWalletConnect = false;
-function warnMissingWalletConnect() {
-    if (!hasWarnedWalletConnect && typeof window !== 'undefined' && !walletConnectProjectId) {
-        console.warn('NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID not set, WalletConnect disabled');
-        hasWarnedWalletConnect = true;
-    }
-}
-
 // Get connectors - using Coinbase Wallet and injected only
 // Privy handles wallet connection through its own modal
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -4,27 +4,89 @@ import { useState } from 'react';
 import { Building, Wallet, Calendar, Bell } from 'lucide-react';
 import { Sidebar, TopBar } from '@/components/dashboard';
 import styles from './page.module.css';
+import { useUser, CompanyUser } from '@/contexts/UserContext';
 
 type SettingsTab = 'company' | 'wallet' | 'payroll' | 'notifications';
 
+type CompanySettingsFormProps = {
+    company: CompanyUser | null;
+    isSaving: boolean;
+    onSave: () => void;
+};
+
+function CompanySettingsForm({ company, isSaving, onSave }: CompanySettingsFormProps) {
+    const [companyName, setCompanyName] = useState(company?.name || '');
+    const [companyEmail, setCompanyEmail] = useState(company?.email || '');
+
+    return (
+        <>
+            <div className={styles.contentHeader}>
+                <h2>Company Information</h2>
+                <p>Update your company profile and details</p>
+            </div>
+            <div className={styles.form}>
+                <div className={styles.formSection}>
+                    <h3>Basic Information</h3>
+                    <div className={styles.formGrid}>
+                        <div className={styles.formGroup}>
+                            <label>Company Name</label>
+                            <input
+                                type="text"
+                                value={companyName}
+                                onChange={(e) => setCompanyName(e.target.value)}
+                            />
+                        </div>
+                        <div className={styles.formGroup}>
+                            <label>Admin Email</label>
+                            <input
+                                type="email"
+                                value={companyEmail}
+                                onChange={(e) => setCompanyEmail(e.target.value)}
+                            />
+                        </div>
+                        <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+                            <label>Business Description</label>
+                            <textarea
+                                placeholder="Brief description of your business..."
+                                defaultValue="Technology company focused on blockchain solutions."
+                            />
+                        </div>
+                    </div>
+                </div>
+                <div className={styles.formActions}>
+                    <button className="btn btn-outline">Cancel</button>
+                    <button
+                        className="btn btn-primary"
+                        onClick={onSave}
+                        disabled={isSaving}
+                    >
+                        {isSaving ? 'Saving...' : 'Save Changes'}
+                    </button>
+                </div>
+            </div>
+        </>
+    );
+}
+
 export default function SettingsPage() {
+    const { user, userType } = useUser();
     const [activeTab, setActiveTab] = useState<SettingsTab>('company');
     const [isSaving, setIsSaving] = useState(false);
 
-    // Form states
-    const [companyName, setCompanyName] = useState('Acme Corp');
-    const [companyEmail, setCompanyEmail] = useState('admin@acmecorp.com');
-    const [walletAddress] = useState('0x1234...abcd');
     const [payrollDay, setPayrollDay] = useState('last');
     const [autoPayroll, setAutoPayroll] = useState(true);
     const [emailNotifications, setEmailNotifications] = useState(true);
     const [paymentAlerts, setPaymentAlerts] = useState(true);
+
+    const companyUser = userType === 'company' ? (user as CompanyUser) : null;
+    const companyFormKey = companyUser?.id || 'company-form-empty';
 
     const handleSave = async () => {
         setIsSaving(true);
         await new Promise(resolve => setTimeout(resolve, 1000));
         setIsSaving(false);
     };
+
 
     const tabs = [
         { id: 'company', label: 'Company', icon: Building },
@@ -64,52 +126,12 @@ export default function SettingsPage() {
                         {/* Content */}
                         <div className={styles.settingsContent}>
                             {activeTab === 'company' && (
-                                <>
-                                    <div className={styles.contentHeader}>
-                                        <h2>Company Information</h2>
-                                        <p>Update your company profile and details</p>
-                                    </div>
-                                    <div className={styles.form}>
-                                        <div className={styles.formSection}>
-                                            <h3>Basic Information</h3>
-                                            <div className={styles.formGrid}>
-                                                <div className={styles.formGroup}>
-                                                    <label>Company Name</label>
-                                                    <input
-                                                        type="text"
-                                                        value={companyName}
-                                                        onChange={(e) => setCompanyName(e.target.value)}
-                                                    />
-                                                </div>
-                                                <div className={styles.formGroup}>
-                                                    <label>Admin Email</label>
-                                                    <input
-                                                        type="email"
-                                                        value={companyEmail}
-                                                        onChange={(e) => setCompanyEmail(e.target.value)}
-                                                    />
-                                                </div>
-                                                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                                                    <label>Business Description</label>
-                                                    <textarea
-                                                        placeholder="Brief description of your business..."
-                                                        defaultValue="Technology company focused on blockchain solutions."
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className={styles.formActions}>
-                                            <button className="btn btn-outline">Cancel</button>
-                                            <button
-                                                className="btn btn-primary"
-                                                onClick={handleSave}
-                                                disabled={isSaving}
-                                            >
-                                                {isSaving ? 'Saving...' : 'Save Changes'}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </>
+                                <CompanySettingsForm
+                                    key={companyFormKey}
+                                    company={companyUser}
+                                    isSaving={isSaving}
+                                    onSave={handleSave}
+                                />
                             )}
 
                             {activeTab === 'wallet' && (
@@ -126,7 +148,7 @@ export default function SettingsPage() {
                                                     <label>Connected Wallet</label>
                                                     <input
                                                         type="text"
-                                                        value={walletAddress}
+                                                        value={companyUser?.walletAddress || ''}
                                                         readOnly
                                                         style={{ fontFamily: 'monospace' }}
                                                     />

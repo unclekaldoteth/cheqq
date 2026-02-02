@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import "@coinbase/onchainkit/styles.css";
 import { OnchainProvider } from "@/providers/OnchainProvider";
+import { UserProvider } from "@/contexts/UserContext";
 
 export const metadata: Metadata = {
   title: "Cheqq - Payroll & DeFi. Unified on Base.",
@@ -40,10 +41,11 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <OnchainProvider>
-          {children}
+          <UserProvider>
+            {children}
+          </UserProvider>
         </OnchainProvider>
       </body>
     </html>
   );
 }
-

@@ -3,8 +3,16 @@
 import { Bell, Search } from 'lucide-react';
 import styles from './TopBar.module.css';
 import { WalletConnect } from '@/components/wallet/WalletConnect';
+import { useUser, getInitials } from '@/contexts/UserContext';
 
 export default function TopBar() {
+    const { user, userType, loading } = useUser();
+    const isCompany = userType === 'company';
+
+    // Default values while loading or if no user
+    const displayName = isCompany && user?.name ? user.name : 'Company';
+    const initials = isCompany && user?.name ? getInitials(user.name) : 'C';
+
     return (
         <header className={styles.topBar}>
             <div className={styles.searchContainer}>
@@ -25,9 +33,13 @@ export default function TopBar() {
                 <WalletConnect />
 
                 <div className={styles.userProfile}>
-                    <div className={styles.avatar}>A</div>
+                    <div className={styles.avatar}>
+                        {loading ? '...' : initials}
+                    </div>
                     <div className={styles.userInfo}>
-                        <span className={styles.userName}>Acme Corp</span>
+                        <span className={styles.userName}>
+                            {loading ? 'Loading...' : displayName}
+                        </span>
                         <span className={styles.userRole}>Admin</span>
                     </div>
                 </div>
@@ -35,4 +47,3 @@ export default function TopBar() {
         </header>
     );
 }
-

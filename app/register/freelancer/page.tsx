@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { User, ArrowRight, ArrowLeft, Check, Upload, Shield, Linkedin, Github, Twitter, Star, ExternalLink, Wallet } from 'lucide-react';
 import { usePrivy, useLogin, useLinkAccount } from '@privy-io/react-auth';

@@ -4,26 +4,100 @@ import { useState } from 'react';
 import { User, Wallet, Bell } from 'lucide-react';
 import { FreelancerSidebar, FreelancerTopBar } from '@/components/freelancer';
 import styles from './page.module.css';
+import { useUser, FreelancerUser } from '@/contexts/UserContext';
 
 type SettingsTab = 'profile' | 'wallet' | 'notifications';
 
+type FreelancerProfileFormProps = {
+    freelancer: FreelancerUser | null;
+    isSaving: boolean;
+    onSave: () => void;
+};
+
+function FreelancerProfileForm({ freelancer, isSaving, onSave }: FreelancerProfileFormProps) {
+    const [name, setName] = useState(freelancer?.name || '');
+    const [email, setEmail] = useState(freelancer?.email || '');
+    const [profession, setProfession] = useState(freelancer?.profession || '');
+    const [currency, setCurrency] = useState('USDC');
+
+    return (
+        <>
+            <div className={styles.contentHeader}>
+                <h2>Profile Information</h2>
+                <p>Update your personal details</p>
+            </div>
+            <div className={styles.form}>
+                <div className={styles.formSection}>
+                    <div className={styles.formGrid}>
+                        <div className={styles.formGroup}>
+                            <label>Full Name</label>
+                            <input
+                                type="text"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                            />
+                        </div>
+                        <div className={styles.formGroup}>
+                            <label>Email</label>
+                            <input
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                            />
+                        </div>
+                        <div className={styles.formGroup}>
+                            <label>Profession</label>
+                            <input
+                                type="text"
+                                value={profession}
+                                onChange={(e) => setProfession(e.target.value)}
+                            />
+                        </div>
+                        <div className={styles.formGroup}>
+                            <label>Preferred Currency</label>
+                            <select
+                                value={currency}
+                                onChange={(e) => setCurrency(e.target.value)}
+                            >
+                                <option value="USDC">USDC</option>
+                                <option value="IDRX">IDRX</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div className={styles.formActions}>
+                    <button className="btn btn-outline">Cancel</button>
+                    <button
+                        className="btn btn-primary"
+                        style={{ background: '#00D395' }}
+                        onClick={onSave}
+                        disabled={isSaving}
+                    >
+                        {isSaving ? 'Saving...' : 'Save Changes'}
+                    </button>
+                </div>
+            </div>
+        </>
+    );
+}
+
 export default function SettingsPage() {
+    const { user, userType } = useUser();
     const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
     const [isSaving, setIsSaving] = useState(false);
 
-    // Form states
-    const [name, setName] = useState('John Doe');
-    const [email, setEmail] = useState('john.doe@email.com');
-    const [profession, setProfession] = useState('Software Developer');
-    const [currency, setCurrency] = useState('USDC');
     const [emailNotifications, setEmailNotifications] = useState(true);
     const [paymentAlerts, setPaymentAlerts] = useState(true);
+
+    const freelancerUser = userType === 'freelancer' ? (user as FreelancerUser) : null;
+    const freelancerFormKey = freelancerUser?.id || 'freelancer-form-empty';
 
     const handleSave = async () => {
         setIsSaving(true);
         await new Promise(resolve => setTimeout(resolve, 1000));
         setIsSaving(false);
     };
+
 
     const tabs = [
         { id: 'profile', label: 'Profile', icon: User },
@@ -64,63 +138,12 @@ export default function SettingsPage() {
                         {/* Content */}
                         <div className={styles.settingsContent}>
                             {activeTab === 'profile' && (
-                                <>
-                                    <div className={styles.contentHeader}>
-                                        <h2>Profile Information</h2>
-                                        <p>Update your personal details</p>
-                                    </div>
-                                    <div className={styles.form}>
-                                        <div className={styles.formSection}>
-                                            <div className={styles.formGrid}>
-                                                <div className={styles.formGroup}>
-                                                    <label>Full Name</label>
-                                                    <input
-                                                        type="text"
-                                                        value={name}
-                                                        onChange={(e) => setName(e.target.value)}
-                                                    />
-                                                </div>
-                                                <div className={styles.formGroup}>
-                                                    <label>Email</label>
-                                                    <input
-                                                        type="email"
-                                                        value={email}
-                                                        onChange={(e) => setEmail(e.target.value)}
-                                                    />
-                                                </div>
-                                                <div className={styles.formGroup}>
-                                                    <label>Profession</label>
-                                                    <input
-                                                        type="text"
-                                                        value={profession}
-                                                        onChange={(e) => setProfession(e.target.value)}
-                                                    />
-                                                </div>
-                                                <div className={styles.formGroup}>
-                                                    <label>Preferred Currency</label>
-                                                    <select
-                                                        value={currency}
-                                                        onChange={(e) => setCurrency(e.target.value)}
-                                                    >
-                                                        <option value="USDC">USDC</option>
-                                                        <option value="IDRX">IDRX</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className={styles.formActions}>
-                                            <button className="btn btn-outline">Cancel</button>
-                                            <button
-                                                className="btn btn-primary"
-                                                style={{ background: '#00D395' }}
-                                                onClick={handleSave}
-                                                disabled={isSaving}
-                                            >
-                                                {isSaving ? 'Saving...' : 'Save Changes'}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </>
+                                <FreelancerProfileForm
+                                    key={freelancerFormKey}
+                                    freelancer={freelancerUser}
+                                    isSaving={isSaving}
+                                    onSave={handleSave}
+                                />
                             )}
 
                             {activeTab === 'wallet' && (
@@ -136,7 +159,7 @@ export default function SettingsPage() {
                                                     <label>Connected Wallet</label>
                                                     <input
                                                         type="text"
-                                                        value="0x1234567890abcdef1234567890abcdef12345678"
+                                                        value={freelancerUser?.walletAddress || 'Not connected'}
                                                         readOnly
                                                         style={{ fontFamily: 'monospace' }}
                                                     />
