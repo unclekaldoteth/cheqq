@@ -5,12 +5,13 @@ import { PrivyProvider, usePrivy, useWallets } from '@privy-io/react-auth';
 import { WagmiProvider as PrivyWagmiProvider, createConfig as createPrivyConfig, useSetActiveWallet, type SetActiveWalletForWagmiType } from '@privy-io/wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { OnchainKitProvider } from '@coinbase/onchainkit';
-import { WagmiProvider as BaseWagmiProvider, createConfig as createWagmiConfig, http, useAccount } from 'wagmi';
+import { WagmiProvider as BaseWagmiProvider, createConfig as createWagmiConfig, http, useAccount, useConnect } from 'wagmi';
 import type { WagmiProviderProps } from 'wagmi';
 import { baseSepolia, base } from 'wagmi/chains';
 import { coinbaseWallet, injected } from 'wagmi/connectors';
 import { SessionExpiredModal } from '@/components/auth/SessionExpiredModal';
 import { sdk } from '@farcaster/miniapp-sdk';
+import type { EIP1193Provider } from 'viem';
 
 const chain = process.env.NEXT_PUBLIC_CHAIN === 'base' ? base : baseSepolia;
 const wagmiTransports = {
@@ -33,7 +34,9 @@ function PrivyWagmiSync() {
     const { wallets, ready: walletsReady } = useWallets();
     const { address, status } = useAccount();
     const { setActiveWallet } = useSetActiveWallet();
+    const { connect } = useConnect();
     const syncingRef = useRef<string | null>(null);
+    const fallbackTriedRef = useRef(false);
 
     useEffect(() => {
         if (!ready || !authenticated || !walletsReady) return;
@@ -57,6 +60,56 @@ function PrivyWagmiSync() {
             syncingRef.current = null;
         });
     }, [ready, authenticated, walletsReady, user?.wallet?.address, wallets, status, address, setActiveWallet]);
+
+    useEffect(() => {
+        if (!ready || !authenticated) {
+            fallbackTriedRef.current = false;
+            return;
+        }
+
+        if (status !== 'disconnected') return;
+
+        const privyAddress = user?.wallet?.address?.trim().toLowerCase();
+        if (!privyAddress) return;
+        if (typeof window === 'undefined') return;
+
+        const provider = (window as Window & {
+            ethereum?: (EIP1193Provider & { isRabby?: boolean }) | undefined;
+        }).ethereum;
+        if (!provider?.request) return;
+        if (fallbackTriedRef.current) return;
+
+        const attemptInjectedConnect = async () => {
+            try {
+                const accounts = await provider.request({ method: 'eth_accounts' });
+                if (!Array.isArray(accounts)) return;
+
+                const matchesPrivy = accounts.some((account) => {
+                    if (typeof account !== 'string') return false;
+                    return account.toLowerCase() === privyAddress;
+                });
+
+                if (!matchesPrivy) return;
+
+                fallbackTriedRef.current = true;
+                const connector = injected({
+                    shimDisconnect: true,
+                    target: {
+                        id: provider.isRabby ? 'rabby_wallet' : 'injected',
+                        name: provider.isRabby ? 'Rabby Wallet' : 'Injected Wallet',
+                        provider,
+                    },
+                });
+
+                connect({ connector });
+            } catch (error) {
+                console.warn('Auto-connect via injected wallet failed:', error);
+                fallbackTriedRef.current = false;
+            }
+        };
+
+        attemptInjectedConnect();
+    }, [ready, authenticated, status, user?.wallet?.address, connect]);
 
     return null;
 }
