@@ -2,7 +2,7 @@
 
 import { ReactNode, useState, useEffect, type ComponentType, type PropsWithChildren } from 'react';
 import { PrivyProvider } from '@privy-io/react-auth';
-import { WagmiProvider as PrivyWagmiProvider, createConfig as createPrivyConfig } from '@privy-io/wagmi';
+import { WagmiProvider as PrivyWagmiProvider, createConfig as createPrivyConfig, type SetActiveWalletForWagmiType } from '@privy-io/wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { OnchainKitProvider } from '@coinbase/onchainkit';
 import { WagmiProvider as BaseWagmiProvider, createConfig as createWagmiConfig, http } from 'wagmi';
@@ -16,6 +16,16 @@ const chain = process.env.NEXT_PUBLIC_CHAIN === 'base' ? base : baseSepolia;
 const wagmiTransports = {
     [baseSepolia.id]: http(),
     [base.id]: http(),
+};
+
+const selectActiveWalletForWagmi: SetActiveWalletForWagmiType = ({ wallets, user }) => {
+    if (!wallets.length) return undefined;
+    const userWalletAddress = user?.wallet?.address?.toLowerCase();
+    if (userWalletAddress) {
+        const match = wallets.find(wallet => wallet.address?.toLowerCase() === userWalletAddress);
+        if (match) return match;
+    }
+    return wallets[0];
 };
 
 // Get connectors - using Coinbase Wallet and injected only
@@ -54,7 +64,6 @@ function getPrivyWagmiConfig() {
         chains: [chain],
         transports: wagmiTransports,
         ssr: true,
-        connectors: getWagmiConnectors(),
     });
     return cachedPrivyConfig;
 }
@@ -101,9 +110,10 @@ export function OnchainProvider({ children }: OnchainProviderProps) {
     const baseProviders = (
         Provider: ComponentType<PropsWithChildren<WagmiProviderProps>>,
         config: WagmiProviderProps['config'],
+        providerProps?: Record<string, unknown>,
     ) => (
         <QueryClientProvider client={queryClient}>
-            <Provider config={config}>
+            <Provider config={config} {...providerProps}>
                 <OnchainKitProvider
                     apiKey={process.env.NEXT_PUBLIC_ONCHAINKIT_CDP_KEY}
                     chain={chain}
@@ -147,7 +157,9 @@ export function OnchainProvider({ children }: OnchainProviderProps) {
             }}
         >
             <SessionExpiredModal />
-            {baseProviders(PrivyWagmiProvider, privyWagmiConfig)}
+            {baseProviders(PrivyWagmiProvider, privyWagmiConfig, {
+                setActiveWalletForWagmi: selectActiveWalletForWagmi,
+            })}
         </PrivyProvider>
     );
 }
