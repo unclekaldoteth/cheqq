@@ -50,6 +50,12 @@ type UploadOptions = {
     ownerKey: string;
 };
 
+type BucketInfo = {
+    name: string;
+};
+
+let cachedBucketName: string | null = null;
+
 const createUploadId = () => {
     if (typeof crypto.randomUUID === 'function') {
         return crypto.randomUUID();
@@ -61,6 +67,58 @@ const isBucketMissing = (status: number, message: string) => {
     if (status === 404) return true;
     const normalized = message.toLowerCase();
     return normalized.includes('bucket') && normalized.includes('not found');
+};
+
+const listBuckets = async (supabaseUrl: string, serviceKey: string) => {
+    const endpoint = `${supabaseUrl}/storage/v1/bucket`;
+    const response = await fetch(endpoint, {
+        headers: {
+            Authorization: `Bearer ${serviceKey}`,
+            apikey: serviceKey,
+        },
+    });
+    if (!response.ok) {
+        const text = await response.text().catch(() => '');
+        throw new Error(
+            `Supabase bucket listing failed (${response.status}) ${text || response.statusText}`
+        );
+    }
+    const data = (await response.json().catch(() => [])) as BucketInfo[];
+    return Array.isArray(data) ? data.map((bucket) => bucket.name).filter(Boolean) : [];
+};
+
+const resolveBucketName = async (
+    requestedBucket: string,
+    supabaseUrl: string,
+    serviceKey: string
+) => {
+    if (cachedBucketName) {
+        return cachedBucketName;
+    }
+
+    const bucketNames = await listBuckets(supabaseUrl, serviceKey);
+    if (bucketNames.includes(requestedBucket)) {
+        cachedBucketName = requestedBucket;
+        return cachedBucketName;
+    }
+
+    if (bucketNames.includes(DEFAULT_BUCKET)) {
+        cachedBucketName = DEFAULT_BUCKET;
+        return cachedBucketName;
+    }
+
+    if (bucketNames.length === 1) {
+        cachedBucketName = bucketNames[0];
+        return cachedBucketName;
+    }
+
+    if (bucketNames.length > 1) {
+        throw new Error(
+            `Supabase bucket "${requestedBucket}" not found. Available buckets: ${bucketNames.join(', ')}`
+        );
+    }
+
+    throw new Error(`No Supabase storage buckets found for "${requestedBucket}".`);
 };
 
 export const uploadDocumentToSupabase = async (
@@ -102,8 +160,15 @@ export const uploadDocumentToSupabase = async (
 
     let result = await attemptUpload(bucket);
     if (!result.response.ok && bucket !== DEFAULT_BUCKET && isBucketMissing(result.response.status, result.text)) {
-        console.warn(`Supabase bucket "${bucket}" not found. Falling back to "${DEFAULT_BUCKET}".`);
-        result = await attemptUpload(DEFAULT_BUCKET);
+        try {
+            const resolvedBucket = await resolveBucketName(bucket, supabaseUrl, serviceKey);
+            if (resolvedBucket !== bucket) {
+                console.warn(`Supabase bucket "${bucket}" not found. Falling back to "${resolvedBucket}".`);
+            }
+            result = await attemptUpload(resolvedBucket);
+        } catch (error) {
+            console.error('Supabase bucket resolution failed:', error);
+        }
     }
 
     if (!result.response.ok) {
