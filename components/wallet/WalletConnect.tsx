@@ -12,7 +12,6 @@ import {
     Address,
     Avatar,
     Name,
-    Identity,
 } from '@coinbase/onchainkit/identity';
 import { useAccount, useConnect } from 'wagmi';
 import { injected } from 'wagmi/connectors';
@@ -106,21 +105,35 @@ export function WalletConnect() {
                     <Avatar className={styles.avatar} />
                     <Name className={styles.name} />
                 </ConnectWallet>
-                <WalletDropdown>
-                    <Identity className={styles.identity} hasCopyAddressOnClick>
-                        <Avatar />
-                        <Name />
-                        <Address />
-                    </Identity>
-                    <WalletDropdownLink
-                        icon="wallet"
-                        href="https://wallet.coinbase.com"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        Go to Wallet Dashboard
-                    </WalletDropdownLink>
-                    <WalletDropdownDisconnect />
+                <WalletDropdown
+                    className={styles.dropdownPortal}
+                    classNames={{ container: styles.dropdownContent }}
+                >
+                    <div className={styles.dropdownInner}>
+                        {address && (
+                            <div className={styles.dropdownHeader}>
+                                <Avatar address={address} className={styles.dropdownAvatar} />
+                                <div className={styles.dropdownHeaderText}>
+                                    <div className={styles.dropdownLabel}>Connected</div>
+                                    <Address
+                                        address={address}
+                                        className={styles.dropdownAddress}
+                                        hasCopyAddressOnClick
+                                    />
+                                </div>
+                            </div>
+                        )}
+                        <WalletDropdownLink
+                            className={styles.dropdownItem}
+                            icon="wallet"
+                            href="https://wallet.coinbase.com"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            Go to Wallet Dashboard
+                        </WalletDropdownLink>
+                        <WalletDropdownDisconnect className={styles.dropdownDisconnect} />
+                    </div>
                 </WalletDropdown>
             </Wallet>
         </div>

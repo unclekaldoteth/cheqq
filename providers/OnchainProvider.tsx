@@ -207,7 +207,8 @@ export function OnchainProvider({ children }: OnchainProviderProps) {
                     config={{
                         appearance: {
                             name: 'Cheqq',
-                            mode: 'auto',
+                            // Cheqq currently uses a light UI; keep OnchainKit consistent regardless of OS theme.
+                            mode: 'light',
                             theme: 'default',
                         },
                     }}
