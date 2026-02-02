@@ -6,6 +6,48 @@
     z-index: 50;
 }
 
+/* Custom pill button for Privy-authenticated state */
+.linkedButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    height: 48px;
+    padding: 0 16px;
+    background-color: #ffffff;
+    border: 1px solid #e5e5e5;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    color: #0f172a;
+    font-weight: 600;
+}
+
+.linkedButton:hover {
+    border-color: #0052FF;
+    background-color: #f9fafb;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 82, 255, 0.1);
+}
+
+.linkedButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.linkedStatus {
+    font-size: 13px;
+    color: #0f172a;
+}
+
+.linkedAddress {
+    font-size: 13px;
+    color: #475569;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
 /* --- Trigger Button (Connect Wallet) --- */
 .walletWrapper :global([data-testid="ockConnectWallet_Container"]) {
     display: flex !important;
