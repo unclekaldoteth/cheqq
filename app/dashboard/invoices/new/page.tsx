@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
-import { useAccount } from 'wagmi';
+import { ArrowLeft, AlertCircle } from 'lucide-react';
 import { Sidebar, TopBar } from '@/components/dashboard';
 import { InvoiceForm, PaymentLinkModal } from '@/components/dashboard/invoice';
+import { useUser } from '@/contexts/UserContext';
 import styles from './page.module.css';
 
 interface InvoiceFormData {
@@ -19,8 +19,9 @@ interface InvoiceFormData {
 
 export default function NewInvoicePage() {
     const router = useRouter();
-    const { address } = useAccount();
+    const { user, userType } = useUser();
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const [showModal, setShowModal] = useState(false);
     const [createdInvoice, setCreatedInvoice] = useState<{
         invoiceNumber: string;
@@ -32,29 +33,69 @@ export default function NewInvoicePage() {
 
     const handleSubmit = async (data: InvoiceFormData) => {
         setIsLoading(true);
+        setError(null);
 
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-
-        // Generate mock invoice
-        const invoiceNumber = `INV-2024-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
-        const paymentLinkUrl = new URL(`${window.location.origin}/pay/${invoiceNumber.toLowerCase()}`);
-        paymentLinkUrl.searchParams.set('amount', data.amount);
-        paymentLinkUrl.searchParams.set('currency', data.currency);
-        if (address) {
-            paymentLinkUrl.searchParams.set('recipient', address);
+        // Get company ID
+        const companyId = userType === 'company' && user?.id ? user.id : null;
+        if (!companyId) {
+            setError('Unable to identify company. Please try logging in again.');
+            setIsLoading(false);
+            return;
         }
 
-        setCreatedInvoice({
-            invoiceNumber,
-            clientName: data.clientName,
-            amount: parseFloat(data.amount),
-            currency: data.currency,
-            paymentLink: paymentLinkUrl.toString(),
-        });
+        try {
+            const response = await fetch('/api/invoices', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    companyId,
+                    clientName: data.clientName,
+                    clientEmail: data.clientEmail,
+                    description: data.memo || 'Invoice for services',
+                    amount: data.amount,
+                    currency: data.currency,
+                    dueDate: data.dueDate,
+                }),
+            });
 
-        setShowModal(true);
-        setIsLoading(false);
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Failed to create invoice');
+            }
+
+            // Generate invoice number from the real ID
+            const invoiceNumber = `INV-${result.invoice.id.slice(-8).toUpperCase()}`;
+
+            const walletAddress = user?.walletAddress?.trim();
+            let paymentLink = result.paymentLink as string;
+            if (paymentLink) {
+                try {
+                    const url = new URL(paymentLink, window.location.origin);
+                    const hasRecipient = url.searchParams.get('recipient') || url.searchParams.get('to');
+                    if (!hasRecipient && walletAddress) {
+                        url.searchParams.set('recipient', walletAddress);
+                        paymentLink = url.toString();
+                    }
+                } catch {
+                    // Keep the original link if parsing fails.
+                }
+            }
+
+            setCreatedInvoice({
+                invoiceNumber,
+                clientName: data.clientName,
+                amount: parseFloat(data.amount),
+                currency: data.currency,
+                paymentLink,
+            });
+
+            setShowModal(true);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to create invoice');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleCloseModal = () => {
@@ -80,6 +121,14 @@ export default function NewInvoicePage() {
                         <h1>Create New Invoice</h1>
                         <p>Fill in the details to generate a payment link</p>
                     </div>
+
+                    {/* Error Message */}
+                    {error && (
+                        <div className={styles.errorBanner}>
+                            <AlertCircle size={18} />
+                            <span>{error}</span>
+                        </div>
+                    )}
 
                     {/* Form */}
                     <div className={styles.formContainer}>

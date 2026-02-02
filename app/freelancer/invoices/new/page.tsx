@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Link as LinkIcon, Copy, Check } from 'lucide-react';
-import { useAccount } from 'wagmi';
+import { ArrowLeft, Link as LinkIcon, Copy, Check, AlertCircle } from 'lucide-react';
 import { FreelancerSidebar, FreelancerTopBar } from '@/components/freelancer';
+import { useUser } from '@/contexts/UserContext';
 import styles from './page.module.css';
 
 interface InvoiceFormData {
@@ -18,8 +18,9 @@ interface InvoiceFormData {
 
 export default function NewInvoicePage() {
     const router = useRouter();
-    const { address } = useAccount();
+    const { user, userType } = useUser();
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const [showPaymentLink, setShowPaymentLink] = useState(false);
     const [paymentLink, setPaymentLink] = useState('');
     const [copied, setCopied] = useState(false);
@@ -35,26 +36,65 @@ export default function NewInvoicePage() {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+        setError(null);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
+        setError(null);
 
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1500));
-
-        // Generate mock payment link
-        const invoiceId = `INV-2024-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`;
-        const paymentLinkUrl = new URL(`${window.location.origin}/pay/${invoiceId.toLowerCase()}`);
-        paymentLinkUrl.searchParams.set('amount', formData.amount);
-        paymentLinkUrl.searchParams.set('currency', formData.currency);
-        if (address) {
-            paymentLinkUrl.searchParams.set('recipient', address);
+        // Get freelancer ID
+        const freelancerId = userType === 'freelancer' && user?.id ? user.id : null;
+        if (!freelancerId) {
+            setError('Unable to identify freelancer. Please try logging in again.');
+            setIsLoading(false);
+            return;
         }
-        setPaymentLink(paymentLinkUrl.toString());
-        setShowPaymentLink(true);
-        setIsLoading(false);
+
+        try {
+            const response = await fetch('/api/invoices', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    freelancerId,
+                    clientName: formData.clientName,
+                    clientEmail: formData.clientEmail,
+                    description: formData.description || 'Invoice for services',
+                    amount: formData.amount,
+                    currency: formData.currency,
+                    dueDate: formData.dueDate,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to create invoice');
+            }
+
+            const walletAddress = user?.walletAddress?.trim();
+            let paymentLinkValue = data.paymentLink as string;
+            if (paymentLinkValue) {
+                try {
+                    const url = new URL(paymentLinkValue, window.location.origin);
+                    const hasRecipient = url.searchParams.get('recipient') || url.searchParams.get('to');
+                    if (!hasRecipient && walletAddress) {
+                        url.searchParams.set('recipient', walletAddress);
+                        paymentLinkValue = url.toString();
+                    }
+                } catch {
+                    // Keep the original link if parsing fails.
+                }
+            }
+
+            setPaymentLink(paymentLinkValue);
+            setShowPaymentLink(true);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to create invoice');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleCopyLink = () => {
@@ -147,6 +187,14 @@ export default function NewInvoicePage() {
                         <p>Send an invoice to your client</p>
                     </div>
 
+                    {/* Error Message */}
+                    {error && (
+                        <div className={styles.errorBanner}>
+                            <AlertCircle size={18} />
+                            <span>{error}</span>
+                        </div>
+                    )}
+
                     {/* Form */}
                     <div className={styles.formContainer}>
                         <form className={styles.form} onSubmit={handleSubmit}>
@@ -223,13 +271,14 @@ export default function NewInvoicePage() {
                                         />
                                     </div>
                                     <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                                        <label htmlFor="description">Description (Optional)</label>
+                                        <label htmlFor="description">Description</label>
                                         <textarea
                                             id="description"
                                             name="description"
                                             value={formData.description}
                                             onChange={handleChange}
                                             placeholder="Services rendered, project details..."
+                                            required
                                         />
                                     </div>
                                 </div>
