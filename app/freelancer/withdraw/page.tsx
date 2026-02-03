@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Check, Loader2 } from 'lucide-react';
 import { FreelancerSidebar, FreelancerTopBar } from '@/components/freelancer';
 import styles from './page.module.css';
+import { useUser } from '@/contexts/UserContext';
 
 interface EarningsData {
     balances: Array<{
@@ -27,6 +28,7 @@ interface OffRampQuote {
 
 export default function WithdrawPage() {
     const router = useRouter();
+    const { user, userType, loading: userLoading } = useUser();
     const [amount, setAmount] = useState('');
     const [method, setMethod] = useState('bank');
     const [bankName, setBankName] = useState('');
@@ -40,14 +42,12 @@ export default function WithdrawPage() {
     const [loadingBalance, setLoadingBalance] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Get freelancerId from localStorage
-    const freelancerId = typeof window !== 'undefined'
-        ? localStorage.getItem('freelancerId')
-        : null;
+    const freelancerId = userType === 'freelancer' ? user?.id ?? null : null;
 
     // Fetch real balance
     useEffect(() => {
         const fetchBalance = async () => {
+            if (userLoading) return;
             if (!freelancerId) {
                 setLoadingBalance(false);
                 return;
@@ -66,7 +66,7 @@ export default function WithdrawPage() {
         };
 
         fetchBalance();
-    }, [freelancerId]);
+    }, [freelancerId, userLoading]);
 
     // Fetch off-ramp quote when amount changes
     useEffect(() => {
@@ -131,6 +131,11 @@ export default function WithdrawPage() {
         e.preventDefault();
         setError(null);
         setIsLoading(true);
+        if (!freelancerId) {
+            setError('Unable to identify your account. Please log in again.');
+            setIsLoading(false);
+            return;
+        }
 
         try {
             // Create withdrawal via API

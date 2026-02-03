@@ -7,6 +7,7 @@ import { Plus, Filter, Search, Users, UserCheck, Clock, CreditCard, Loader2, Use
 import { Sidebar, TopBar } from '@/components/dashboard';
 import { EmployeeTable, type Employee } from '@/components/dashboard/payroll';
 import styles from './page.module.css';
+import { useUser } from '@/contexts/UserContext';
 
 const normalizeEmployeeCurrency = (value?: string): Employee['currency'] => {
     if (value === 'IDRX') return 'IDRX';
@@ -26,6 +27,8 @@ const normalizeEmployeeStatus = (value?: string): Employee['status'] => {
 
 export default function EmployeesPage() {
     const router = useRouter();
+    const { user, userType, loading: userLoading } = useUser();
+    const companyId = userType === 'company' ? user?.id ?? null : null;
     const [searchQuery, setSearchQuery] = useState('');
     const [departmentFilter, setDepartmentFilter] = useState<string>('all');
     const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -34,7 +37,7 @@ export default function EmployeesPage() {
 
     // Fetch employees from API
     useEffect(() => {
-        const companyId = localStorage.getItem('companyId');
+        if (userLoading) return;
         if (!companyId) {
             setLoading(false);
             return;
@@ -96,7 +99,7 @@ export default function EmployeesPage() {
             isActive = false;
             controller.abort();
         };
-    }, []);
+    }, [companyId, userLoading]);
 
     // Get unique departments
     const departments = [...new Set(employees.map(e => e.department))];

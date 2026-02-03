@@ -7,6 +7,7 @@ import { Plus, Search, Filter, DollarSign, Clock, CheckCircle, AlertTriangle, Lo
 import { FreelancerSidebar, FreelancerTopBar } from '@/components/freelancer';
 import { InvoiceTable, type Invoice, type InvoiceStatusType } from '@/components/dashboard/invoice';
 import styles from './page.module.css';
+import { useUser } from '@/contexts/UserContext';
 
 const normalizeInvoiceCurrency = (value?: string): Invoice['currency'] => {
     if (value === 'IDRX') return 'IDRX';
@@ -30,6 +31,8 @@ const normalizeInvoiceStatus = (value?: string): InvoiceStatusType => {
 
 export default function FreelancerInvoicesPage() {
     const router = useRouter();
+    const { user, userType, loading: userLoading } = useUser();
+    const freelancerId = userType === 'freelancer' ? user?.id ?? null : null;
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -37,7 +40,7 @@ export default function FreelancerInvoicesPage() {
 
     // Fetch invoices from API
     useEffect(() => {
-        const freelancerId = localStorage.getItem('freelancerId');
+        if (userLoading) return;
         if (!freelancerId) {
             setLoading(false);
             return;
@@ -91,7 +94,7 @@ export default function FreelancerInvoicesPage() {
             isActive = false;
             controller.abort();
         };
-    }, []);
+    }, [freelancerId, userLoading]);
 
     // Filter invoices
     const filteredInvoices = invoices.filter((invoice) => {

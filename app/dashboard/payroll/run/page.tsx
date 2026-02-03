@@ -9,11 +9,14 @@ import { PayrollPreview, type PayrollItem } from '@/components/dashboard/payroll
 import { CHEQQ_PAYROLL_ABI, getCheqqPayrollAddress, generatePayrollId } from '@/lib/contracts';
 import { getTokenAddress, parseTokenAmount } from '@/lib/tokens';
 import styles from './page.module.css';
+import { useUser } from '@/contexts/UserContext';
 
 type Step = 'select' | 'approve' | 'confirm' | 'success';
 
 export default function RunPayrollPage() {
     const router = useRouter();
+    const { user, userType, loading: userLoading } = useUser();
+    const companyId = userType === 'company' ? user?.id ?? null : null;
     const [step, setStep] = useState<Step>('select');
     const [items, setItems] = useState<PayrollItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -22,13 +25,9 @@ export default function RunPayrollPage() {
     );
     const [txHash, setTxHash] = useState<`0x${string}` | undefined>();
 
-    // Get companyId from localStorage (in production, use auth context)
-    const companyId = typeof window !== 'undefined'
-        ? localStorage.getItem('companyId')
-        : null;
-
     // Fetch employees from API
     useEffect(() => {
+        if (userLoading) return;
         const fetchEmployees = async () => {
             if (!companyId) {
                 setLoading(false);
@@ -74,7 +73,7 @@ export default function RunPayrollPage() {
         };
 
         fetchEmployees();
-    }, [companyId]);
+    }, [companyId, userLoading]);
 
     // Smart contract write
     const { writeContract, data: hash, isPending: isWritePending } = useWriteContract();
@@ -139,6 +138,7 @@ export default function RunPayrollPage() {
 
     const handleExecutePayroll = async () => {
         if (payableItems.length === 0 || hasNonPayableSelected) return;
+        if (!companyId) return;
 
         // Generate unique payroll ID
         const payrollId = generatePayrollId(`${companyId}-${Date.now()}`);

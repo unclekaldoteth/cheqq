@@ -5,6 +5,7 @@ import { Search, Filter, TrendingUp, ArrowDownLeft, Calendar, Loader2, DollarSig
 import Link from 'next/link';
 import { FreelancerSidebar, FreelancerTopBar } from '@/components/freelancer';
 import styles from './page.module.css';
+import { useUser } from '@/contexts/UserContext';
 
 type PaymentStatus = 'completed' | 'pending' | 'failed';
 
@@ -32,6 +33,8 @@ const normalizePaymentStatus = (value?: string): PaymentStatus => {
 };
 
 export default function PaymentsPage() {
+    const { user, userType, loading: userLoading } = useUser();
+    const freelancerId = userType === 'freelancer' ? user?.id ?? null : null;
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [payments, setPayments] = useState<Payment[]>([]);
@@ -39,7 +42,7 @@ export default function PaymentsPage() {
 
     // Fetch payments from API
     useEffect(() => {
-        const freelancerId = localStorage.getItem('freelancerId');
+        if (userLoading) return;
         if (!freelancerId) {
             setLoading(false);
             return;
@@ -99,7 +102,7 @@ export default function PaymentsPage() {
             isActive = false;
             controller.abort();
         };
-    }, []);
+    }, [freelancerId, userLoading]);
 
     // Filter payments
     const filteredPayments = payments.filter((payment) => {

@@ -11,15 +11,15 @@ import {
 } from '@/components/dashboard';
 import Link from 'next/link';
 import styles from './page.module.css';
+import { useUser } from '@/contexts/UserContext';
 
 export default function DashboardPage() {
-    const [companyId] = useState<string | null>(() => {
-        if (typeof window === 'undefined') return null;
-        return localStorage.getItem('companyId');
-    });
+    const { user, userType, loading: userLoading } = useUser();
+    const companyId = userType === 'company' ? user?.id ?? null : null;
     const [companyName, setCompanyName] = useState<string>('');
 
     useEffect(() => {
+        if (userLoading) return;
         if (!companyId) return;
 
         const controller = new AbortController();
@@ -49,9 +49,9 @@ export default function DashboardPage() {
             isActive = false;
             controller.abort();
         };
-    }, [companyId]);
+    }, [companyId, userLoading]);
 
-    const displayName = companyName || 'Your Company';
+    const displayName = companyName || (userType === 'company' ? user?.name : null) || 'Your Company';
 
     return (
         <div className={styles.dashboardLayout}>

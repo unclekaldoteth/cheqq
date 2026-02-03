@@ -12,6 +12,7 @@ import {
     normalizeLoansResponse,
 } from '@/lib/defi/normalize';
 import styles from './page.module.css';
+import { useUser } from '@/contexts/UserContext';
 
 // Static protocols data (these are fixed DeFi integrations)
 const protocols = [
@@ -32,6 +33,8 @@ const protocols = [
 ];
 
 export default function DefiPage() {
+    const { user, userType, loading: userLoading } = useUser();
+    const companyId = userType === 'company' ? user?.id ?? null : null;
     const [loading, setLoading] = useState(true);
     const [treasury, setTreasury] = useState<TreasuryData | null>(null);
     const [activeLoans, setActiveLoans] = useState<Loan[]>([]);
@@ -69,7 +72,7 @@ export default function DefiPage() {
     }, []);
 
     useEffect(() => {
-        const companyId = localStorage.getItem('companyId');
+        if (userLoading) return;
         if (!companyId) {
             setLoading(false);
             return;
@@ -106,9 +109,10 @@ export default function DefiPage() {
             isActive = false;
             controller.abort();
         };
-    }, [fetchLoans]);
+    }, [companyId, fetchLoans, userLoading]);
 
     const handleLoanAction = async (loanId: string, action: 'approve' | 'reject') => {
+        if (!companyId) return;
         setProcessingLoanId(loanId);
         try {
             const response = await fetch('/api/loans', {
@@ -119,10 +123,7 @@ export default function DefiPage() {
 
             if (response.ok) {
                 // Refresh loans
-                const companyId = localStorage.getItem('companyId');
-                if (companyId) {
-                    await fetchLoans(companyId);
-                }
+                await fetchLoans(companyId);
             } else {
                 const data = await response.json();
                 alert(data.error || `Failed to ${action} loan`);

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Plus, ArrowUpRight, TrendingUp, Clock, FileText, ArrowDownLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { FreelancerSidebar, FreelancerTopBar } from '@/components/freelancer';
 import styles from './page.module.css';
+import { useUser } from '@/contexts/UserContext';
 
 interface FreelancerAnalytics {
     freelancer: {
@@ -45,15 +46,14 @@ interface FreelancerAnalytics {
 }
 
 export default function FreelancerDashboard() {
+    const { user, userType, loading: userLoading } = useUser();
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState<FreelancerAnalytics | null>(null);
-    const [freelancerId] = useState(() => {
-        if (typeof window === 'undefined') return null;
-        return localStorage.getItem('freelancerId');
-    });
+    const freelancerId = userType === 'freelancer' ? user?.id ?? null : null;
 
     // In production, get freelancerId from auth context
     useEffect(() => {
+        if (userLoading) return;
         if (!freelancerId) {
             setData(null);
             setLoading(false);
@@ -94,7 +94,7 @@ export default function FreelancerDashboard() {
             isActive = false;
             controller.abort();
         };
-    }, [freelancerId]);
+    }, [freelancerId, userLoading]);
 
     const formatAmount = (amount: number) => {
         return new Intl.NumberFormat('en-US', {
@@ -121,7 +121,7 @@ export default function FreelancerDashboard() {
         availableBalance: totals?.availableBalance || 0,
     };
 
-    const freelancerName = data?.freelancer?.name || 'Freelancer';
+    const freelancerName = data?.freelancer?.name || (userType === 'freelancer' ? user?.name : null) || 'Freelancer';
     const greetingName = freelancerName.trim().split(/\s+/)[0] || freelancerName;
 
     // Combine recent invoices and withdrawals into transactions

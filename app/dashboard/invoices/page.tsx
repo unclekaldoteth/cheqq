@@ -12,6 +12,7 @@ import {
     type InvoiceStatusType,
 } from '@/components/dashboard/invoice';
 import styles from './page.module.css';
+import { useUser } from '@/contexts/UserContext';
 
 interface InvoiceFromAPI {
     id: string;
@@ -55,18 +56,15 @@ const normalizeDate = (value?: string) => {
 
 export default function InvoicesPage() {
     const router = useRouter();
+    const { user, userType, loading: userLoading } = useUser();
+    const companyId = userType === 'company' ? user?.id ?? null : null;
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // Get companyId from localStorage
-    const [companyId] = useState(() => {
-        if (typeof window === 'undefined') return null;
-        return localStorage.getItem('companyId');
-    });
-
     useEffect(() => {
+        if (userLoading) return;
         if (!companyId) {
             setInvoices([]);
             setLoading(false);
@@ -120,7 +118,7 @@ export default function InvoicesPage() {
             isActive = false;
             controller.abort();
         };
-    }, [companyId]);
+    }, [companyId, userLoading]);
 
     const filteredInvoices = invoices.filter((invoice) => {
         const matchesSearch =
