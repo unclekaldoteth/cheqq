@@ -39,7 +39,7 @@ const defaultBalances: BalanceCardData[] = [
         color: '#0052FF',
     },
     {
-        label: 'USDC',
+        label: 'AlphaUSD',
         value: '$0.00',
         change: '–',
         trend: 'up',
@@ -47,7 +47,7 @@ const defaultBalances: BalanceCardData[] = [
         color: '#2775CA',
     },
     {
-        label: 'IDRX',
+        label: 'BetaUSD',
         value: 'Rp 0',
         subValue: '≈ $0',
         change: '–',
@@ -56,13 +56,12 @@ const defaultBalances: BalanceCardData[] = [
         color: '#DC143C',
     },
     {
-        label: 'ETH',
-        value: '0 ETH',
-        subValue: '≈ $0',
+        label: 'pathUSD',
+        value: '$0.00',
         change: '–',
         trend: 'up',
         icon: <Coins size={20} />,
-        color: '#627EEA',
+        color: '#22A06B',
     },
 ];
 
@@ -102,9 +101,9 @@ export default function BalanceCards({ companyId }: BalanceCardsProps) {
                 };
 
                 // Transform API data to display format
-                const usdcBalance = data.balances.find((b) => b.currency === 'USDC');
-                const idrxBalance = data.balances.find((b) => b.currency === 'IDRX');
-                const ethBalance = data.balances.find((b) => b.currency === 'ETH');
+                const alphaUsdBalance = data.balances.find((b) => b.currency === 'AlphaUSD');
+                const betaUsdBalance = data.balances.find((b) => b.currency === 'BetaUSD');
+                const pathUsdBalance = data.balances.find((b) => b.currency === 'pathUSD');
 
                 const formatUSD = (val: number) =>
                     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
@@ -114,10 +113,10 @@ export default function BalanceCards({ companyId }: BalanceCardsProps) {
 
                 const totalBalance = toNumber(data.summary.totalBalance);
                 const totalYield = toNumber(data.summary.totalYield);
-                const usdc = toNumber(usdcBalance?.balance);
-                const usdcYield = toNumber(usdcBalance?.yieldEarned);
-                const idrx = toNumber(idrxBalance?.balance);
-                const eth = toNumber(ethBalance?.balance);
+                const alphaUsd = toNumber(alphaUsdBalance?.balance);
+                const alphaUsdYield = toNumber(alphaUsdBalance?.yieldEarned);
+                const betaUsd = toNumber(betaUsdBalance?.balance);
+                const pathUsd = toNumber(pathUsdBalance?.balance);
 
                 const newBalances: BalanceCardData[] = [
                     {
@@ -129,32 +128,31 @@ export default function BalanceCards({ companyId }: BalanceCardsProps) {
                         color: '#0052FF',
                     },
                     {
-                        label: 'USDC',
-                        value: formatUSD(usdc),
-                        change: usdcYield > 0
-                            ? `+${formatUSD(usdcYield)}`
+                        label: 'AlphaUSD',
+                        value: formatUSD(alphaUsd),
+                        change: alphaUsdYield > 0
+                            ? `+${formatUSD(alphaUsdYield)}`
                             : '–',
                         trend: 'up',
                         icon: <span>💵</span>,
                         color: '#2775CA',
                     },
                     {
-                        label: 'IDRX',
-                        value: formatIDR(idrx),
-                        subValue: `≈ ${formatUSD(idrx / 15700)}`,
+                        label: 'BetaUSD',
+                        value: formatIDR(betaUsd),
+                        subValue: `≈ ${formatUSD(betaUsd / 15700)}`,
                         change: '–',
                         trend: 'up',
                         icon: <span>🇮🇩</span>,
                         color: '#DC143C',
                     },
                     {
-                        label: 'ETH',
-                        value: `${eth.toFixed(4)} ETH`,
-                        subValue: `≈ ${formatUSD(eth * 3500)}`,
+                        label: 'pathUSD',
+                        value: formatUSD(pathUsd),
                         change: '–',
                         trend: 'up',
                         icon: <Coins size={20} />,
-                        color: '#627EEA',
+                        color: '#22A06B',
                     },
                 ];
 

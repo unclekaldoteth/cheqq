@@ -5,8 +5,8 @@
   /* Colors */
   --bg-cream: #FFFDF5;
   --bg-dark: #0A0B0D;
-  --primary-blue: #0052FF;
-  --primary-blue-hover: #0040CC;
+  --primary-blue: #000000;
+  --primary-blue-hover: #333333;
   --accent-green: #00D395;
   --accent-green-hover: #00B07A;
   --text-dark: #0A0B0D;
@@ -17,9 +17,9 @@
   --border-light: #F3F4F6;
 
   /* Gradients */
-  --gradient-primary: linear-gradient(135deg, #0052FF 0%, #00D395 100%);
+  --gradient-primary: linear-gradient(135deg, #0A0B0D 0%, #333333 100%);
   --gradient-dark: linear-gradient(135deg, #0A0B0D 0%, #1A1D24 100%);
-  --gradient-glow: radial-gradient(circle at 50% 50%, rgba(0, 82, 255, 0.15) 0%, transparent 50%);
+  --gradient-glow: radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.15) 0%, transparent 50%);
 
   /* Spacing */
   --space-xs: 0.25rem;

@@ -27,8 +27,8 @@ test('normalizeDate returns ISO strings for valid dates', () => {
 test('normalizeTreasuryResponse coerces balances and summary values', () => {
     const payload = {
         balances: [
-            { id: 'b1', currency: 'USDC', balance: '100.50', yieldEarned: '5.25' },
-            { id: 'b2', currency: 'ETH', balance: 2, yieldEarned: '0' },
+            { id: 'b1', currency: 'AlphaUSD', balance: '100.50', yieldEarned: '5.25' },
+            { id: 'b2', currency: 'pathUSD', balance: 2, yieldEarned: '0' },
         ],
         summary: { totalBalance: '102.5', totalYield: '5.25', currencies: '2' },
     };
@@ -37,7 +37,7 @@ test('normalizeTreasuryResponse coerces balances and summary values', () => {
 
     assert.equal(normalized.balances.length, 2);
     assert.equal(normalized.balances[0].balance, 100.5);
-    assert.equal(normalized.balances[1].currency, 'ETH');
+    assert.equal(normalized.balances[1].currency, 'pathUSD');
     assert.equal(normalized.summary.totalBalance, 102.5);
     assert.equal(normalized.summary.currencies, 2);
 });
@@ -50,7 +50,7 @@ test('normalizeLoansResponse defaults missing fields and numeric strings', () =>
                 amount: '1000',
                 remainingAmount: '750',
                 monthlyDeduction: '250',
-                currency: 'USDC',
+                currency: 'AlphaUSD',
                 createdAt: '2024-02-01T00:00:00.000Z',
                 employee: { name: 'Ada Lovelace' },
             },
@@ -70,6 +70,7 @@ test('normalizeLoansResponse defaults missing fields and numeric strings', () =>
     assert.equal(normalized.loans[0].employee.name, 'Ada Lovelace');
     assert.equal(normalized.loans[1].employee.name, 'Employee');
     assert.equal(normalized.loans[1].amount, 0);
+    assert.equal(normalized.loans[1].currency, 'AlphaUSD');
     assert.equal(normalized.summary.total, 2);
     assert.equal(normalized.summary.totalRemaining, 750);
 });

@@ -12,7 +12,7 @@ interface InvoiceFormData {
     clientName: string;
     clientEmail: string;
     amount: string;
-    currency: 'USDC' | 'IDRX';
+    currency: 'AlphaUSD' | 'BetaUSD' | 'pathUSD';
     dueDate: string;
     memo: string;
 }

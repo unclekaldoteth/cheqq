@@ -1,19 +1,14 @@
 import { NextResponse } from 'next/server';
 import { createHmac } from 'crypto';
 import type { Currency } from '@prisma/client';
+import { normalizeCurrency } from '@/lib/currency';
 
 // Force dynamic rendering - prevents build-time analysis
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-const ALLOWED_CURRENCIES = ['USDC', 'IDRX', 'ETH'] as const;
-
-const normalizeCurrency = (value: string | undefined | null): Currency | null => {
-    const normalized = (value || 'USDC').trim().toUpperCase();
-    return ALLOWED_CURRENCIES.includes(normalized as Currency)
-        ? (normalized as Currency)
-        : null;
-};
+const normalizePaymentCurrency = (value: string | undefined | null): Currency | null =>
+    normalizeCurrency(value, 'AlphaUSD') as Currency | null;
 
 // Webhook secret for verifying signatures (set in .env)
 const WEBHOOK_SECRET = process.env.PAYMENT_WEBHOOK_SECRET || '';
@@ -72,7 +67,7 @@ export async function POST(request: Request) {
                 const paymentId = (data as { paymentId?: string }).paymentId || null;
                 const txHash = (data as { txHash?: string }).txHash || null;
                 const amount = (data as { amount?: string | number }).amount;
-                const currency = normalizeCurrency((data as { currency?: string }).currency);
+                const currency = normalizePaymentCurrency((data as { currency?: string }).currency);
                 const payerAddress = (data as { payerAddress?: string }).payerAddress || null;
 
                 if (!invoiceId || amount === undefined || amount === null) {

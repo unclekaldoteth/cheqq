@@ -1,6 +1,7 @@
 /**
  * KYC Callback API Route
- * Processes KYC submission, computes dataRoot, and creates EAS attestation
+ * Processes KYC submission and stores credentials
+ * Updated for Tempo Testnet - EAS attestations removed
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -10,14 +11,13 @@ import {
     generateSalt,
     type FreelancerKYCData
 } from "@/lib/dataRoot";
-import {
-    createFreelancerKYCAttestation,
-    type FreelancerKYCAttestationData,
-} from "@/lib/eas";
 import { keccak256, type Hex } from "viem";
 
 // KYC expiry: 1 year from now
 const KYC_EXPIRY_SECONDS = 365 * 24 * 60 * 60;
+
+// Tempo Testnet chain ID
+const TEMPO_CHAIN_ID = 42431;
 
 export async function POST(request: NextRequest) {
     try {
@@ -80,7 +80,6 @@ export async function POST(request: NextRequest) {
                 },
             });
         } else {
-            // Increment salt nonce for new KYC
             salt = await prisma.kycSalt.update({
                 where: { id: salt.id },
                 data: { saltNonce: salt.saltNonce + 1 },
@@ -111,36 +110,11 @@ export async function POST(request: NextRequest) {
 
         // Calculate expiry
         const expiresAt = new Date(Date.now() + KYC_EXPIRY_SECONDS * 1000);
-        const expiresAtUnix = BigInt(Math.floor(expiresAt.getTime() / 1000));
 
-        // Get chain ID from environment
-        const chainId = process.env.NEXT_PUBLIC_CHAIN === "base" ? 8453 : 84532;
+        // Use Tempo chain ID
+        const chainId = TEMPO_CHAIN_ID;
 
-        // Create EAS attestation
-        let attestationUID: Hex | null = null;
-        let txHash: Hex | null = null;
-
-        try {
-            const attestationData: FreelancerKYCAttestationData = {
-                level: 1, // Basic level for manual verification
-                expiresAt: expiresAtUnix,
-                dataRoot,
-            };
-
-            const result = await createFreelancerKYCAttestation(
-                walletAddress,
-                attestationData,
-                chainId
-            );
-
-            attestationUID = result.attestationUID;
-            txHash = result.txHash;
-        } catch (attestError) {
-            console.error("EAS attestation failed:", attestError);
-            // Continue without attestation - will be retried
-        }
-
-        // Store KYC credential
+        // Store KYC credential (without EAS attestation on Tempo)
         await prisma.kycCredential.upsert({
             where: {
                 freelancerId_chainId: {
@@ -153,7 +127,7 @@ export async function POST(request: NextRequest) {
                 walletAddress,
                 level: 1,
                 dataRoot,
-                attestationUid: attestationUID,
+                attestationUid: null,
                 chainId,
                 expiresAt,
                 provider: "MANUAL",
@@ -161,7 +135,7 @@ export async function POST(request: NextRequest) {
             update: {
                 level: 1,
                 dataRoot,
-                attestationUid: attestationUID,
+                attestationUid: null,
                 expiresAt,
                 revokedAt: null,
             },
@@ -176,20 +150,17 @@ export async function POST(request: NextRequest) {
                 metadata: {
                     sessionId,
                     freelancerId,
-                    attestationUID,
-                    txHash,
                     chainId,
+                    note: "EAS attestation not available on Tempo",
                 },
             },
         });
 
         return NextResponse.json({
             success: true,
-            attestationUID,
-            txHash,
             expiresAt: expiresAt.toISOString(),
             level: 1,
-            status: attestationUID ? "attested" : "pending_attestation",
+            status: "verified",
         });
     } catch (error) {
         console.error("KYC callback error:", error);

@@ -63,10 +63,8 @@ export function FlipWords({
                     duration: 0.4,
                     ease: 'easeInOut',
                 }}
-                className={cn(
-                    'inline-block',
-                    className
-                )}
+                className={className}
+                style={{ display: 'inline-block' }}
             >
                 {words[currentIndex]}
             </motion.span>

@@ -1,20 +1,16 @@
 import { NextResponse } from 'next/server';
 import type { Currency } from '@prisma/client';
+import { normalizeCurrency } from '@/lib/currency';
 
 // Force dynamic rendering - prevents build-time analysis
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-const ALLOWED_CURRENCIES = ['USDC', 'IDRX', 'ETH'] as const;
-
-const isAllowedCurrency = (value: string): value is Currency =>
-    ALLOWED_CURRENCIES.includes(value as Currency);
-
 // Mock yield rates - In production, these would come from actual DeFi protocols
 const YIELD_RATES: Record<Currency, { protocol: string; apy: number; tvl: number }> = {
-    USDC: { protocol: 'Moonwell', apy: 4.5, tvl: 125000000 },
-    IDRX: { protocol: 'Internal Vault', apy: 3.2, tvl: 5000000 },
-    ETH: { protocol: 'Aave', apy: 2.8, tvl: 500000000 },
+    AlphaUSD: { protocol: 'Tempo Vault', apy: 4.5, tvl: 125000000 },
+    BetaUSD: { protocol: 'Tempo Lending', apy: 3.2, tvl: 5000000 },
+    pathUSD: { protocol: 'Tempo Pool', apy: 2.8, tvl: 500000000 },
 };
 
 // GET /api/defi/yield - Get yield rates and positions
@@ -25,9 +21,10 @@ export async function GET(request: Request) {
 
         const { searchParams } = new URL(request.url);
         const companyId = searchParams.get('companyId')?.trim();
-        const currencyParam = searchParams.get('currency')?.trim().toUpperCase() || null;
+        const rawCurrencyParam = searchParams.get('currency');
+        const currencyParam = normalizeCurrency(rawCurrencyParam);
 
-        if (currencyParam && !isAllowedCurrency(currencyParam)) {
+        if (rawCurrencyParam && !currencyParam) {
             return NextResponse.json(
                 { error: 'Invalid currency' },
                 { status: 400 }
@@ -118,7 +115,7 @@ export async function POST(request: Request) {
 
         const body = await request.json();
         const companyId = String(body.companyId || '').trim();
-        const currencyInput = String(body.currency || 'USDC').trim().toUpperCase();
+        const currencyInput = normalizeCurrency(String(body.currency || 'AlphaUSD'), 'AlphaUSD');
         const amountValue = String(body.amount ?? '').trim();
 
         if (!companyId) {
@@ -128,7 +125,7 @@ export async function POST(request: Request) {
             );
         }
 
-        if (!isAllowedCurrency(currencyInput)) {
+        if (!currencyInput) {
             return NextResponse.json(
                 { error: 'Invalid currency' },
                 { status: 400 }
@@ -205,7 +202,7 @@ export async function PATCH(request: Request) {
 
         const body = await request.json();
         const companyId = String(body.companyId || '').trim();
-        const currencyInput = String(body.currency || 'USDC').trim().toUpperCase();
+        const currencyInput = normalizeCurrency(String(body.currency || 'AlphaUSD'), 'AlphaUSD');
         const amountValue = String(body.amount ?? '').trim();
 
         if (!companyId) {
@@ -215,7 +212,7 @@ export async function PATCH(request: Request) {
             );
         }
 
-        if (!isAllowedCurrency(currencyInput)) {
+        if (!currencyInput) {
             return NextResponse.json(
                 { error: 'Invalid currency' },
                 { status: 400 }

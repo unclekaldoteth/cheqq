@@ -203,9 +203,9 @@ export default function SettingsPage() {
                                                 </div>
                                                 <div className={styles.formGroup}>
                                                     <label>Default Currency</label>
-                                                    <select defaultValue="USDC">
-                                                        <option value="USDC">USDC</option>
-                                                        <option value="IDRX">IDRX</option>
+                                                    <select defaultValue="AlphaUSD">
+                                                        <option value="AlphaUSD">AlphaUSD</option>
+                                                        <option value="BetaUSD">BetaUSD</option>
                                                     </select>
                                                 </div>
                                             </div>

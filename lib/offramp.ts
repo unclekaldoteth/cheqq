@@ -6,6 +6,8 @@
  * In production, integrate with Circle, Ramp, or TransFi.
  */
 
+import { normalizeCurrency } from './currency';
+
 export interface OffRampQuote {
     inputAmount: string;
     inputCurrency: string;
@@ -34,11 +36,11 @@ export interface OffRampTransaction {
 
 // Simulated exchange rates (in production, fetch from API)
 const EXCHANGE_RATES: Record<string, Record<string, number>> = {
-    USDC: {
+    AlphaUSD: {
         USD: 1.0,
         IDR: 15700,
     },
-    IDRX: {
+    BetaUSD: {
         IDR: 1.0,
         USD: 0.0000637,
     },
@@ -59,24 +61,26 @@ export async function getOffRampQuote(
     if (!Number.isFinite(amount) || amount <= 0) {
         throw new Error('Amount must be greater than zero');
     }
-    const rates = EXCHANGE_RATES[inputCurrency.toUpperCase()];
+    const normalizedInputCurrency = normalizeCurrency(inputCurrency);
+    const normalizedOutputCurrency = outputCurrency.trim().toUpperCase();
+    const rates = normalizedInputCurrency ? EXCHANGE_RATES[normalizedInputCurrency] : null;
 
-    if (!rates || !rates[outputCurrency.toUpperCase()]) {
+    if (!rates || !rates[normalizedOutputCurrency]) {
         throw new Error(`Unsupported conversion: ${inputCurrency} to ${outputCurrency}`);
     }
 
-    const exchangeRate = rates[outputCurrency.toUpperCase()];
+    const exchangeRate = rates[normalizedOutputCurrency];
     const fee = amount * (OFF_RAMP_FEE_PERCENT / 100);
     const netOutput = (amount - fee) * exchangeRate;
 
     return {
         inputAmount,
-        inputCurrency: inputCurrency.toUpperCase(),
+        inputCurrency: normalizedInputCurrency ?? inputCurrency,
         outputAmount: netOutput.toFixed(2),
-        outputCurrency: outputCurrency.toUpperCase(),
+        outputCurrency: normalizedOutputCurrency,
         exchangeRate,
         fee: fee.toFixed(6),
-        feeCurrency: inputCurrency.toUpperCase(),
+        feeCurrency: normalizedInputCurrency ?? inputCurrency,
         expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes
     };
 }
@@ -135,7 +139,7 @@ export async function getOffRampStatus(transactionId: string): Promise<OffRampTr
         id: transactionId,
         status: 'COMPLETED',
         inputAmount: '100.00',
-        inputCurrency: 'USDC',
+        inputCurrency: 'AlphaUSD',
         outputAmount: '1545500.00',
         outputCurrency: 'IDR',
         bankName: 'BCA',
@@ -158,7 +162,8 @@ function maskAccountNumber(accountNumber: string): string {
  * Get supported output currencies for a given input currency
  */
 export function getSupportedOutputCurrencies(inputCurrency: string): string[] {
-    const rates = EXCHANGE_RATES[inputCurrency.toUpperCase()];
+    const normalizedCurrency = normalizeCurrency(inputCurrency);
+    const rates = normalizedCurrency ? EXCHANGE_RATES[normalizedCurrency] : null;
     return rates ? Object.keys(rates) : [];
 }
 

@@ -50,9 +50,14 @@ const CHEQQ_PAYROLL_GATED_ABI = [
 
 // Contract addresses
 const PAYROLL_GATED_ADDRESS: Record<number, Hex> = {
-    84532: "0x7430605AD9cbaB00961E5a52a059E9c3A2280Cd0" as Hex, // Base Sepolia
-    8453: "0x0000000000000000000000000000000000000000" as Hex, // Base Mainnet - TBD
+    42431: (
+        process.env.NEXT_PUBLIC_CHEQQ_GATED_ACTIONS_ADDRESS ||
+        process.env.NEXT_PUBLIC_CHEQQ_PAYROLL_GATED_ADDRESS ||
+        "0x0000000000000000000000000000000000000000"
+    ) as Hex,
 };
+
+const ZERO_BYTES32 = "0x0000000000000000000000000000000000000000000000000000000000000000" as Hex;
 
 // ========== TYPES ==========
 
@@ -153,7 +158,9 @@ export function useGatedPayroll(): UseGatedPayrollReturn {
                         })),
                         contractPermit,
                         permitResponse.signature,
-                        permitResponse.attestationUID,
+                        permitResponse.attestationUID ||
+                        permitResponse.permit.requiredAttestationUID ||
+                        ZERO_BYTES32,
                     ],
                 });
 

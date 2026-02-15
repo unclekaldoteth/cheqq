@@ -67,7 +67,7 @@ export default function Footer() {
                             styles.logo
                         )}
                         <p>
-                            Payroll & DeFi. Unified on Base. The future of business finance.
+                            Payroll & DeFi. Unified on Tempo. The future of business finance.
                         </p>
                         <div className={styles.socialLinks}>
                             {socialLinks.map((social, index) => (
@@ -134,7 +134,7 @@ export default function Footer() {
                 <div className={styles.footerBottom}>
                     <p>© {new Date().getFullYear()} Cheqq. All rights reserved.</p>
                     <p className={styles.hackathonBadge}>
-                        🇮🇩 Built for Base Indonesia Hackathon 2026
+                        Built for Tempo Hackathon 2026
                     </p>
                 </div>
             </div>

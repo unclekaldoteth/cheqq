@@ -11,7 +11,7 @@ interface EmployeeFormData {
     email: string;
     walletAddress: string;
     salary: string;
-    currency: 'USDC' | 'IDRX';
+    currency: 'AlphaUSD' | 'BetaUSD';
     department: string;
 }
 
@@ -23,7 +23,7 @@ export default function NewEmployeePage() {
         email: '',
         walletAddress: '',
         salary: '',
-        currency: 'USDC',
+        currency: 'AlphaUSD',
         department: '',
     });
 
@@ -161,8 +161,8 @@ export default function NewEmployeePage() {
                                                 onChange={handleChange}
                                                 className={styles.currencySelect}
                                             >
-                                                <option value="USDC">USDC</option>
-                                                <option value="IDRX">IDRX</option>
+                                                <option value="AlphaUSD">AlphaUSD</option>
+                                                <option value="BetaUSD">BetaUSD</option>
                                             </select>
                                         </div>
                                     </div>

@@ -6,30 +6,35 @@ import {CheqqGatedActions} from "../src/CheqqGatedActions.sol";
 
 /**
  * @title DeployCheqqGatedActions
- * @notice Deploys the CheqqGatedActions contract to Base Sepolia
- * @dev Run with: forge script script/DeployCheqqGatedActions.s.sol --rpc-url base-sepolia --broadcast --verify
+ * @notice Deploys the CheqqGatedActions contract on Tempo Testnet (no EAS)
+ * @dev Run with: forge script script/DeployCheqqGatedActions.s.sol --rpc-url https://rpc.moderato.tempo.xyz --broadcast
  */
 contract DeployCheqqGatedActions is Script {
-    // EAS Contract (predeploy on Base)
-    address constant EAS_CONTRACT = 0x4200000000000000000000000000000000000021;
-    
+    uint256 constant TEMPO_CHAIN_ID = 42431;
+
     function run() external {
-        uint256 deployerPrivateKey = vm.envUint("ATTESTER_PRIVATE_KEY");
+        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         address deployer = vm.addr(deployerPrivateKey);
         
-        console.log("Deploying CheqqGatedActions...");
+        console.log("Deploying CheqqGatedActions (no EAS)...");
         console.log("Deployer:", deployer);
-        console.log("EAS Contract:", EAS_CONTRACT);
+        console.log("Chain ID:", block.chainid);
+
+        if (block.chainid != TEMPO_CHAIN_ID) {
+            revert("Must deploy on Tempo Testnet (42431)");
+        }
         
         vm.startBroadcast(deployerPrivateKey);
         
         // Deploy CheqqGatedActions
-        // Constructor: eas, permitSigner, owner
+        // Constructor: permitSigner, owner
         CheqqGatedActions gatedActions = new CheqqGatedActions(
-            EAS_CONTRACT,   // eas
             deployer,       // permit signer
             deployer        // owner
         );
+        
+        // Register deployer wallet for testing
+        gatedActions.setWalletRegistered(deployer, true);
         
         vm.stopBroadcast();
         
@@ -38,8 +43,7 @@ contract DeployCheqqGatedActions is Script {
         console.log("CheqqGatedActions:", address(gatedActions));
         console.log("");
         console.log("Next steps:");
-        console.log("1. Update GATED_ACTIONS_ADDRESS in lib/permit.ts");
-        console.log("2. Update PAYROLL_GATED_ADDRESS in hooks/useGatedPayroll.ts");
-        console.log("3. Call setSchemaUIDs() on the contract with the schema UIDs");
+        console.log("1. Set CHEQQ_GATED_ACTIONS_ADDRESS in .env.local");
+        console.log("2. Set NEXT_PUBLIC_CHEQQ_GATED_ACTIONS_ADDRESS in .env.local");
     }
 }

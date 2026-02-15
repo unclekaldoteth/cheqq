@@ -1,12 +1,11 @@
 /**
  * Revoke API Route
- * Admin endpoint to block subjects and revoke attestations
+ * Admin endpoint to block subjects and revoke credentials
+ * Updated for Tempo Testnet - EAS attestation revocation removed
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { revokeAttestation, SCHEMA_UIDS } from "@/lib/eas";
-import { type Hex } from "viem";
 
 // Admin wallets (should be in environment variable in production)
 const ADMIN_WALLETS = [
@@ -21,7 +20,7 @@ export async function POST(request: NextRequest) {
             adminWallet,
             subjectAddress,
             reason,
-            revokeAttestations = false,
+            revokeCredentials = false,
             blockedUntil = null, // null = permanent
         } = body;
 
@@ -67,38 +66,23 @@ export async function POST(request: NextRequest) {
             },
         });
 
-        const revokedAttestations: string[] = [];
-        const chainId = process.env.NEXT_PUBLIC_CHAIN === "base" ? 8453 : 84532;
-        const schemaUIDs = chainId === 8453 ? SCHEMA_UIDS.base : SCHEMA_UIDS.baseSepolia;
+        const revokedCredentials: string[] = [];
 
-        if (revokeAttestations) {
-            // Revoke KYC credentials
+        if (revokeCredentials) {
+            // Revoke KYC credentials (database-level only, no on-chain attestation on Tempo)
             const kycCredentials = await prisma.kycCredential.findMany({
                 where: {
                     walletAddress: normalizedSubject,
                     revokedAt: null,
-                    attestationUid: { not: null },
                 },
             });
 
             for (const kyc of kycCredentials) {
-                if (kyc.attestationUid) {
-                    try {
-                        await revokeAttestation(
-                            kyc.attestationUid as Hex,
-                            schemaUIDs.freelancerKYC,
-                            kyc.chainId
-                        );
-                        revokedAttestations.push(kyc.attestationUid);
-                    } catch (e) {
-                        console.error(`Failed to revoke KYC attestation ${kyc.attestationUid}:`, e);
-                    }
-
-                    await prisma.kycCredential.update({
-                        where: { id: kyc.id },
-                        data: { revokedAt: new Date() },
-                    });
-                }
+                await prisma.kycCredential.update({
+                    where: { id: kyc.id },
+                    data: { revokedAt: new Date() },
+                });
+                revokedCredentials.push(`kyc:${kyc.id}`);
             }
 
             // Revoke company roles
@@ -106,28 +90,15 @@ export async function POST(request: NextRequest) {
                 where: {
                     walletAddress: normalizedSubject,
                     revokedAt: null,
-                    attestationUid: { not: null },
                 },
             });
 
             for (const role of companyRoles) {
-                if (role.attestationUid) {
-                    try {
-                        await revokeAttestation(
-                            role.attestationUid as Hex,
-                            schemaUIDs.companyRole,
-                            role.chainId
-                        );
-                        revokedAttestations.push(role.attestationUid);
-                    } catch (e) {
-                        console.error(`Failed to revoke role attestation ${role.attestationUid}:`, e);
-                    }
-
-                    await prisma.companyWalletRole.update({
-                        where: { id: role.id },
-                        data: { revokedAt: new Date() },
-                    });
-                }
+                await prisma.companyWalletRole.update({
+                    where: { id: role.id },
+                    data: { revokedAt: new Date() },
+                });
+                revokedCredentials.push(`role:${role.id}`);
             }
         }
 
@@ -141,7 +112,7 @@ export async function POST(request: NextRequest) {
                     reason,
                     blockedBy: normalizedAdmin,
                     blockedUntil,
-                    revokedAttestations,
+                    revokedCredentials,
                 },
             },
         });
@@ -151,7 +122,7 @@ export async function POST(request: NextRequest) {
             blocked: true,
             reason,
             blockedUntil: blockedUntil || "permanent",
-            revokedAttestations,
+            revokedCredentials,
         });
     } catch (error) {
         console.error("Revoke error:", error);

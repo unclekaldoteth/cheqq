@@ -17,25 +17,22 @@ flowchart TB
         DefiUI["DeFi Manager"]
     end
 
-    subgraph Blockchain["⛓️ Base L2"]
+    subgraph Blockchain["⛓️ Tempo Network"]
         subgraph Contracts["Smart Contracts"]
-            CheqqCore["Cheqq Core"]
-            InvoiceContract["Invoice Contract"]
-            PayrollContract["Payroll Contract"]
-            LendingContract["Employee Lending"]
-            TreasuryVault["Treasury Vault"]
+            PayrollContract["CheqqPayroll"]
+            GatedActions["CheqqGatedActions"]
         end
         
-        subgraph Tokens["Tokens"]
-            USDC["USDC"]
-            IDRX["IDRX"]
-            ETH["ETH"]
+        subgraph Tokens["TIP-20 Tokens"]
+            AlphaUSD["AlphaUSD"]
+            BetaUSD["BetaUSD"]
+            PathUSD["pathUSD"]
         end
     end
 
-    subgraph DeFiProtocols["📈 DeFi Protocols"]
-        Morpho["Morpho (Lending)"]
-        Aero["Aerodrome (DEX)"]
+    subgraph Backend["🔧 Backend (Next.js API)"]
+        PermitSigner["EIP-712 Permit Signer"]
+        Database["PostgreSQL (Prisma)"]
     end
 
     Company --> Dashboard
@@ -44,17 +41,15 @@ flowchart TB
     Dashboard --> PayrollUI
     Dashboard --> DefiUI
 
-    InvoiceUI --> InvoiceContract
     PayrollUI --> PayrollContract
-    DefiUI --> LendingContract
-    DefiUI --> TreasuryVault
-
-    TreasuryVault --> Morpho
-    TreasuryVault --> Aero
+    PayrollUI --> PermitSigner
+    PermitSigner --> GatedActions
     
     PayrollContract --> Tokens
-    InvoiceContract --> Tokens
-    LendingContract --> Tokens
+    GatedActions --> PermitSigner
+    
+    InvoiceUI --> Backend
+    Backend --> Database
 ```
 
 ---
@@ -63,14 +58,14 @@ flowchart TB
 
 ```mermaid
 flowchart LR
-    A["🏢 Company"] --> B["Connect Wallet"]
-    B --> C{"Has Smart Account?"}
-    C -->|No| D["Create Smart Account\n(Account Abstraction)"]
+    A["🏢 Company"] --> B["Connect Wallet\n(Privy / Injected)"]
+    B --> C{"KYB Verified?"}
+    C -->|No| D["Submit KYB\nDocumentation"]
     C -->|Yes| E["Sign In"]
     D --> E
     E --> F["Setup Company Profile"]
     F --> G["Add Employees"]
-    G --> H["Fund Treasury\n(USDC/IDRX)"]
+    G --> H["Fund Treasury\n(AlphaUSD/BetaUSD)"]
     H --> I["✅ Ready to Use"]
 ```
 
@@ -82,16 +77,16 @@ flowchart LR
 flowchart TB
     subgraph Create["📝 Create Invoice"]
         A1["Company creates invoice"] --> A2["Add client details"]
-        A2 --> A3["Set amount & currency\n(USDC/IDRX)"]
+        A2 --> A3["Set amount & currency\n(AlphaUSD/BetaUSD)"]
         A3 --> A4["Generate payment link"]
     end
 
     subgraph Pay["💳 Payment"]
-        B1["Client receives link"] --> B2["Connect wallet or\npay with card"]
+        B1["Client receives link"] --> B2["Connect wallet or\nlogin with Privy"]
         B2 --> B3{"Payment Method"}
-        B3 -->|Crypto| B4["Pay with USDC/IDRX"]
-        B3 -->|Fiat| B5["Onramp to Stablecoin"]
-        B4 --> B6["Smart Contract\nprocesses payment"]
+        B3 -->|Crypto| B4["Pay with AlphaUSD/BetaUSD"]
+        B3 -->|Fiat| B5["On-ramp to Stablecoin"]
+        B4 --> B6["TIP-20 Transfer\non Tempo"]
         B5 --> B6
     end
 
@@ -114,7 +109,7 @@ flowchart TB
     subgraph Setup["⚙️ Setup"]
         A1["Add employees"] --> A2["Set salary amounts"]
         A2 --> A3["Set pay frequency\n(Weekly/Monthly)"]
-        A3 --> A4["Choose currency\n(USDC/IDRX)"]
+        A3 --> A4["Choose currency\n(AlphaUSD/BetaUSD)"]
     end
 
     subgraph Execute["🚀 Execute Payroll"]
@@ -126,7 +121,7 @@ flowchart TB
     end
 
     subgraph Distribute["💸 Distribution"]
-        C1["Smart Contract\nexecutes batch"] --> C2["Deduct any loan\nrepayments"]
+        C1["CheqqPayroll contract\nexecutes batch"] --> C2["Deduct any loan\nrepayments"]
         C2 --> C3["Transfer net salary\nto each employee"]
         C3 --> C4["Update records"]
         C4 --> C5["Send notifications"]
@@ -143,7 +138,7 @@ flowchart TB
 ```mermaid
 flowchart TB
     subgraph Deposit["📥 Deposit"]
-        A1["Company has idle\ntreasury funds"] --> A2["Choose protocol\n(Morpho/Aerodrome)"]
+        A1["Company has idle\ntreasury funds"] --> A2["Choose yield protocol"]
         A2 --> A3["Select amount to deposit"]
         A3 --> A4["Approve & Deposit"]
     end
@@ -180,7 +175,7 @@ flowchart TB
 
     subgraph Approval["✅ Approval"]
         B1["Request sent to\nCompany Admin"] --> B2{"Admin Review"}
-        B2 -->|Approve| B3["Smart Contract\ncreates loan"]
+        B2 -->|Approve| B3["Loan recorded\nin database"]
         B2 -->|Reject| B4["Employee notified"]
         B3 --> B5["Loan funds sent\nto Employee"]
     end
@@ -205,37 +200,62 @@ flowchart TB
 
 ---
 
-## 7. Complete Transaction Flow (End-to-End)
+## 7. EIP-712 Permit Flow (Gated Actions)
+
+```mermaid
+sequenceDiagram
+    participant U as 👤 User
+    participant F as 🖥️ Frontend
+    participant B as 🔧 Backend API
+    participant GA as 📜 CheqqGatedActions
+    participant T as ⛓️ Tempo
+
+    U->>F: Initiate action (e.g., payroll)
+    F->>B: POST /api/permit
+    B->>B: Verify wallet registration
+    B->>B: Generate nonce
+    B->>B: Sign EIP-712 permit
+    B-->>F: Return signed permit
+    F->>GA: verifyAndUsePermit(permit, signature)
+    GA->>GA: Verify signature matches permitSigner
+    GA->>GA: Check nonce not used
+    GA->>GA: Check not expired
+    GA->>GA: Mark nonce as used
+    GA-->>T: Emit PermitUsed event
+    T-->>F: Transaction confirmed
+    F-->>U: Action completed ✅
+```
+
+---
+
+## 8. Complete Transaction Flow (End-to-End)
 
 ```mermaid
 sequenceDiagram
     participant C as 🏢 Company
     participant F as 🖥️ Frontend
-    participant SC as 📜 Smart Contract
-    participant M as 🦋 Morpho
+    participant API as 🔧 API Server
+    participant SC as 📜 CheqqPayroll
+    participant T as ⛓️ Tempo
     participant E as 👤 Employee
 
     Note over C,E: === Treasury Management ===
-    C->>F: Deposit $50,000 USDC
-    F->>SC: Treasury.deposit()
-    SC->>M: Deposit to yield vault
-    M-->>SC: Receive yield tokens
-    SC-->>F: Confirm deposit
+    C->>F: Deposit $50,000 AlphaUSD
+    F->>T: TIP-20 Transfer to Treasury
+    T-->>F: Confirm deposit
     F-->>C: Balance updated
 
     Note over C,E: === Employee Loan ===
     E->>F: Request $1,500 advance
-    F->>SC: Lending.requestLoan()
-    SC->>SC: Lock future salary as collateral
-    SC->>E: Transfer $1,500 USDC
-    SC-->>F: Loan created
-    F-->>E: Funds received
+    F->>API: POST /api/loans
+    API->>API: Record loan in database
+    API-->>F: Loan approved
+    F->>T: Transfer AlphaUSD to Employee
+    T-->>E: Funds received
 
     Note over C,E: === Payroll ===
     C->>F: Run monthly payroll
-    F->>SC: Payroll.executeBatch()
-    SC->>M: Withdraw required funds
-    M-->>SC: Return USDC
+    F->>SC: executePayroll(batch)
     loop For each employee
         SC->>SC: Calculate net salary
         SC->>SC: Deduct loan repayment
@@ -247,55 +267,47 @@ sequenceDiagram
 
 ---
 
-## 8. Smart Contract Architecture
+## 9. Smart Contract Architecture
 
 ```mermaid
 flowchart TB
-    subgraph Core["Cheqq Core"]
-        Registry["Company Registry"]
-        Access["Access Control"]
+    subgraph Core["Cheqq Contracts"]
+        Payroll["CheqqPayroll\n(Batch Payments)"]
+        Gated["CheqqGatedActions\n(EIP-712 Permits)"]
     end
 
-    subgraph Modules["Feature Modules"]
-        Invoice["Invoice Module"]
-        Payroll["Payroll Module"]
-        Lending["Lending Module"]
-        Treasury["Treasury Module"]
+    subgraph Access["Access Control"]
+        Owner["Ownable (Admin)"]
+        PermitSigner["Permit Signer"]
+        CompanyReg["Company Registry"]
     end
 
-    subgraph External["External Integrations"]
-        Morpho["Morpho Vault"]
-        Aero["Aerodrome Pool"]
-        Chainlink["Chainlink Price Feeds"]
+    subgraph Tokens["TIP-20 Token Support"]
+        AlphaUSD["AlphaUSD"]
+        BetaUSD["BetaUSD"]
+        PathUSD["pathUSD"]
     end
 
-    subgraph Tokens["Token Support"]
-        USDC["USDC"]
-        IDRX["IDRX"]
+    subgraph Security["Security"]
+        Reentrancy["ReentrancyGuard"]
+        SafeERC20["SafeERC20"]
+        NonceTracking["Nonce Tracking"]
     end
 
-    Registry --> Invoice
-    Registry --> Payroll
-    Registry --> Lending
-    Registry --> Treasury
+    Owner --> Payroll
+    Owner --> Gated
+    PermitSigner --> Gated
+    CompanyReg --> Payroll
 
-    Access --> Invoice
-    Access --> Payroll
-    Access --> Lending
-    Access --> Treasury
-
-    Treasury --> Morpho
-    Treasury --> Aero
-    
-    Lending --> Chainlink
-    Invoice --> Tokens
     Payroll --> Tokens
-    Lending --> Tokens
+    Payroll --> Reentrancy
+    Payroll --> SafeERC20
+    Gated --> NonceTracking
 ```
 
 ---
 
-## 9. User Journey Map
+## 10. User Journey Map
 
 ```mermaid
 journey
@@ -326,12 +338,13 @@ journey
 
 | Flow | Description |
 |------|-------------|
-| **Onboarding** | Company connects wallet → creates smart account → sets up profile |
-| **Invoice** | Create invoice → client pays via link → instant settlement |
-| **Payroll** | Set schedules → batch payments → auto loan deductions |
+| **Onboarding** | Company connects wallet (Privy) → completes KYB → sets up profile |
+| **Invoice** | Create invoice → client pays via link → instant TIP-20 settlement |
+| **Payroll** | Set schedules → batch payments via CheqqPayroll → auto loan deductions |
 | **DeFi Yield** | Deposit treasury → earn APY → compound or withdraw |
 | **Employee Lending** | Request advance → collateralized by salary → auto repayment |
+| **Gated Actions** | Backend signs EIP-712 permit → on-chain verification via CheqqGatedActions |
 
 ---
 
-> 💡 **Key Innovation**: Employee loans are collateralized by **future payroll**, creating a unique DeFi primitive that reduces risk while providing employees with financial flexibility.
+> 💡 **Key Innovation**: Employee loans are collateralized by **future payroll**, creating a unique DeFi primitive that reduces risk while providing employees with financial flexibility. Built on **Tempo** with TIP-20 stablecoins for low-cost, fast transactions.

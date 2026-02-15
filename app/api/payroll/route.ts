@@ -1,19 +1,16 @@
 import { NextResponse } from 'next/server';
 import type { PayrollStatus, Currency } from '@prisma/client';
 import { executeBatchPayroll } from '@/lib/cdp';
+import { normalizeCurrency } from '@/lib/currency';
 
 // Force dynamic rendering - prevents build-time analysis
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 const ALLOWED_PAYROLL_STATUSES = ['PENDING', 'APPROVED', 'PROCESSING', 'COMPLETED', 'FAILED'] as const;
-const ALLOWED_CURRENCIES = ['USDC', 'IDRX', 'ETH'] as const;
 
 const isAllowedPayrollStatus = (value: string): value is PayrollStatus =>
     ALLOWED_PAYROLL_STATUSES.includes(value as PayrollStatus);
-
-const isAllowedCurrency = (value: string): value is Currency =>
-    ALLOWED_CURRENCIES.includes(value as Currency);
 
 interface PayrollItem {
     employeeId: string;
@@ -59,9 +56,9 @@ export async function POST(request: Request) {
         const prisma = getPrisma();
 
         const body = await request.json();
-        const { companyId, employeeIds, currency = 'USDC' } = body;
+        const { companyId, employeeIds, currency = 'AlphaUSD' } = body;
         const normalizedCompanyId = String(companyId || '').trim();
-        const currencyInput = String(currency || 'USDC').trim().toUpperCase();
+        const currencyInput = normalizeCurrency(String(currency || 'AlphaUSD'), 'AlphaUSD');
 
         if (!normalizedCompanyId) {
             return NextResponse.json(
@@ -88,7 +85,7 @@ export async function POST(request: Request) {
             );
         }
 
-        if (!isAllowedCurrency(currencyInput)) {
+        if (!currencyInput) {
             return NextResponse.json(
                 { error: 'Invalid payroll currency' },
                 { status: 400 }
@@ -252,7 +249,11 @@ export async function PATCH(request: Request) {
                     throw new Error('No treasury wallet configured');
                 }
 
-                const results = await executeBatchPayroll(treasuryAddress, recipients);
+                const results = await executeBatchPayroll(
+                    treasuryAddress,
+                    recipients,
+                    payrollRun.currency
+                );
 
                 // Update each item status
                 for (let i = 0; i < payrollRun.items.length; i++) {

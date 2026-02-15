@@ -10,7 +10,7 @@ export default function CTA() {
                         <h2>Ready to transform your business finance?</h2>
                         <p>
                             Join innovative companies already using Cheqq to manage payroll, invoices,
-                            and treasury — all on Base.
+                            and treasury — all on Tempo.
                         </p>
                         <div className={styles.ctaButtons}>
                             <a href="/get-started" className="btn btn-primary">
@@ -26,7 +26,7 @@ export default function CTA() {
                         <div className={styles.statCard}>
                             <span className={styles.statEmoji}>🚀</span>
                             <div>
-                                <span className={styles.statLabel}>Base Indonesia Hackathon</span>
+                                <span className={styles.statLabel}>Tempo Hackathon</span>
                                 <span className={styles.statValue}>2026</span>
                             </div>
                         </div>

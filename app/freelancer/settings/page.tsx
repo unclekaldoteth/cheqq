@@ -18,7 +18,7 @@ function FreelancerProfileForm({ freelancer, isSaving, onSave }: FreelancerProfi
     const [name, setName] = useState(freelancer?.name || '');
     const [email, setEmail] = useState(freelancer?.email || '');
     const [profession, setProfession] = useState(freelancer?.profession || '');
-    const [currency, setCurrency] = useState('USDC');
+    const [currency, setCurrency] = useState('AlphaUSD');
 
     return (
         <>
@@ -59,8 +59,8 @@ function FreelancerProfileForm({ freelancer, isSaving, onSave }: FreelancerProfi
                                 value={currency}
                                 onChange={(e) => setCurrency(e.target.value)}
                             >
-                                <option value="USDC">USDC</option>
-                                <option value="IDRX">IDRX</option>
+                                <option value="AlphaUSD">AlphaUSD</option>
+                                <option value="BetaUSD">BetaUSD</option>
                             </select>
                         </div>
                     </div>

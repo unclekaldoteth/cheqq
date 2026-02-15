@@ -30,12 +30,14 @@ export function Spotlight({ className, fill }: SpotlightProps) {
     return (
         <div
             ref={divRef}
-            className={cn(
-                'pointer-events-none fixed inset-0 z-30 transition-opacity duration-300',
-                className
-            )}
+            className={className}
             style={{
-                background: `radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), ${fill || 'rgba(0, 82, 255, 0.15)'}, transparent 40%)`,
+                position: 'fixed',
+                inset: 0,
+                zIndex: 30,
+                pointerEvents: 'none',
+                transition: 'opacity 300ms',
+                background: `radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), ${fill || 'rgba(0, 0, 0, 0.08)'}, transparent 40%)`,
             }}
         />
     );

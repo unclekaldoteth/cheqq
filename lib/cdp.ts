@@ -1,181 +1,47 @@
-import { CdpClient } from '@coinbase/cdp-sdk';
-import { createPublicClient, http, parseEther, erc20Abi, encodeFunctionData } from 'viem';
-import { baseSepolia, base } from 'viem/chains';
+/**
+ * Tempo Chain Utilities
+ * Handles token transfers, balance queries, and batch payroll on Tempo Testnet.
+ * Replaces the previous CDP SDK-based implementation.
+ */
+
+import { createPublicClient, createWalletClient, http, erc20Abi, encodeFunctionData, formatUnits, type Hex } from 'viem';
+import { privateKeyToAccount } from 'viem/accounts';
+import { tempoTestnet } from '@/providers/OnchainProvider';
 import { getTokenAddress, getTokenConfig, parseTokenAmount } from './tokens';
 
-// Select chain based on environment
-const chain = process.env.NEXT_PUBLIC_CHAIN === 'base' ? base : baseSepolia;
-const networkName = process.env.NEXT_PUBLIC_CHAIN === 'base' ? 'base' : 'base-sepolia';
+const TEMPO_RPC_URL =
+    process.env.NEXT_PUBLIC_TEMPO_RPC_URL ||
+    process.env.TEMPO_RPC_URL ||
+    'https://rpc.moderato.tempo.xyz';
 
-// Initialize public client for reading chain data
+// Initialize public client for reading chain data on Tempo Testnet
 const publicClient = createPublicClient({
-    chain,
-    transport: http(),
+    chain: tempoTestnet,
+    transport: http(TEMPO_RPC_URL),
 });
 
-// CDP Client singleton (initialized on first use)
-let cdpClient: CdpClient | null = null;
-
 /**
- * Get or create the CDP client instance
- * CDP client reads credentials from environment:
- * - CDP_API_KEY_ID
- * - CDP_API_KEY_SECRET
- * - CDP_WALLET_SECRET
+ * Get a wallet client for server-side transactions
+ * Uses PERMIT_SIGNER_PRIVATE_KEY for signing
  */
-export function getCdpClient(): CdpClient {
-    if (!cdpClient) {
-        cdpClient = new CdpClient();
-    }
-    return cdpClient;
-}
-
-/**
- * Create a new EVM account (server wallet)
- * Useful for creating company treasury or employee payout accounts
- */
-export async function createEvmAccount(): Promise<{ address: string }> {
-    const cdp = getCdpClient();
-    const account = await cdp.evm.createAccount();
-    return { address: account.address };
-}
-
-/**
- * Request test ETH from faucet (testnet only)
- */
-export async function requestFaucetFunds(address: string): Promise<string> {
-    if (process.env.NEXT_PUBLIC_CHAIN === 'base') {
-        throw new Error('Faucet only available on testnet');
+function getWalletClient() {
+    const privateKey = process.env.PERMIT_SIGNER_PRIVATE_KEY;
+    if (!privateKey) {
+        throw new Error('PERMIT_SIGNER_PRIVATE_KEY not configured');
     }
 
-    const cdp = getCdpClient();
-    const { transactionHash } = await cdp.evm.requestFaucet({
-        address: address as `0x${string}`,
-        network: 'base-sepolia',
-        token: 'eth',
-    });
-
-    // Wait for confirmation
-    await publicClient.waitForTransactionReceipt({ hash: transactionHash });
-    return transactionHash;
-}
-
-/**
- * Send ETH or native token from a server wallet
- */
-export async function sendTransaction(
-    fromAddress: string,
-    toAddress: string,
-    amountEther: string
-): Promise<{ transactionHash: string; explorerUrl: string }> {
-    const cdp = getCdpClient();
-
-    const result = await cdp.evm.sendTransaction({
-        address: fromAddress as `0x${string}`,
-        transaction: {
-            to: toAddress as `0x${string}`,
-            value: parseEther(amountEther),
-        },
-        network: networkName,
-    });
-
-    // Wait for confirmation
-    await publicClient.waitForTransactionReceipt({
-        hash: result.transactionHash
-    });
-
-    const explorerBase = process.env.NEXT_PUBLIC_CHAIN === 'base'
-        ? 'https://basescan.org'
-        : 'https://sepolia.basescan.org';
-
-    return {
-        transactionHash: result.transactionHash,
-        explorerUrl: `${explorerBase}/tx/${result.transactionHash}`,
-    };
-}
-
-/**
- * Execute batch payroll transactions
- * Sends payments to multiple recipients in sequence
- */
-export async function executeBatchPayroll(
-    fromAddress: string,
-    recipients: Array<{ address: string; amount: string }>
-): Promise<Array<{ address: string; transactionHash: string; success: boolean; error?: string }>> {
-    const results = [];
-
-    for (const recipient of recipients) {
-        try {
-            const result = await sendTransaction(
-                fromAddress,
-                recipient.address,
-                recipient.amount
-            );
-            results.push({
-                address: recipient.address,
-                transactionHash: result.transactionHash,
-                success: true,
-            });
-        } catch (error) {
-            results.push({
-                address: recipient.address,
-                transactionHash: '',
-                success: false,
-                error: error instanceof Error ? error.message : 'Unknown error',
-            });
-        }
-    }
-
-    return results;
-}
-
-/**
- * Get account balance
- */
-export async function getAccountBalanceRaw(address: string): Promise<bigint> {
-    return publicClient.getBalance({
-        address: address as `0x${string}`,
+    const account = privateKeyToAccount(privateKey as Hex);
+    return createWalletClient({
+        account,
+        chain: tempoTestnet,
+        transport: http(TEMPO_RPC_URL),
     });
 }
 
 /**
- * Get account balance formatted in ETH
- */
-export async function getAccountBalance(address: string): Promise<string> {
-    const balance = await getAccountBalanceRaw(address);
-    return (Number(balance) / 1e18).toFixed(6);
-}
-
-// =========================
-// ERC-20 Token Functions
-// =========================
-
-/**
- * Get USDC balance for an address
- */
-export async function getUSDCBalance(address: string): Promise<string> {
-    const tokenAddress = getTokenAddress('USDC') as `0x${string}`;
-    const token = getTokenConfig('USDC');
-    if (!token) throw new Error('USDC token not configured');
-
-    const balance = await publicClient.readContract({
-        address: tokenAddress,
-        abi: erc20Abi,
-        functionName: 'balanceOf',
-        args: [address as `0x${string}`],
-    });
-
-    return (Number(balance) / Math.pow(10, token.decimals)).toFixed(2);
-}
-
-/**
- * Get token balance in smallest unit
+ * Get token balance in smallest unit (TIP-20 / ERC-20 compatible)
  */
 export async function getTokenBalanceRaw(address: string, symbol: string): Promise<bigint> {
-    if (symbol.toUpperCase() === 'ETH') {
-        return getAccountBalanceRaw(address);
-    }
-
     const tokenAddress = getTokenAddress(symbol) as `0x${string}`;
     const token = getTokenConfig(symbol);
     if (!token) throw new Error(`Token ${symbol} not configured`);
@@ -191,66 +57,27 @@ export async function getTokenBalanceRaw(address: string, symbol: string): Promi
 }
 
 /**
- * Get token balance for any supported token
+ * Get token balance formatted for display
  */
 export async function getTokenBalance(address: string, symbol: string): Promise<string> {
-    if (symbol.toUpperCase() === 'ETH') {
-        return getAccountBalance(address);
-    }
-
     const token = getTokenConfig(symbol);
     if (!token) throw new Error(`Token ${symbol} not configured`);
 
     const balance = await getTokenBalanceRaw(address, symbol);
-
-    return (Number(balance) / Math.pow(10, token.decimals)).toFixed(token.decimals > 2 ? 2 : token.decimals);
+    const formatted = formatUnits(balance, token.decimals);
+    const numeric = Number.parseFloat(formatted);
+    return Number.isFinite(numeric) ? numeric.toFixed(2) : '0.00';
 }
 
 /**
- * Send USDC from a server wallet to a recipient
+ * Get AlphaUSD balance for an address (primary stablecoin)
  */
-export async function sendUSDC(
-    fromAddress: string,
-    toAddress: string,
-    amount: string
-): Promise<{ transactionHash: string; explorerUrl: string }> {
-    const cdp = getCdpClient();
-    const tokenAddress = getTokenAddress('USDC') as `0x${string}`;
-    const parsedAmount = parseTokenAmount(amount, 'USDC');
-
-    // Encode ERC-20 transfer function
-    const data = encodeFunctionData({
-        abi: erc20Abi,
-        functionName: 'transfer',
-        args: [toAddress as `0x${string}`, parsedAmount],
-    });
-
-    const result = await cdp.evm.sendTransaction({
-        address: fromAddress as `0x${string}`,
-        transaction: {
-            to: tokenAddress,
-            data,
-        },
-        network: networkName,
-    });
-
-    // Wait for confirmation
-    await publicClient.waitForTransactionReceipt({
-        hash: result.transactionHash
-    });
-
-    const explorerBase = process.env.NEXT_PUBLIC_CHAIN === 'base'
-        ? 'https://basescan.org'
-        : 'https://sepolia.basescan.org';
-
-    return {
-        transactionHash: result.transactionHash,
-        explorerUrl: `${explorerBase}/tx/${result.transactionHash}`,
-    };
+export async function getAlphaUSDBalance(address: string): Promise<string> {
+    return getTokenBalance(address, 'AlphaUSD');
 }
 
 /**
- * Send any supported token from a server wallet
+ * Send any supported TIP-20 token from a server wallet
  */
 export async function sendToken(
     fromAddress: string,
@@ -258,11 +85,7 @@ export async function sendToken(
     amount: string,
     symbol: string
 ): Promise<{ transactionHash: string; explorerUrl: string }> {
-    if (symbol.toUpperCase() === 'ETH') {
-        return sendTransaction(fromAddress, toAddress, amount);
-    }
-
-    const cdp = getCdpClient();
+    const walletClient = getWalletClient();
     const tokenAddress = getTokenAddress(symbol) as `0x${string}`;
     const parsedAmount = parseTokenAmount(amount, symbol);
 
@@ -272,44 +95,48 @@ export async function sendToken(
         args: [toAddress as `0x${string}`, parsedAmount],
     });
 
-    const result = await cdp.evm.sendTransaction({
-        address: fromAddress as `0x${string}`,
-        transaction: {
-            to: tokenAddress,
-            data,
-        },
-        network: networkName,
+    const txHash = await walletClient.sendTransaction({
+        to: tokenAddress,
+        data,
     });
 
-    await publicClient.waitForTransactionReceipt({
-        hash: result.transactionHash
-    });
-
-    const explorerBase = process.env.NEXT_PUBLIC_CHAIN === 'base'
-        ? 'https://basescan.org'
-        : 'https://sepolia.basescan.org';
+    // Wait for confirmation
+    await publicClient.waitForTransactionReceipt({ hash: txHash });
 
     return {
-        transactionHash: result.transactionHash,
-        explorerUrl: `${explorerBase}/tx/${result.transactionHash}`,
+        transactionHash: txHash,
+        explorerUrl: `https://explore.tempo.xyz/tx/${txHash}`,
     };
 }
 
 /**
- * Execute batch USDC payroll transactions
+ * Send AlphaUSD from a server wallet to a recipient
  */
-export async function executeBatchUSDCPayroll(
+export async function sendAlphaUSD(
     fromAddress: string,
-    recipients: Array<{ address: string; amount: string }>
+    toAddress: string,
+    amount: string
+): Promise<{ transactionHash: string; explorerUrl: string }> {
+    return sendToken(fromAddress, toAddress, amount, 'AlphaUSD');
+}
+
+/**
+ * Execute batch payroll transactions (sequential)
+ */
+export async function executeBatchPayroll(
+    fromAddress: string,
+    recipients: Array<{ address: string; amount: string }>,
+    symbol: string = 'AlphaUSD'
 ): Promise<Array<{ address: string; transactionHash: string; success: boolean; error?: string }>> {
     const results = [];
 
     for (const recipient of recipients) {
         try {
-            const result = await sendUSDC(
+            const result = await sendToken(
                 fromAddress,
                 recipient.address,
-                recipient.amount
+                recipient.amount,
+                symbol
             );
             results.push({
                 address: recipient.address,
@@ -327,4 +154,21 @@ export async function executeBatchUSDCPayroll(
     }
 
     return results;
+}
+
+/**
+ * Execute batch AlphaUSD payroll transactions
+ */
+export async function executeBatchAlphaUSDPayroll(
+    fromAddress: string,
+    recipients: Array<{ address: string; amount: string }>
+): Promise<Array<{ address: string; transactionHash: string; success: boolean; error?: string }>> {
+    return executeBatchPayroll(fromAddress, recipients, 'AlphaUSD');
+}
+
+/**
+ * Get the public client instance for external use
+ */
+export function getPublicClient() {
+    return publicClient;
 }

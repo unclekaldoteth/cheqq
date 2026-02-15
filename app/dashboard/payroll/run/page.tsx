@@ -49,9 +49,9 @@ export default function RunPayrollPage() {
                     netAmount: number;
                     currency: string;
                 }) => {
-                    const currency = (emp.currency || 'USDC') as PayrollItem['currency'];
+                    const currency = (emp.currency || 'AlphaUSD') as PayrollItem['currency'];
                     const netAmount = Number(emp.netAmount);
-                    const isPayable = currency === 'USDC' && netAmount > 0;
+                    const isPayable = currency === 'AlphaUSD' && netAmount > 0;
                     return {
                         id: emp.id,
                         name: emp.name,
@@ -92,7 +92,7 @@ export default function RunPayrollPage() {
     }, [isSuccess, hash]);
 
     const selectableItems = useMemo(
-        () => items.filter(item => item.currency === 'USDC' && item.netAmount > 0),
+        () => items.filter(item => item.currency === 'AlphaUSD' && item.netAmount > 0),
         [items]
     );
     const allSelected = useMemo(
@@ -106,7 +106,7 @@ export default function RunPayrollPage() {
     );
     const payableCount = payableItems.length;
     const hasNonPayableSelected = useMemo(
-        () => items.some(item => item.selected && (item.currency !== 'USDC' || item.netAmount <= 0)),
+        () => items.some(item => item.selected && (item.currency !== 'AlphaUSD' || item.netAmount <= 0)),
         [items]
     );
     const canContinue = payableCount > 0 && !hasNonPayableSelected;
@@ -123,7 +123,7 @@ export default function RunPayrollPage() {
         const newValue = !allSelected;
         setItems(prev => prev.map(item => (
             newValue
-                ? (item.currency === 'USDC' && item.netAmount > 0
+                ? (item.currency === 'AlphaUSD' && item.netAmount > 0
                     ? { ...item, selected: true }
                     : { ...item, selected: false })
                 : { ...item, selected: false }
@@ -142,12 +142,12 @@ export default function RunPayrollPage() {
 
         // Generate unique payroll ID
         const payrollId = generatePayrollId(`${companyId}-${Date.now()}`);
-        const tokenAddress = getTokenAddress('USDC') as `0x${string}`;
+        const tokenAddress = getTokenAddress('AlphaUSD') as `0x${string}`;
 
         // Prepare payment items for contract
         const payments = payableItems.map(item => ({
             recipient: item.walletAddress as `0x${string}`,
-            amount: parseTokenAmount(item.netAmount.toString(), 'USDC'),
+            amount: parseTokenAmount(item.netAmount.toString(), 'AlphaUSD'),
         }));
 
         // Execute contract call
@@ -171,13 +171,13 @@ export default function RunPayrollPage() {
     const totals = useMemo(() => {
         const selected = payableItems;
         return {
-            usdc: {
-                gross: selected.filter(i => i.currency === 'USDC').reduce((sum, i) => sum + i.grossAmount, 0),
-                net: selected.filter(i => i.currency === 'USDC').reduce((sum, i) => sum + i.netAmount, 0),
+            alphaUsd: {
+                gross: selected.filter(i => i.currency === 'AlphaUSD').reduce((sum, i) => sum + i.grossAmount, 0),
+                net: selected.filter(i => i.currency === 'AlphaUSD').reduce((sum, i) => sum + i.netAmount, 0),
             },
-            idrx: {
-                gross: selected.filter(i => i.currency === 'IDRX').reduce((sum, i) => sum + i.grossAmount, 0),
-                net: selected.filter(i => i.currency === 'IDRX').reduce((sum, i) => sum + i.netAmount, 0),
+            betaUsd: {
+                gross: selected.filter(i => i.currency === 'BetaUSD').reduce((sum, i) => sum + i.grossAmount, 0),
+                net: selected.filter(i => i.currency === 'BetaUSD').reduce((sum, i) => sum + i.netAmount, 0),
             },
         };
     }, [payableItems]);
@@ -191,7 +191,7 @@ export default function RunPayrollPage() {
 
     const isProcessing = isWritePending || isConfirming;
     const explorerUrl = txHash
-        ? `https://sepolia.basescan.org/tx/${txHash}`
+        ? `https://explore.tempo.xyz/tx/${txHash}`
         : undefined;
 
     return (
@@ -292,8 +292,8 @@ export default function RunPayrollPage() {
 
                             {hasNonPayableSelected && (
                                 <div className={styles.notice}>
-                                    Only USDC employees with a positive net payout can be executed on-chain right now.
-                                    Deselect IDRX or zero-net employees to continue.
+                                    Only AlphaUSD employees with a positive net payout can be executed on-chain right now.
+                                    Deselect BetaUSD or zero-net employees to continue.
                                 </div>
                             )}
 
@@ -330,22 +330,22 @@ export default function RunPayrollPage() {
                             <h2>Confirm Payroll</h2>
                             <p>
                                 You are about to execute payroll for {payableCount} employees.
-                                This will call the CheqqPayroll smart contract on Base.
+                                This will call the CheqqPayroll smart contract on Tempo.
                             </p>
                             <div className={styles.confirmAmount}>
-                                {totals.usdc.net > 0 && (
+                                {totals.alphaUsd.net > 0 && (
                                     <div className={styles.confirmItem}>
-                                        <span className={styles.confirmLabel}>USDC Payout</span>
+                                        <span className={styles.confirmLabel}>AlphaUSD Payout</span>
                                         <span className={styles.confirmValue}>
-                                            {formatAmount(totals.usdc.net, 'USDC')}
+                                            {formatAmount(totals.alphaUsd.net, 'AlphaUSD')}
                                         </span>
                                     </div>
                                 )}
-                                {totals.idrx.net > 0 && (
+                                {totals.betaUsd.net > 0 && (
                                     <div className={styles.confirmItem}>
-                                        <span className={styles.confirmLabel}>IDRX Payout</span>
+                                        <span className={styles.confirmLabel}>BetaUSD Payout</span>
                                         <span className={styles.confirmValue}>
-                                            {formatAmount(totals.idrx.net, 'IDRX')}
+                                            {formatAmount(totals.betaUsd.net, 'BetaUSD')}
                                         </span>
                                     </div>
                                 )}
@@ -382,7 +382,7 @@ export default function RunPayrollPage() {
                             <h2>Payroll Complete!</h2>
                             <p>
                                 Successfully disbursed salaries to {payableCount} employees.
-                                All transactions have been confirmed on Base.
+                                All transactions have been confirmed on Tempo.
                             </p>
                             {txHash && (
                                 <div className={styles.txHash}>

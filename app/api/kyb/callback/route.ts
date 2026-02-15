@@ -1,6 +1,7 @@
 /**
  * KYB Callback API Route
- * Processes KYB submission, creates attestations for company and initial owner role
+ * Processes KYB submission and stores company credentials
+ * Updated for Tempo Testnet - EAS attestations removed
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -11,19 +12,13 @@ import {
     generateSalt,
     type CompanyKYBData
 } from "@/lib/dataRoot";
-import {
-    createCompanyKYBAttestation,
-    createCompanyRoleAttestation,
-    type CompanyKYBAttestationData,
-    type CompanyRoleAttestationData,
-} from "@/lib/eas";
 import { keccak256, type Hex } from "viem";
 
 // KYB expiry: 1 year from now
 const KYB_EXPIRY_SECONDS = 365 * 24 * 60 * 60;
 
-// Role constants
-const ROLE_OWNER = 1;
+// Tempo Testnet chain ID
+const TEMPO_CHAIN_ID = 42431;
 
 export async function POST(request: NextRequest) {
     try {
@@ -130,52 +125,11 @@ export async function POST(request: NextRequest) {
 
         // Calculate expiry
         const expiresAt = new Date(Date.now() + KYB_EXPIRY_SECONDS * 1000);
-        const expiresAtUnix = BigInt(Math.floor(expiresAt.getTime() / 1000));
 
-        // Get chain ID from environment
-        const chainId = process.env.NEXT_PUBLIC_CHAIN === "base" ? 8453 : 84532;
+        // Use Tempo chain ID
+        const chainId = TEMPO_CHAIN_ID;
 
-        // Create EAS attestations
-        let kybAttestationUID: Hex | null = null;
-        let ownerRoleAttestationUID: Hex | null = null;
-        let kybTxHash: Hex | null = null;
-        let roleTxHash: Hex | null = null;
-
-        try {
-            // 1. Create KYB attestation
-            const kybAttestation: CompanyKYBAttestationData = {
-                companyId: companyHash,
-                level: 1,
-                expiresAt: expiresAtUnix,
-                dataRoot,
-            };
-
-            const kybResult = await createCompanyKYBAttestation(kybAttestation, chainId);
-            kybAttestationUID = kybResult.attestationUID;
-            kybTxHash = kybResult.txHash;
-
-            // 2. Create owner role attestation (linked to KYB)
-            if (kybAttestationUID) {
-                const roleData: CompanyRoleAttestationData = {
-                    companyId: companyHash,
-                    role: ROLE_OWNER,
-                };
-
-                const roleResult = await createCompanyRoleAttestation(
-                    walletAddress,
-                    roleData,
-                    kybAttestationUID,
-                    chainId
-                );
-                ownerRoleAttestationUID = roleResult.attestationUID;
-                roleTxHash = roleResult.txHash;
-            }
-        } catch (attestError) {
-            console.error("EAS attestation failed:", attestError);
-            // Continue without attestation - will be retried
-        }
-
-        // Store KYB credential
+        // Store KYB credential (without EAS attestation on Tempo)
         await prisma.kybCredential.upsert({
             where: {
                 companyId_chainId: {
@@ -188,7 +142,7 @@ export async function POST(request: NextRequest) {
                 companyHash,
                 level: 1,
                 dataRoot,
-                attestationUid: kybAttestationUID,
+                attestationUid: null,
                 chainId,
                 expiresAt,
                 provider: "MANUAL",
@@ -197,7 +151,7 @@ export async function POST(request: NextRequest) {
                 companyHash,
                 level: 1,
                 dataRoot,
-                attestationUid: kybAttestationUID,
+                attestationUid: null,
                 expiresAt,
                 revokedAt: null,
             },
@@ -216,13 +170,13 @@ export async function POST(request: NextRequest) {
                 companyId,
                 walletAddress,
                 role: "OWNER",
-                attestationUid: ownerRoleAttestationUID,
+                attestationUid: null,
                 chainId,
                 grantedBy: walletAddress,
             },
             update: {
                 role: "OWNER",
-                attestationUid: ownerRoleAttestationUID,
+                attestationUid: null,
                 revokedAt: null,
             },
         });
@@ -236,25 +190,19 @@ export async function POST(request: NextRequest) {
                 metadata: {
                     sessionId,
                     companyId,
-                    kybAttestationUID,
-                    ownerRoleAttestationUID,
-                    kybTxHash,
-                    roleTxHash,
+                    companyHash,
                     chainId,
+                    note: "EAS attestation not available on Tempo",
                 },
             },
         });
 
         return NextResponse.json({
             success: true,
-            kybAttestationUID,
-            ownerRoleAttestationUID,
             companyHash,
-            kybTxHash,
-            roleTxHash,
             expiresAt: expiresAt.toISOString(),
             level: 1,
-            status: kybAttestationUID ? "attested" : "pending_attestation",
+            status: "verified",
         });
     } catch (error) {
         console.error("KYB callback error:", error);

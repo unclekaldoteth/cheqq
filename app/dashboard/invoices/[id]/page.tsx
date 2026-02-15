@@ -352,7 +352,7 @@ export default function InvoiceDetailPage() {
                                                     <span className={styles.timelineDesc}>{tx.description}</span>
                                                     {tx.txHash && (
                                                         <a
-                                                            href={`https://sepolia.basescan.org/tx/${tx.txHash}`}
+                                                            href={`https://explore.tempo.xyz/tx/${tx.txHash}`}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
                                                             className={styles.txLink}

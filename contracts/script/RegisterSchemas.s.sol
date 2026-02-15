@@ -6,7 +6,7 @@ import {Script, console} from "forge-std/Script.sol";
 /**
  * @title RegisterEASSchemas
  * @notice Script to register KYC/KYB schemas on EAS Schema Registry
- * @dev Run with: forge script script/RegisterSchemas.s.sol --rpc-url base-sepolia --broadcast
+ * @dev Run with: forge script script/RegisterSchemas.s.sol --rpc-url <eas-chain-rpc> --broadcast
  */
 contract RegisterEASSchemas is Script {
     // EAS Schema Registry (same address on all Base chains)
@@ -18,6 +18,10 @@ contract RegisterEASSchemas is Script {
     string constant COMPANY_ROLE_SCHEMA = "bytes32 companyId,uint8 role";
     
     function run() external {
+        if (block.chainid == 42431) {
+            revert("Tempo Testnet does not support EAS schema registry");
+        }
+
         uint256 deployerPrivateKey = vm.envUint("ATTESTER_PRIVATE_KEY");
         
         vm.startBroadcast(deployerPrivateKey);
@@ -40,7 +44,7 @@ contract RegisterEASSchemas is Script {
         vm.stopBroadcast();
         
         console.log("");
-        console.log("=== Update lib/eas.ts with these UIDs ===");
+        console.log("=== Update contract setSchemaUIDs() calls with these UIDs ===");
         console.log("baseSepolia: {");
         console.log("  freelancerKYC: '", vm.toString(freelancerKycUID), "',");
         console.log("  companyKYB: '", vm.toString(companyKybUID), "',");

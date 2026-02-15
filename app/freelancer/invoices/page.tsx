@@ -6,13 +6,12 @@ import Link from 'next/link';
 import { Plus, Search, Filter, DollarSign, Clock, CheckCircle, AlertTriangle, Loader2, FileText } from 'lucide-react';
 import { FreelancerSidebar, FreelancerTopBar } from '@/components/freelancer';
 import { InvoiceTable, type Invoice, type InvoiceStatusType } from '@/components/dashboard/invoice';
+import { normalizeCurrency } from '@/lib/currency';
 import styles from './page.module.css';
 import { useUser } from '@/contexts/UserContext';
 
 const normalizeInvoiceCurrency = (value?: string): Invoice['currency'] => {
-    if (value === 'IDRX') return 'IDRX';
-    if (value === 'ETH') return 'ETH';
-    return 'USDC';
+    return (normalizeCurrency(value) as Invoice['currency'] | null) || 'AlphaUSD';
 };
 
 const normalizeInvoiceStatus = (value?: string): InvoiceStatusType => {
@@ -106,8 +105,8 @@ export default function FreelancerInvoicesPage() {
     });
 
     // Calculate stats
-    const totalAmount = invoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + (i.currency === 'USDC' ? i.amount : 0), 0);
-    const pendingAmount = invoices.filter(i => i.status === 'pending').reduce((sum, i) => sum + (i.currency === 'USDC' ? i.amount : 0), 0);
+    const totalAmount = invoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + (i.currency === 'AlphaUSD' ? i.amount : 0), 0);
+    const pendingAmount = invoices.filter(i => i.status === 'pending').reduce((sum, i) => sum + (i.currency === 'AlphaUSD' ? i.amount : 0), 0);
     const paidCount = invoices.filter(i => i.status === 'paid').length;
     const overdueCount = invoices.filter(i => i.status === 'overdue').length;
 

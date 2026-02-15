@@ -3,18 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "prisma generate && next build",
+    "dev": "NODE_OPTIONS='--max-old-space-size=4096' next dev",
+    "build": "prisma generate && NODE_OPTIONS='--max-old-space-size=4096' next build",
     "postinstall": "prisma generate",
     "start": "next start",
     "lint": "eslint",
     "test": "node --test tests/*.test.mjs"
   },
   "dependencies": {
-    "@base-org/account": "^2.5.1",
-    "@coinbase/cdp-sdk": "^1.43.0",
-    "@coinbase/onchainkit": "^1.1.2",
-    "@farcaster/miniapp-sdk": "^0.2.2",
     "@prisma/adapter-pg": "^7.2.0",
     "@prisma/client": "^7.3.0",
     "@privy-io/react-auth": "^3.11.0",

@@ -51,22 +51,20 @@ export function WobbleCard({
             ref={ref}
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
-            className={cn(
-                'relative overflow-hidden',
-                containerClassName
-            )}
-            style={{ perspective: '1000px' }}
+            className={containerClassName}
+            style={{ perspective: '1000px', position: 'relative', overflow: 'hidden' }}
         >
             <motion.div
-                style={{ transform }}
-                className={cn(
-                    'rounded-2xl p-6',
-                    'bg-white dark:bg-gray-900',
-                    'border border-gray-200 dark:border-gray-800',
-                    'shadow-lg',
-                    'transition-shadow hover:shadow-xl',
-                    className
-                )}
+                style={{
+                    transform,
+                    borderRadius: '16px',
+                    padding: '1.5rem',
+                    background: 'white',
+                    border: '1px solid var(--border-light)',
+                    boxShadow: 'var(--shadow-lg)',
+                    transition: 'box-shadow 0.2s ease',
+                }}
+                className={className}
             >
                 {children}
             </motion.div>

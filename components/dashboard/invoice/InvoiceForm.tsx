@@ -8,7 +8,7 @@ interface InvoiceFormData {
     clientName: string;
     clientEmail: string;
     amount: string;
-    currency: 'USDC' | 'IDRX';
+    currency: 'AlphaUSD' | 'BetaUSD' | 'pathUSD';
     dueDate: string;
     memo: string;
 }
@@ -24,7 +24,7 @@ export default function InvoiceForm({ onSubmit, onCancel, isLoading }: InvoiceFo
         clientName: '',
         clientEmail: '',
         amount: '',
-        currency: 'USDC',
+        currency: 'AlphaUSD',
         dueDate: '',
         memo: '',
     });
@@ -133,8 +133,9 @@ export default function InvoiceForm({ onSubmit, onCancel, isLoading }: InvoiceFo
                                 value={formData.currency}
                                 onChange={(e) => handleChange('currency', e.target.value)}
                             >
-                                <option value="USDC">USDC</option>
-                                <option value="IDRX">IDRX</option>
+                                <option value="AlphaUSD">AlphaUSD</option>
+                                <option value="BetaUSD">BetaUSD</option>
+                                <option value="pathUSD">pathUSD</option>
                             </select>
                         </div>
                         {errors.amount && (

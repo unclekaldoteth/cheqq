@@ -10,8 +10,8 @@ import styles from './page.module.css';
 import { useUser } from '@/contexts/UserContext';
 
 const normalizeEmployeeCurrency = (value?: string): Employee['currency'] => {
-    if (value === 'IDRX') return 'IDRX';
-    return 'USDC';
+    if (value === 'BetaUSD') return 'BetaUSD';
+    return 'AlphaUSD';
 };
 
 const normalizeEmployeeStatus = (value?: string): Employee['status'] => {
@@ -116,7 +116,7 @@ export default function PayrollPage() {
     // Calculate stats
     const activeEmployees = employees.filter(e => e.status === 'active');
     const usdcPayroll = activeEmployees
-        .filter(e => e.currency === 'USDC')
+        .filter(e => e.currency === 'AlphaUSD')
         .reduce((sum, e) => sum + e.salary, 0);
     const employeesWithLoans = employees.filter(e => e.hasActiveLoan).length;
 
@@ -178,7 +178,7 @@ export default function PayrollPage() {
                         totalEmployees={employees.length}
                         activeEmployees={activeEmployees.length}
                         totalPayroll={usdcPayroll}
-                        currency="USDC"
+                        currency="AlphaUSD"
                         nextPayDate={nextPayDate}
                         pendingLoans={employeesWithLoans}
                     />

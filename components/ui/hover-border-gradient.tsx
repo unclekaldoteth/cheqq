@@ -1,7 +1,6 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { cn } from '@/lib/utils';
 
 interface HoverBorderGradientProps {
     children: React.ReactNode;
@@ -24,25 +23,41 @@ export function HoverBorderGradient({
 
     return (
         <Component
-            className={cn(
-                'group relative flex rounded-full border border-transparent bg-black/10 dark:bg-white/10 content-center items-center justify-center overflow-hidden p-[1px] transition duration-500',
-                containerClassName
-            )}
+            className={containerClassName}
+            style={{
+                position: 'relative',
+                display: 'flex',
+                borderRadius: '9999px',
+                border: '1px solid transparent',
+                background: 'rgba(0, 0, 0, 0.1)',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
+                padding: '1px',
+                transition: 'all 500ms',
+            }}
             {...componentProps}
             {...props}
         >
             <div
-                className="absolute inset-0 -z-10 pointer-events-none"
                 style={{
+                    position: 'absolute',
+                    inset: 0,
+                    zIndex: -1,
+                    pointerEvents: 'none',
                     background:
-                        'conic-gradient(from 90deg at 50% 50%, #0052FF 0%, #00C6FF 50%, #0052FF 100%)',
+                        'conic-gradient(from 90deg at 50% 50%, #000000 0%, #333333 50%, #000000 100%)',
                 }}
             />
             <motion.div
-                className="absolute inset-0 -z-10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
                 style={{
+                    position: 'absolute',
+                    inset: 0,
+                    zIndex: -1,
+                    pointerEvents: 'none',
+                    opacity: 0,
                     background:
-                        'conic-gradient(from 90deg at 50% 50%, #0052FF 0%, #7C3AED 25%, #00C6FF 50%, #7C3AED 75%, #0052FF 100%)',
+                        'conic-gradient(from 90deg at 50% 50%, #000000 0%, #555555 25%, #333333 50%, #555555 75%, #000000 100%)',
                 }}
                 animate={{
                     rotate: 360,
@@ -54,10 +69,20 @@ export function HoverBorderGradient({
                 }}
             />
             <div
-                className={cn(
-                    'relative z-10 flex items-center justify-center gap-2 bg-white dark:bg-[#0f0f1a] rounded-full px-6 py-3 font-semibold text-sm',
-                    className
-                )}
+                className={className}
+                style={{
+                    position: 'relative',
+                    zIndex: 10,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    background: 'white',
+                    borderRadius: '9999px',
+                    padding: '0.75rem 1.5rem',
+                    fontWeight: 600,
+                    fontSize: '0.875rem',
+                }}
             >
                 {children}
             </div>

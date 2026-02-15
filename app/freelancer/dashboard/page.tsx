@@ -190,7 +190,7 @@ export default function FreelancerDashboard() {
                         <div className={styles.balanceInfo}>
                             <h2>Available Balance</h2>
                             <div className={styles.balanceAmount}>${formatAmount(stats.availableBalance)}</div>
-                            <div className={styles.balanceCurrency}>USDC</div>
+                            <div className={styles.balanceCurrency}>AlphaUSD</div>
                         </div>
                         <div className={styles.balanceActions}>
                             <Link href="/freelancer/withdraw" className={`${styles.balanceBtn} ${styles.primary}`}>

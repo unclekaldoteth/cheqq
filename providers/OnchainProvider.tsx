@@ -1,22 +1,44 @@
 'use client';
 
-import { ReactNode, useState, useEffect, useRef, type ComponentType, type PropsWithChildren } from 'react';
+import { ReactNode, useState, useEffect, useRef } from 'react';
 import { PrivyProvider, usePrivy, useWallets } from '@privy-io/react-auth';
 import { WagmiProvider as PrivyWagmiProvider, createConfig as createPrivyConfig, useSetActiveWallet, type SetActiveWalletForWagmiType } from '@privy-io/wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { OnchainKitProvider } from '@coinbase/onchainkit';
 import { WagmiProvider as BaseWagmiProvider, createConfig as createWagmiConfig, http, useAccount, useConnect } from 'wagmi';
-import type { WagmiProviderProps } from 'wagmi';
-import { baseSepolia, base } from 'wagmi/chains';
-import { coinbaseWallet, injected } from 'wagmi/connectors';
+import { injected } from 'wagmi/connectors';
 import { SessionExpiredModal } from '@/components/auth/SessionExpiredModal';
-import { sdk } from '@farcaster/miniapp-sdk';
-import type { EIP1193Provider } from 'viem';
+import type { EIP1193Provider, Chain } from 'viem';
 
-const chain = process.env.NEXT_PUBLIC_CHAIN === 'base' ? base : baseSepolia;
+const TEMPO_RPC_HTTP = process.env.NEXT_PUBLIC_TEMPO_RPC_URL || 'https://rpc.moderato.tempo.xyz';
+const TEMPO_RPC_WS = process.env.NEXT_PUBLIC_TEMPO_WS_URL || 'wss://rpc.moderato.tempo.xyz';
+
+// Define Tempo Testnet chain
+export const tempoTestnet: Chain = {
+    id: 42431,
+    name: 'Tempo Testnet',
+    nativeCurrency: {
+        name: 'USD',
+        symbol: 'USD',
+        decimals: 18,
+    },
+    rpcUrls: {
+        default: {
+            http: [TEMPO_RPC_HTTP],
+            webSocket: [TEMPO_RPC_WS],
+        },
+    },
+    blockExplorers: {
+        default: {
+            name: 'Tempo Explorer',
+            url: 'https://explore.tempo.xyz',
+        },
+    },
+    testnet: true,
+};
+
+const chain = tempoTestnet;
 const wagmiTransports = {
-    [baseSepolia.id]: http(),
-    [base.id]: http(),
+    [tempoTestnet.id]: http(TEMPO_RPC_HTTP),
 };
 
 const selectActiveWalletForWagmi: SetActiveWalletForWagmiType = ({ wallets, user }) => {
@@ -114,7 +136,7 @@ function PrivyWagmiSync() {
     return null;
 }
 
-// Get connectors - using Coinbase Wallet and injected only
+// Get connectors - using injected wallets only
 // Privy handles wallet connection through its own modal
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let cachedConnectors: any[] | null = null;
@@ -125,10 +147,6 @@ function getWagmiConnectors() {
     }
 
     cachedConnectors = [
-        coinbaseWallet({
-            appName: 'Cheqq',
-            preference: 'all', // Allow both smart wallet and browser extension
-        }),
         // Injected connector for browser extension wallets
         injected({
             shimDisconnect: true,
@@ -177,53 +195,18 @@ export function OnchainProvider({ children }: OnchainProviderProps) {
     const [privyWagmiConfig] = useState(() => getPrivyWagmiConfig());
     const [fallbackWagmiConfig] = useState(() => getFallbackWagmiConfig());
 
-    // Signal Base Mini App that the app is ready to be displayed
-    useEffect(() => {
-        // Only call ready() in browser and wrap in try-catch to handle 
-        // cases where the app is not running inside a Farcaster frame
-        if (typeof window !== 'undefined') {
-            try {
-                sdk.actions.ready();
-            } catch (error) {
-                // Silently ignore - not running in a Farcaster frame
-                console.debug('Farcaster SDK not available:', error);
-            }
-        }
-    }, []);
-
     const privyAppId = process.env.NEXT_PUBLIC_PRIVY_APP_ID;
-
-    const baseProviders = (
-        Provider: ComponentType<PropsWithChildren<WagmiProviderProps>>,
-        config: WagmiProviderProps['config'],
-        providerProps?: Record<string, unknown>,
-        extraContent?: ReactNode,
-    ) => (
-        <QueryClientProvider client={queryClient}>
-            <Provider config={config} {...providerProps}>
-                <OnchainKitProvider
-                    apiKey={process.env.NEXT_PUBLIC_ONCHAINKIT_CDP_KEY}
-                    chain={chain}
-                    config={{
-                        appearance: {
-                            name: 'Cheqq',
-                            // Cheqq currently uses a light UI; keep OnchainKit consistent regardless of OS theme.
-                            mode: 'light',
-                            theme: 'default',
-                        },
-                    }}
-                >
-                    {extraContent}
-                    {children}
-                </OnchainKitProvider>
-            </Provider>
-        </QueryClientProvider>
-    );
 
     // If Privy is not configured, return without PrivyProvider
     if (!privyAppId) {
         console.warn('NEXT_PUBLIC_PRIVY_APP_ID not set, rendering without Privy');
-        return baseProviders(BaseWagmiProvider, fallbackWagmiConfig);
+        return (
+            <QueryClientProvider client={queryClient}>
+                <BaseWagmiProvider config={fallbackWagmiConfig}>
+                    {children}
+                </BaseWagmiProvider>
+            </QueryClientProvider>
+        );
     }
 
     return (
@@ -246,9 +229,12 @@ export function OnchainProvider({ children }: OnchainProviderProps) {
             }}
         >
             <SessionExpiredModal />
-            {baseProviders(PrivyWagmiProvider, privyWagmiConfig, {
-                setActiveWalletForWagmi: selectActiveWalletForWagmi,
-            }, <PrivyWagmiSync />)}
+            <QueryClientProvider client={queryClient}>
+                <PrivyWagmiProvider config={privyWagmiConfig} setActiveWalletForWagmi={selectActiveWalletForWagmi}>
+                    <PrivyWagmiSync />
+                    {children}
+                </PrivyWagmiProvider>
+            </QueryClientProvider>
         </PrivyProvider>
     );
 }

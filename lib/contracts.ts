@@ -1,8 +1,7 @@
-// CheqqPayroll Smart Contract Configuration
+// CheqqPayroll Smart Contract Configuration for Tempo
 
 export const CHEQQ_PAYROLL_ADDRESSES = {
-    'base': '0x0000000000000000000000000000000000000000' as `0x${string}`, // TODO: Deploy to mainnet
-    'base-sepolia': '0xb1946053637898a74d7C22c9Fc5f221B6DbB2a2e' as `0x${string}`,
+    'tempo-testnet': (process.env.NEXT_PUBLIC_CHEQQ_PAYROLL_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`,
 } as const;
 
 // Contract ABI (essential functions only)
@@ -106,11 +105,10 @@ export const CHEQQ_PAYROLL_ABI = [
 ] as const;
 
 /**
- * Get CheqqPayroll contract address for current network
+ * Get CheqqPayroll contract address for Tempo Testnet
  */
 export function getCheqqPayrollAddress(): `0x${string}` {
-    const network = (process.env.NEXT_PUBLIC_CHAIN || 'base-sepolia') as 'base' | 'base-sepolia';
-    return CHEQQ_PAYROLL_ADDRESSES[network];
+    return CHEQQ_PAYROLL_ADDRESSES['tempo-testnet'];
 }
 
 /**

@@ -86,7 +86,7 @@ export default function WithdrawPage() {
             setIsFetchingQuote(true);
             try {
                 const res = await fetch(
-                    `/api/offramp?amount=${amount}&inputCurrency=USDC&outputCurrency=IDR`
+                    `/api/offramp?amount=${amount}&inputCurrency=AlphaUSD&outputCurrency=IDR`
                 );
                 if (res.ok) {
                     const data = await res.json();
@@ -103,7 +103,7 @@ export default function WithdrawPage() {
         return () => clearTimeout(debounce);
     }, [amount, method]);
 
-    const usdcBalance = earnings?.balances?.find((balance) => balance.currency === 'USDC');
+    const usdcBalance = earnings?.balances?.find((balance) => balance.currency === 'AlphaUSD');
     const availableBalance = usdcBalance?.availableBalance ?? 0;
     const fee = quote ? parseFloat(quote.fee) : 0;
 
@@ -145,7 +145,7 @@ export default function WithdrawPage() {
                 body: JSON.stringify({
                     freelancerId,
                     amount: parseFloat(amount),
-                    currency: 'USDC',
+                    currency: 'AlphaUSD',
                     destinationType: method === 'bank' ? 'BANK' : 'CRYPTO',
                     destination: method === 'bank'
                         ? `${bankName} - ${accountNumber} - ${accountName}`
@@ -166,7 +166,7 @@ export default function WithdrawPage() {
                     body: JSON.stringify({
                         freelancerId,
                         amount,
-                        inputCurrency: 'USDC',
+                        inputCurrency: 'AlphaUSD',
                         outputCurrency: 'IDR',
                         bankName,
                         accountNumber,
@@ -209,7 +209,7 @@ export default function WithdrawPage() {
                             <div className={styles.successDetails}>
                                 <div className={styles.detailRow}>
                                     <span>Amount</span>
-                                    <span>${formatAmount(numericAmount)} USDC</span>
+                                    <span>${formatAmount(numericAmount)} AlphaUSD</span>
                                 </div>
                                 <div className={styles.detailRow}>
                                     <span>Method</span>
@@ -268,7 +268,7 @@ export default function WithdrawPage() {
                             <>
                                 <div className={styles.balanceLabel}>Available Balance</div>
                                 <div className={styles.balanceAmount}>${formatAmount(availableBalance)}</div>
-                                <div className={styles.balanceCurrency}>USDC</div>
+                                <div className={styles.balanceCurrency}>AlphaUSD</div>
                             </>
                         )}
                     </div>
@@ -309,7 +309,7 @@ export default function WithdrawPage() {
                                     onChange={(e) => setMethod(e.target.value)}
                                 >
                                     <option value="bank">Bank Transfer (to IDR)</option>
-                                    <option value="crypto">Crypto Wallet (USDC)</option>
+                                    <option value="crypto">Crypto Wallet (AlphaUSD)</option>
                                 </select>
                             </div>
 
@@ -375,17 +375,17 @@ export default function WithdrawPage() {
                                 <div className={styles.summary}>
                                     <div className={styles.summaryRow}>
                                         <span>Withdrawal Amount</span>
-                                        <span>${formatAmount(numericAmount)} USDC</span>
+                                        <span>${formatAmount(numericAmount)} AlphaUSD</span>
                                     </div>
                                     {method === 'bank' && quote && (
                                         <>
                                             <div className={styles.summaryRow}>
                                                 <span>Fee ({((fee / numericAmount) * 100).toFixed(1)}%)</span>
-                                                <span>-${formatAmount(fee)} USDC</span>
+                                                <span>-${formatAmount(fee)} AlphaUSD</span>
                                             </div>
                                             <div className={styles.summaryRow}>
                                                 <span>Exchange Rate</span>
-                                                <span>1 USDC = {formatIDR(quote.exchangeRate)}</span>
+                                                <span>1 AlphaUSD = {formatIDR(quote.exchangeRate)}</span>
                                             </div>
                                             <div className={`${styles.summaryRow} ${styles.total}`}>
                                                 <span>You Receive</span>
@@ -401,7 +401,7 @@ export default function WithdrawPage() {
                                     {method === 'crypto' && (
                                         <div className={`${styles.summaryRow} ${styles.total}`}>
                                             <span>You Receive</span>
-                                            <span>${formatAmount(numericAmount)} USDC</span>
+                                            <span>${formatAmount(numericAmount)} AlphaUSD</span>
                                         </div>
                                     )}
                                 </div>

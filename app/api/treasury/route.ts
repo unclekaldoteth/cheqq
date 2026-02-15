@@ -1,14 +1,10 @@
 import { NextResponse } from 'next/server';
 import type { Currency } from '@prisma/client';
+import { normalizeCurrency } from '@/lib/currency';
 
 // Force dynamic rendering - prevents build-time analysis
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
-
-const ALLOWED_CURRENCIES = ['USDC', 'IDRX', 'ETH'] as const;
-
-const isAllowedCurrency = (value: string): value is Currency =>
-    ALLOWED_CURRENCIES.includes(value as Currency);
 
 // GET /api/treasury?companyId=xxx - Get treasury balances for a company
 export async function GET(request: Request) {
@@ -84,7 +80,7 @@ export async function POST(request: Request) {
 
         const body = await request.json();
         const companyId = String(body.companyId || '').trim();
-        const currencyInput = String(body.currency || 'USDC').trim().toUpperCase();
+        const currencyInput = normalizeCurrency(String(body.currency || 'AlphaUSD'), 'AlphaUSD');
         const balanceValue = String(body.balance ?? '0').trim();
 
         if (!companyId) {
@@ -94,7 +90,7 @@ export async function POST(request: Request) {
             );
         }
 
-        if (!isAllowedCurrency(currencyInput)) {
+        if (!currencyInput) {
             return NextResponse.json(
                 { error: 'Invalid currency' },
                 { status: 400 }

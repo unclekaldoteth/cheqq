@@ -31,8 +31,14 @@ export default function Sidebar() {
         <aside className={`${styles.sidebar} ${collapsed ? styles.collapsed : ''}`}>
             <div className={styles.sidebarHeader}>
                 <Link href="/" className={styles.logo}>
-                    <Image src="/logo.png" alt="Cheqq" width={32} height={32} className={styles.logoImage} />
-                    {!collapsed && <span>Cheqq</span>}
+                    <Image
+                        src="/brand/tempo-mark-black.svg"
+                        alt="Cheqq"
+                        width={32}
+                        height={32}
+                        style={{ objectFit: 'contain' }}
+                    />
+                    {!collapsed && <span style={{ fontWeight: 700, fontSize: '1.25rem' }}>Cheqq</span>}
                 </Link>
             </div>
 
@@ -61,7 +67,7 @@ export default function Sidebar() {
             <div className={styles.sidebarFooter}>
                 <div className={styles.networkBadge}>
                     <span className={styles.networkDot}></span>
-                    {!collapsed && <span>Base Mainnet</span>}
+                    {!collapsed && <span>Tempo Testnet</span>}
                 </div>
             </div>
         </aside>

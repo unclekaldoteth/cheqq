@@ -2,16 +2,16 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
-import { ConnectWallet, Wallet } from '@coinbase/onchainkit/wallet';
 import Image from 'next/image';
+import { usePrivy } from '@privy-io/react-auth';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { parseUnits } from 'viem';
-import { createInvoicePayment } from '@/lib/payments';
-import { TOKENS, formatCurrency, type SupportedCurrency, getTokenAddress } from '@/lib/tokens';
+import { TOKENS, SUPPORTED_CURRENCIES, formatCurrency, type SupportedCurrency, getTokenAddress } from '@/lib/tokens';
+import { normalizeCurrency as normalizeSupportedCurrency } from '@/lib/currency';
 import styles from './page.module.css';
 
-// Minimal ERC20 ABI for transfer
-const ERC20_ABI = [
+// TIP-20 / ERC20 transfer ABI (compatible)
+const TIP20_ABI = [
     {
         name: 'transfer',
         type: 'function',
@@ -43,7 +43,7 @@ interface Invoice {
 }
 
 const normalizeCurrency = (value: string | null | undefined): SupportedCurrency => {
-    return value === 'IDRX' ? 'IDRX' : 'USDC';
+    return (normalizeSupportedCurrency(value) as SupportedCurrency | null) || 'AlphaUSD';
 };
 
 export default function PaymentPage() {
@@ -54,6 +54,7 @@ export default function PaymentPage() {
     const currencyParam = normalizeCurrency(searchParams.get('currency'));
     const recipientParam = searchParams.get('recipient') || searchParams.get('to');
 
+    const { login } = usePrivy();
     const { isConnected, address } = useAccount();
     const [invoice, setInvoice] = useState<Invoice | null>(null);
     const [selectedCurrency, setSelectedCurrency] = useState<SupportedCurrency>(currencyParam);
@@ -61,7 +62,7 @@ export default function PaymentPage() {
     const [isPaying, setIsPaying] = useState(false);
     const [paymentError, setPaymentError] = useState<string | null>(null);
 
-    // Wagmi hooks for IDRX ERC20 transfer
+    // Wagmi hooks for TIP-20 transfer
     const { data: txHash, writeContract, isPending: isWritePending, error: writeError } = useWriteContract();
     const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
         hash: txHash,
@@ -125,7 +126,7 @@ export default function PaymentPage() {
     const parsedAmount = Number.parseFloat(payableAmount);
     const hasValidAmount = Number.isFinite(parsedAmount) && parsedAmount > 0;
 
-    // Handle IDRX transaction confirmation
+    // Handle TIP-20 transaction confirmation
     const updatePaymentStatus = useCallback(async (transactionHash: string) => {
         try {
             const pending = pendingPaymentRef.current;
@@ -165,7 +166,7 @@ export default function PaymentPage() {
         }
     }, [writeError]);
 
-    const handlePayUSDC = async () => {
+    const handlePay = async () => {
         if (!recipientAddress) {
             setPaymentError('Recipient wallet is not configured for this invoice.');
             return;
@@ -179,76 +180,27 @@ export default function PaymentPage() {
         setPaymentError(null);
 
         try {
-            const payment = await createInvoicePayment(payableAmount, recipientAddress);
-
-            await fetch('/api/payments/status', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    invoiceId,
-                    amount: payableAmount,
-                    currency: 'USDC',
-                    status: 'COMPLETED',
-                    txHash: payment.id,
-                    payerAddress: address || null,
-                }),
-            });
-
-            setPaymentComplete(true);
-        } catch (error) {
-            console.error('Payment failed:', error);
-            setPaymentError('Payment failed. Please try again.');
-        } finally {
-            setIsPaying(false);
-        }
-    };
-
-    const handlePayIDRX = async () => {
-        if (!recipientAddress) {
-            setPaymentError('Recipient wallet is not configured for this invoice.');
-            return;
-        }
-        if (!hasValidAmount) {
-            setPaymentError('Invoice amount is invalid.');
-            return;
-        }
-
-        setIsPaying(true);
-        setPaymentError(null);
-
-        try {
-            const tokenAddress = getTokenAddress('IDRX');
-            const decimals = TOKENS.IDRX.decimals;
-            const amountInSmallestUnit = parseUnits(payableAmount, decimals);
-            pendingPaymentRef.current = { amount: payableAmount, currency: 'IDRX' };
+            const tokenAddress = getTokenAddress(selectedCurrency);
+            const token = TOKENS[selectedCurrency];
+            const amountInSmallestUnit = parseUnits(payableAmount, token.decimals);
+            pendingPaymentRef.current = { amount: payableAmount, currency: selectedCurrency };
 
             writeContract({
                 address: tokenAddress as `0x${string}`,
-                abi: ERC20_ABI,
+                abi: TIP20_ABI,
                 functionName: 'transfer',
                 args: [recipientAddress as `0x${string}`, amountInSmallestUnit],
             });
         } catch (error) {
-            console.error('IDRX payment failed:', error);
-            setPaymentError('Failed to initiate IDRX transfer. Please try again.');
+            console.error('Payment failed:', error);
+            setPaymentError('Failed to initiate transfer. Please try again.');
             setIsPaying(false);
             pendingPaymentRef.current = null;
         }
     };
 
-    const handlePay = () => {
-        if (selectedCurrency === 'USDC') {
-            handlePayUSDC();
-        } else {
-            handlePayIDRX();
-        }
-    };
-
     const getDisplayAmount = () => {
-        if (selectedCurrency === 'IDRX') {
-            return formatCurrency(payableAmount, 'IDRX');
-        }
-        return `$${payableAmount} USDC`;
+        return formatCurrency(payableAmount, selectedCurrency);
     };
 
     const isProcessing = isPaying || isWritePending || isConfirming;
@@ -271,6 +223,16 @@ export default function PaymentPage() {
                         Thank you for your payment of {getDisplayAmount()}
                     </p>
                     <p className={styles.invoiceId}>Invoice: {invoice.id}</p>
+                    {txHash && (
+                        <a
+                            href={`https://explore.tempo.xyz/tx/${txHash}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={styles.explorerLink}
+                        >
+                            View on Tempo Explorer ↗
+                        </a>
+                    )}
                 </div>
             </div>
         );
@@ -280,8 +242,8 @@ export default function PaymentPage() {
         <div className={styles.container}>
             <div className={styles.card}>
                 <div className={styles.logo}>
-                    <Image src="/logo.png" alt="Cheqq" width={48} height={48} className={styles.logoImage} />
-                    <span className={styles.logoText}>Cheqq</span>
+                    <Image src="/brand/tempo-mark-black.svg" alt="Tempo" width={48} height={48} className={styles.logoImage} />
+                    <span className={styles.logoText}>Tempo</span>
                 </div>
 
                 <h1 className={styles.title}>Pay Invoice</h1>
@@ -299,7 +261,7 @@ export default function PaymentPage() {
                     <div className={styles.currencySection}>
                         <span className={styles.label}>Pay with</span>
                         <div className={styles.currencyOptions}>
-                            {(['USDC', 'IDRX'] as SupportedCurrency[]).map((currency) => (
+                            {SUPPORTED_CURRENCIES.map((currency) => (
                                 <button
                                     key={currency}
                                     className={`${styles.currencyButton} ${selectedCurrency === currency ? styles.currencyButtonActive : ''
@@ -308,7 +270,11 @@ export default function PaymentPage() {
                                     type="button"
                                 >
                                     <span className={styles.currencyIcon}>
-                                        {currency === 'USDC' ? '💵' : '🇮🇩'}
+                                        {currency === 'AlphaUSD'
+                                            ? '💵'
+                                            : currency === 'BetaUSD'
+                                                ? '💶'
+                                                : '🛣️'}
                                     </span>
                                     <span className={styles.currencyName}>{currency}</span>
                                     <span className={styles.currencyFullName}>
@@ -329,9 +295,13 @@ export default function PaymentPage() {
                 {!isConnected ? (
                     <div className={styles.connectSection}>
                         <p className={styles.connectText}>Connect your wallet to pay</p>
-                        <Wallet>
-                            <ConnectWallet className={styles.connectButton} />
-                        </Wallet>
+                        <button
+                            type="button"
+                            className={styles.connectButton}
+                            onClick={() => login()}
+                        >
+                            Connect Wallet
+                        </button>
                     </div>
                 ) : (
                     <div className={styles.checkoutSection}>
@@ -352,7 +322,7 @@ export default function PaymentPage() {
                 )}
 
                 <p className={styles.footer}>
-                    Powered by Base · Secured by Coinbase
+                    Powered by Tempo · Stablecoin Payments
                 </p>
             </div>
         </div>

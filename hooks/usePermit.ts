@@ -24,7 +24,7 @@ export interface Permit {
 export interface PermitResponse {
     permit: Permit;
     signature: Hex;
-    attestationUID: Hex;
+    attestationUID?: Hex;
     chainId: number;
     expiresAt: string;
 }

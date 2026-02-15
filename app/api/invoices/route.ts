@@ -1,18 +1,15 @@
 import { NextResponse } from 'next/server';
 import type { Currency, InvoiceStatus } from '@prisma/client';
+import { normalizeCurrency } from '@/lib/currency';
 
 // Force dynamic rendering - prevents build-time analysis
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 const ALLOWED_STATUSES = ['DRAFT', 'PENDING', 'PAID', 'OVERDUE', 'CANCELLED'] as const;
-const ALLOWED_CURRENCIES = ['USDC', 'IDRX', 'ETH'] as const;
 
 const isAllowedStatus = (value: string): value is InvoiceStatus =>
     ALLOWED_STATUSES.includes(value as InvoiceStatus);
-
-const isAllowedCurrency = (value: string): value is Currency =>
-    ALLOWED_CURRENCIES.includes(value as Currency);
 
 // GET /api/invoices - List all invoices
 export async function GET(request: Request) {
@@ -102,7 +99,7 @@ export async function POST(request: Request) {
         const clientEmail = String(body.clientEmail || '').trim();
         const description = String(body.description || '').trim();
         const amount = String(body.amount ?? '').trim();
-        const currencyInput = String(body.currency || 'USDC').trim().toUpperCase();
+        const currencyInput = normalizeCurrency(String(body.currency || 'AlphaUSD'), 'AlphaUSD');
 
         if (!companyId && !freelancerId) {
             return NextResponse.json(
@@ -133,7 +130,7 @@ export async function POST(request: Request) {
             );
         }
 
-        if (!isAllowedCurrency(currencyInput)) {
+        if (!currencyInput) {
             return NextResponse.json(
                 { error: 'Invalid currency' },
                 { status: 400 }

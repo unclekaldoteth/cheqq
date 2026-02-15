@@ -9,7 +9,7 @@ export interface Employee {
     email: string;
     walletAddress: string;
     salary: number;
-    currency: 'USDC' | 'IDRX';
+    currency: 'AlphaUSD' | 'BetaUSD';
     department: string;
     status: 'active' | 'inactive' | 'pending';
     joinDate: string;

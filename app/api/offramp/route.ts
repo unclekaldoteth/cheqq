@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { normalizeCurrency } from '@/lib/currency';
 
 // Force dynamic rendering - prevents build-time analysis
 export const dynamic = 'force-dynamic';
@@ -8,17 +9,25 @@ export const runtime = 'nodejs';
 export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
-        const inputCurrency = searchParams.get('inputCurrency')?.trim().toUpperCase() || 'USDC';
+        const rawInputCurrency = searchParams.get('inputCurrency');
+        const inputCurrency = normalizeCurrency(rawInputCurrency, 'AlphaUSD');
         const outputCurrencyParam = searchParams.get('outputCurrency');
         const outputCurrency = outputCurrencyParam?.trim().toUpperCase() || 'IDR';
+
+        if (rawInputCurrency && !inputCurrency) {
+            return NextResponse.json(
+                { error: 'Invalid input currency' },
+                { status: 400 }
+            );
+        }
 
         const { getOffRampQuote, getSupportedOutputCurrencies } = await import('@/lib/offramp');
 
         // If no output currency, return supported options
         if (!outputCurrencyParam) {
-            const supportedOutputs = getSupportedOutputCurrencies(inputCurrency);
+            const supportedOutputs = getSupportedOutputCurrencies(inputCurrency || 'AlphaUSD');
             return NextResponse.json({
-                inputCurrency,
+                inputCurrency: inputCurrency || 'AlphaUSD',
                 supportedOutputCurrencies: supportedOutputs,
             });
         }
@@ -39,7 +48,7 @@ export async function GET(request: Request) {
             );
         }
 
-        const quote = await getOffRampQuote(inputAmount, inputCurrency, outputCurrency);
+        const quote = await getOffRampQuote(inputAmount, inputCurrency || 'AlphaUSD', outputCurrency);
 
         return NextResponse.json({ quote });
     } catch (error) {
@@ -57,7 +66,7 @@ export async function POST(request: Request) {
         const body = await request.json();
         const freelancerId = String(body.freelancerId || '').trim();
         const inputAmount = String(body.amount || '').trim();
-        const inputCurrency = String(body.inputCurrency || 'USDC').trim().toUpperCase();
+        const inputCurrency = normalizeCurrency(String(body.inputCurrency || 'AlphaUSD'), 'AlphaUSD');
         const outputCurrency = String(body.outputCurrency || 'IDR').trim().toUpperCase();
         const bankName = String(body.bankName || '').trim();
         const accountNumber = String(body.accountNumber || '').trim();
@@ -68,6 +77,13 @@ export async function POST(request: Request) {
         if (!freelancerId) {
             return NextResponse.json(
                 { error: 'Freelancer ID is required' },
+                { status: 400 }
+            );
+        }
+
+        if (!inputCurrency) {
+            return NextResponse.json(
+                { error: 'Invalid input currency' },
                 { status: 400 }
             );
         }

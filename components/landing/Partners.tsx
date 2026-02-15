@@ -2,12 +2,12 @@ import styles from './Partners.module.css';
 
 const partners = [
     {
-        name: 'Base',
-        logo: '🔵',
-        description: 'Built on Base L2',
+        name: 'Tempo',
+        logo: '⚫',
+        description: 'Built on Tempo',
     },
     {
-        name: 'IDRX',
+        name: 'BetaUSD',
         logo: '🇮🇩',
         description: 'Indonesian Rupiah Stablecoin',
     },
@@ -19,7 +19,7 @@ const partners = [
     {
         name: 'Aerodrome',
         logo: '✈️',
-        description: 'Base DEX & Liquidity',
+        description: 'Tempo DEX & Liquidity',
     },
 ];
 

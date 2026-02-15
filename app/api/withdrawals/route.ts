@@ -1,21 +1,18 @@
 import { NextResponse } from 'next/server';
 import type { Currency, PaymentStatus } from '@prisma/client';
+import { normalizeCurrency } from '@/lib/currency';
 
 // Force dynamic rendering - prevents build-time analysis
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 const ALLOWED_STATUSES = ['PENDING', 'PROCESSING', 'COMPLETED', 'FAILED'] as const;
-const ALLOWED_CURRENCIES = ['USDC', 'IDRX', 'ETH'] as const;
 const ALLOWED_TYPES = ['BANK', 'CRYPTO'] as const;
 
 type WithdrawalType = 'BANK' | 'CRYPTO';
 
 const isAllowedStatus = (value: string): value is PaymentStatus =>
     ALLOWED_STATUSES.includes(value as PaymentStatus);
-
-const isAllowedCurrency = (value: string): value is Currency =>
-    ALLOWED_CURRENCIES.includes(value as Currency);
 
 const isAllowedType = (value: string): value is WithdrawalType =>
     ALLOWED_TYPES.includes(value as WithdrawalType);
@@ -130,7 +127,7 @@ export async function POST(request: Request) {
         const body = await request.json();
         const freelancerId = String(body.freelancerId || '').trim();
         const amountValue = String(body.amount ?? '').trim();
-        const currencyInput = String(body.currency || 'USDC').trim().toUpperCase();
+        const currencyInput = normalizeCurrency(String(body.currency || 'AlphaUSD'), 'AlphaUSD');
         const destinationType = String(body.destinationType || '').trim().toUpperCase();
         const destination = String(body.destination || '').trim();
 
@@ -150,7 +147,7 @@ export async function POST(request: Request) {
             );
         }
 
-        if (!isAllowedCurrency(currencyInput)) {
+        if (!currencyInput) {
             return NextResponse.json(
                 { error: 'Invalid currency' },
                 { status: 400 }

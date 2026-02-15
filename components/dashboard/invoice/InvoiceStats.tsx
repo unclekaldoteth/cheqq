@@ -39,7 +39,7 @@ export default function InvoiceStats({
     paidThisMonth,
     pendingCount,
     overdueCount,
-    currency = 'USDC'
+    currency = 'AlphaUSD'
 }: InvoiceStatsProps) {
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('en-US', {

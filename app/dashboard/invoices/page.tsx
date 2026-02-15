@@ -11,6 +11,7 @@ import {
     type Invoice,
     type InvoiceStatusType,
 } from '@/components/dashboard/invoice';
+import { normalizeCurrency } from '@/lib/currency';
 import styles from './page.module.css';
 import { useUser } from '@/contexts/UserContext';
 
@@ -28,9 +29,7 @@ interface InvoiceFromAPI {
 }
 
 const normalizeInvoiceCurrency = (value?: string): Invoice['currency'] => {
-    if (value === 'IDRX') return 'IDRX';
-    if (value === 'ETH') return 'ETH';
-    return 'USDC';
+    return (normalizeCurrency(value) as Invoice['currency'] | null) || 'AlphaUSD';
 };
 
 const normalizeInvoiceStatus = (value?: string): InvoiceStatusType => {
@@ -132,11 +131,11 @@ export default function InvoicesPage() {
     const stats = {
         totalOutstanding: invoices
             .filter((i) => i.status === 'pending' || i.status === 'overdue')
-            .filter((i) => i.currency === 'USDC')
+            .filter((i) => i.currency === 'AlphaUSD')
             .reduce((sum, i) => sum + i.amount, 0),
         paidThisMonth: invoices
             .filter((i) => i.status === 'paid')
-            .filter((i) => i.currency === 'USDC')
+            .filter((i) => i.currency === 'AlphaUSD')
             .reduce((sum, i) => sum + i.amount, 0),
         pendingCount: invoices.filter((i) => i.status === 'pending').length,
         overdueCount: invoices.filter((i) => i.status === 'overdue').length,

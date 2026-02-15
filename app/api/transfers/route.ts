@@ -1,27 +1,23 @@
 import { NextResponse } from 'next/server';
-import { parseEther } from 'viem';
 import { getTokenConfig, parseTokenAmount } from '@/lib/tokens';
+import { normalizeCurrency } from '@/lib/currency';
+import { formatUnits } from 'viem';
 
 // Force dynamic rendering - prevents build-time analysis
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-const ALLOWED_CURRENCIES = ['USDC', 'IDRX', 'ETH'] as const;
-
 const isValidAddress = (address: string): boolean =>
     /^0x[a-f0-9]{40}$/i.test(address);
 
-const isAllowedCurrency = (value: string): boolean =>
-    ALLOWED_CURRENCIES.includes(value.toUpperCase() as (typeof ALLOWED_CURRENCIES)[number]);
-
-// POST /api/transfers - Execute on-chain transfer
+// POST /api/transfers - Execute on-chain TIP-20 transfer
 export async function POST(request: Request) {
     try {
         const body = await request.json();
         const fromAddress = String(body.fromAddress || '').trim();
         const toAddress = String(body.toAddress || '').trim();
         const amountValue = String(body.amount || '').trim();
-        const currency = String(body.currency || 'USDC').trim().toUpperCase();
+        const currency = normalizeCurrency(String(body.currency || 'AlphaUSD'), 'AlphaUSD');
         const amountPattern = /^(?:\d+|\d*\.\d+)$/;
 
         // Validation
@@ -54,15 +50,15 @@ export async function POST(request: Request) {
             );
         }
 
-        if (!isAllowedCurrency(currency)) {
+        if (!currency) {
             return NextResponse.json(
-                { error: 'Unsupported currency' },
+                { error: 'Unsupported currency. Supported: AlphaUSD, BetaUSD, pathUSD' },
                 { status: 400 }
             );
         }
 
-        const tokenConfig = currency === 'ETH' ? null : getTokenConfig(currency);
-        if (!tokenConfig && currency !== 'ETH') {
+        const tokenConfig = getTokenConfig(currency);
+        if (!tokenConfig) {
             return NextResponse.json(
                 { error: 'Unsupported currency' },
                 { status: 400 }
@@ -70,28 +66,22 @@ export async function POST(request: Request) {
         }
 
         const decimalPlaces = amountValue.includes('.') ? amountValue.split('.')[1].length : 0;
-        const maxDecimals = currency === 'ETH' ? 18 : (tokenConfig?.decimals ?? 0);
-        if (decimalPlaces > maxDecimals) {
+        if (decimalPlaces > tokenConfig.decimals) {
             return NextResponse.json(
-                { error: `Amount exceeds supported precision (${maxDecimals} decimals)` },
+                { error: `Amount exceeds supported precision (${tokenConfig.decimals} decimals)` },
                 { status: 400 }
             );
         }
 
-        // Import CDP functions dynamically
-        const { sendToken, getTokenBalanceRaw, getAccountBalanceRaw } = await import('@/lib/cdp');
+        // Import chain functions dynamically
+        const { sendToken, getTokenBalanceRaw } = await import('@/lib/cdp');
 
         // Check sender balance
         let balanceRaw: bigint;
         let requestedRaw: bigint;
         try {
-            if (currency === 'ETH') {
-                balanceRaw = await getAccountBalanceRaw(fromAddress);
-                requestedRaw = parseEther(amountValue);
-            } else {
-                balanceRaw = await getTokenBalanceRaw(fromAddress, currency);
-                requestedRaw = parseTokenAmount(amountValue, currency);
-            }
+            balanceRaw = await getTokenBalanceRaw(fromAddress, currency);
+            requestedRaw = parseTokenAmount(amountValue, currency);
         } catch (error) {
             return NextResponse.json(
                 { error: error instanceof Error ? error.message : 'Invalid amount' },
@@ -100,11 +90,11 @@ export async function POST(request: Request) {
         }
 
         if (balanceRaw < requestedRaw) {
-            const available = currency === 'ETH'
-                ? (Number(balanceRaw) / 1e18).toFixed(6)
-                : (Number(balanceRaw) / Math.pow(10, tokenConfig?.decimals ?? 0)).toFixed(
-                    (tokenConfig?.decimals ?? 0) > 2 ? 2 : (tokenConfig?.decimals ?? 0)
-                );
+            const formattedAvailable = formatUnits(balanceRaw, tokenConfig.decimals);
+            const availableNumeric = Number.parseFloat(formattedAvailable);
+            const available = Number.isFinite(availableNumeric)
+                ? availableNumeric.toFixed(2)
+                : formattedAvailable;
             return NextResponse.json(
                 {
                     error: 'Insufficient balance',
@@ -143,7 +133,9 @@ export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
         const address = searchParams.get('address')?.trim();
-        const currency = searchParams.get('currency')?.trim().toUpperCase() || 'USDC';
+        const rawCurrency = searchParams.get('currency');
+        const normalizedCurrency = normalizeCurrency(rawCurrency);
+        const currency = normalizedCurrency || 'AlphaUSD';
         const txHash = searchParams.get('txHash')?.trim();
 
         // Get balance
@@ -155,27 +147,27 @@ export async function GET(request: Request) {
                 );
             }
 
-            const { getTokenBalance, getAccountBalance } = await import('@/lib/cdp');
+            const { getTokenBalance } = await import('@/lib/cdp');
 
             // Get all balances if currency not specified
             if (!searchParams.has('currency')) {
-                const [usdc, idrx, eth] = await Promise.all([
-                    getTokenBalance(address, 'USDC'),
-                    getTokenBalance(address, 'IDRX'),
-                    getAccountBalance(address),
+                const [alphaUsd, betaUsd, pathUsd] = await Promise.all([
+                    getTokenBalance(address, 'AlphaUSD'),
+                    getTokenBalance(address, 'BetaUSD'),
+                    getTokenBalance(address, 'pathUSD'),
                 ]);
 
                 return NextResponse.json({
                     address,
                     balances: {
-                        USDC: usdc,
-                        IDRX: idrx,
-                        ETH: eth,
+                        AlphaUSD: alphaUsd,
+                        BetaUSD: betaUsd,
+                        pathUSD: pathUsd,
                     },
                 });
             }
 
-            if (!isAllowedCurrency(currency)) {
+            if (searchParams.has('currency') && !normalizedCurrency) {
                 return NextResponse.json(
                     { error: 'Unsupported currency' },
                     { status: 400 }
@@ -192,11 +184,8 @@ export async function GET(request: Request) {
 
         // Get transaction status
         if (txHash) {
-            const { createPublicClient, http } = await import('viem');
-            const { baseSepolia, base } = await import('viem/chains');
-
-            const chain = process.env.NEXT_PUBLIC_CHAIN === 'base' ? base : baseSepolia;
-            const publicClient = createPublicClient({ chain, transport: http() });
+            const { getPublicClient } = await import('@/lib/cdp');
+            const publicClient = getPublicClient();
 
             const receipt = await publicClient.getTransactionReceipt({
                 hash: txHash as `0x${string}`,

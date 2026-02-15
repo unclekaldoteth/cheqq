@@ -44,7 +44,7 @@ export default function HowItWorks() {
                         <div className={styles.audienceIcon}><Building2 size={32} /></div>
                         <h3>For Companies (B2B)</h3>
                         <ul className={styles.audienceList}>
-                            <li>Batch payroll in USDC/IDRX</li>
+                            <li>Batch payroll in AlphaUSD/BetaUSD</li>
                             <li>Employee salary advances</li>
                             <li>Treasury DeFi yield</li>
                             <li>Invoice management</li>

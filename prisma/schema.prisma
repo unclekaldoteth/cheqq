@@ -30,7 +30,7 @@ model Employee {
   email         String
   walletAddress String
   salary        Decimal        @db.Decimal(18, 2)
-  currency      Currency       @default(USDC)
+  currency      Currency       @default(AlphaUSD)
   status        EmployeeStatus @default(ACTIVE)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
@@ -43,7 +43,7 @@ model PayrollRun {
   id          String        @id @default(cuid())
   companyId   String
   totalAmount Decimal       @db.Decimal(18, 2)
-  currency    Currency      @default(USDC)
+  currency    Currency      @default(AlphaUSD)
   status      PayrollStatus @default(PENDING)
   txHash      String?
   scheduledAt DateTime?
@@ -72,7 +72,7 @@ model Loan {
   amount           Decimal    @db.Decimal(18, 2)
   remainingAmount  Decimal    @db.Decimal(18, 2)
   monthlyDeduction Decimal    @db.Decimal(18, 2)
-  currency         Currency   @default(USDC)
+  currency         Currency   @default(AlphaUSD)
   status           LoanStatus @default(ACTIVE)
   approvedAt       DateTime?
   createdAt        DateTime   @default(now())
@@ -120,7 +120,7 @@ model Invoice {
   clientEmail  String
   description  String
   amount       Decimal       @db.Decimal(18, 2)
-  currency     Currency      @default(USDC)
+  currency     Currency      @default(AlphaUSD)
   status       InvoiceStatus @default(DRAFT)
   dueDate      DateTime
   paidAt       DateTime?
@@ -265,9 +265,9 @@ model BlockedSubject {
 }
 
 enum Currency {
-  USDC
-  IDRX
-  ETH
+  AlphaUSD
+  BetaUSD
+  pathUSD
 }
 
 enum InvoiceStatus {

@@ -1,46 +1,44 @@
-// Token configuration for supported currencies on Base
+// Token configuration for supported currencies on Tempo
+
+import { normalizeCurrency, SUPPORTED_CURRENCIES, type SupportedCurrency } from './currency';
 
 export interface TokenConfig {
     symbol: string;
     name: string;
     decimals: number;
     address: {
-        base: string;
-        'base-sepolia': string;
+        'tempo-testnet': string;
     };
     logoUrl?: string;
 }
 
 export const TOKENS: Record<string, TokenConfig> = {
-    USDC: {
-        symbol: 'USDC',
-        name: 'USD Coin',
+    AlphaUSD: {
+        symbol: 'AlphaUSD',
+        name: 'Alpha USD',
         decimals: 6,
         address: {
-            base: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-            'base-sepolia': '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
+            'tempo-testnet': '0x20c0000000000000000000000000000000000001',
         },
-        logoUrl: 'https://assets.coingecko.com/coins/images/6319/small/USD_Coin_icon.png',
+        logoUrl: 'https://tokenlist.tempo.xyz/icon/42431/0x20c0000000000000000000000000000000000001',
     },
-    IDRX: {
-        symbol: 'IDRX',
-        name: 'Indonesian Rupiah Token',
-        decimals: 2, // IDR typically uses 2 decimals
+    BetaUSD: {
+        symbol: 'BetaUSD',
+        name: 'Beta USD',
+        decimals: 6,
         address: {
-            base: '0x501D8569D2B7e3d1503Ff306837CeB28F5703122', // TODO: Confirm mainnet address
-            'base-sepolia': '0x501D8569D2B7e3d1503Ff306837CeB28F5703122',
+            'tempo-testnet': '0x20c0000000000000000000000000000000000002',
         },
-        logoUrl: '/idrx-logo.png',
+        logoUrl: 'https://tokenlist.tempo.xyz/icon/42431/0x20c0000000000000000000000000000000000002',
     },
-    ETH: {
-        symbol: 'ETH',
-        name: 'Ethereum',
-        decimals: 18,
+    pathUSD: {
+        symbol: 'pathUSD',
+        name: 'Path USD',
+        decimals: 6,
         address: {
-            base: '0x0000000000000000000000000000000000000000',
-            'base-sepolia': '0x0000000000000000000000000000000000000000',
+            'tempo-testnet': '0x20c0000000000000000000000000000000000000',
         },
-        logoUrl: 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
+        logoUrl: 'https://tokenlist.tempo.xyz/icon/42431/0x20c0000000000000000000000000000000000000',
     },
 };
 
@@ -48,17 +46,18 @@ export const TOKENS: Record<string, TokenConfig> = {
  * Get token config for current network
  */
 export function getTokenConfig(symbol: string): TokenConfig | undefined {
-    return TOKENS[symbol.toUpperCase()];
+    const normalized = normalizeCurrency(symbol);
+    if (!normalized) return undefined;
+    return TOKENS[normalized];
 }
 
 /**
- * Get token address for current network
+ * Get token address for current network (Tempo Testnet)
  */
 export function getTokenAddress(symbol: string): string {
-    const network = (process.env.NEXT_PUBLIC_CHAIN || 'base-sepolia') as 'base' | 'base-sepolia';
-    const token = TOKENS[symbol.toUpperCase()];
+    const token = getTokenConfig(symbol);
     if (!token) throw new Error(`Unknown token: ${symbol}`);
-    return token.address[network];
+    return token.address['tempo-testnet'];
 }
 
 /**
@@ -67,8 +66,12 @@ export function getTokenAddress(symbol: string): string {
 export function parseTokenAmount(amount: string, symbol: string): bigint {
     const token = getTokenConfig(symbol);
     if (!token) throw new Error(`Unknown token: ${symbol}`);
+    const normalizedAmount = amount.trim();
+    if (!/^(?:\d+|\d*\.\d+)$/.test(normalizedAmount)) {
+        throw new Error('Amount must be a valid numeric string');
+    }
 
-    const [whole, decimal = ''] = amount.split('.');
+    const [whole, decimal = ''] = normalizedAmount.split('.');
     const paddedDecimal = decimal.padEnd(token.decimals, '0').slice(0, token.decimals);
     return BigInt(whole + paddedDecimal);
 }
@@ -91,14 +94,12 @@ export function formatTokenAmount(amount: bigint, symbol: string): string {
  */
 export function formatCurrency(amount: string, symbol: string): string {
     const num = parseFloat(amount);
-    if (symbol === 'IDRX') {
-        return `Rp ${num.toLocaleString('id-ID')}`;
-    }
-    return `$${num.toLocaleString('en-US', { minimumFractionDigits: 2 })} ${symbol}`;
+    const safeValue = Number.isFinite(num) ? num : 0;
+    return `$${safeValue.toLocaleString('en-US', { minimumFractionDigits: 2 })} ${symbol}`;
 }
 
 /**
  * Available currencies for selection
  */
-export const SUPPORTED_CURRENCIES = ['USDC', 'IDRX'] as const;
-export type SupportedCurrency = typeof SUPPORTED_CURRENCIES[number];
+export { SUPPORTED_CURRENCIES };
+export type { SupportedCurrency };

@@ -10,8 +10,8 @@ import styles from './page.module.css';
 import { useUser } from '@/contexts/UserContext';
 
 const normalizeEmployeeCurrency = (value?: string): Employee['currency'] => {
-    if (value === 'IDRX') return 'IDRX';
-    return 'USDC';
+    if (value === 'BetaUSD') return 'BetaUSD';
+    return 'AlphaUSD';
 };
 
 const normalizeEmployeeStatus = (value?: string): Employee['status'] => {

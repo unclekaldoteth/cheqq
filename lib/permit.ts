@@ -1,13 +1,18 @@
 /**
- * EIP-712 Permit Signing Utilities
+ * EIP-712 Permit Signing Utilities for Tempo
  * Signs permits for backend authorization of gated contract calls
  */
 
 import { createWalletClient, http, keccak256, toBytes, type Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { baseSepolia, base } from "viem/chains";
+import { tempoTestnet } from "@/providers/OnchainProvider";
 
 // ========== CONSTANTS ==========
+
+const TEMPO_RPC_URL =
+    process.env.NEXT_PUBLIC_TEMPO_RPC_URL ||
+    process.env.TEMPO_RPC_URL ||
+    "https://rpc.moderato.tempo.xyz";
 
 const PERMIT_TYPES = {
     Permit: [
@@ -67,12 +72,11 @@ export async function signPermit(
     }
 
     const account = privateKeyToAccount(privateKey as Hex);
-    const chain = chainId === 8453 ? base : baseSepolia;
 
     const client = createWalletClient({
         account,
-        chain,
-        transport: http(),
+        chain: tempoTestnet,
+        transport: http(TEMPO_RPC_URL),
     });
 
     const signature = await client.signTypedData({
@@ -148,13 +152,17 @@ export function computeParamsHash(params: unknown): Hex {
 }
 
 /**
- * Get the gated actions contract address for a chain
+ * Get the gated actions contract address for Tempo Testnet
  */
 export function getGatedActionsAddress(chainId: number): Hex {
-    // These will be populated after deployment
+    const configuredTempoAddress = (
+        process.env.CHEQQ_GATED_ACTIONS_ADDRESS ||
+        process.env.NEXT_PUBLIC_CHEQQ_GATED_ACTIONS_ADDRESS ||
+        "0x0000000000000000000000000000000000000000"
+    ) as Hex;
+
     const addresses: Record<number, Hex> = {
-        84532: "0x7430605AD9cbaB00961E5a52a059E9c3A2280Cd0", // Base Sepolia
-        8453: "0x0000000000000000000000000000000000000000", // Base Mainnet - TBD
+        42431: configuredTempoAddress,
     };
 
     const address = addresses[chainId];

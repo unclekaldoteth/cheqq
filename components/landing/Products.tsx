@@ -6,7 +6,7 @@ const products = [
         icon: <FileText size={32} />,
         emoji: '📄',
         title: 'Invoice',
-        description: 'Create, send, and track professional invoices. Get paid in USDC, IDRX, or any stablecoin. Automatic reminders and instant settlement.',
+        description: 'Create, send, and track professional invoices. Get paid in AlphaUSD, BetaUSD, or any stablecoin. Automatic reminders and instant settlement.',
         features: ['E-signature support', 'Multi-currency', 'Auto-reminders', 'Instant settlement'],
         cta: 'Create Invoice',
         color: '#0052FF',
@@ -24,7 +24,7 @@ const products = [
         icon: <TrendingUp size={32} />,
         emoji: '📈',
         title: 'DeFi',
-        description: 'Put your treasury to work. Earn yield on idle funds via Morpho or Aerodrome. Offer salary advances to employees with built-in collateral.',
+        description: 'Put your treasury to work. Earn yield on idle funds via Tempo DeFi protocols. Offer salary advances to employees with built-in collateral.',
         features: ['Up to 8% APY', 'Employee lending', 'Auto-compound', 'Risk management'],
         cta: 'Start Earning',
         color: '#8B5CF6',
@@ -39,7 +39,7 @@ export default function Products() {
                     <span className="badge">Our Products</span>
                     <h2>Everything you need to manage business finance</h2>
                     <p>
-                        From invoicing to payroll to DeFi yield — all in one unified platform built on Base.
+                        From invoicing to payroll to DeFi yield — all in one unified platform built on Tempo.
                     </p>
                 </div>
 

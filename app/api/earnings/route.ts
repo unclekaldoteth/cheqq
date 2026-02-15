@@ -1,14 +1,10 @@
 import { NextResponse } from 'next/server';
 import type { Currency } from '@prisma/client';
+import { normalizeCurrency } from '@/lib/currency';
 
 // Force dynamic rendering - prevents build-time analysis
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
-
-const ALLOWED_CURRENCIES = ['USDC', 'IDRX', 'ETH'] as const;
-
-const isAllowedCurrency = (value: string): value is Currency =>
-    ALLOWED_CURRENCIES.includes(value as Currency);
 
 // GET /api/earnings - Get freelancer earnings balance
 export async function GET(request: Request) {
@@ -18,7 +14,8 @@ export async function GET(request: Request) {
 
         const { searchParams } = new URL(request.url);
         const freelancerId = searchParams.get('freelancerId')?.trim();
-        const currencyParam = searchParams.get('currency')?.trim().toUpperCase();
+        const rawCurrencyParam = searchParams.get('currency');
+        const currencyParam = normalizeCurrency(rawCurrencyParam);
 
         if (!freelancerId) {
             return NextResponse.json(
@@ -27,7 +24,7 @@ export async function GET(request: Request) {
             );
         }
 
-        if (currencyParam && !isAllowedCurrency(currencyParam)) {
+        if (rawCurrencyParam && !currencyParam) {
             return NextResponse.json(
                 { error: 'Invalid currency' },
                 { status: 400 }

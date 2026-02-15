@@ -18,19 +18,19 @@ export default function Hero() {
                     {/* Badge */}
                     <div className="badge">
                         <span>🚀</span>
-                        Built on Base • Base Indonesia Hackathon 2026
+                        Built on Tempo • Tempo Hackathon 2026
                     </div>
 
                     {/* Headline with FlipWords */}
                     <h1 className={styles.headline}>
                         <FlipWords words={flipWords} className={styles.flipWord} /> & More.{' '}
-                        <span className="text-gradient">Unified on Base.</span>
+                        <span className="text-gradient">Unified on Tempo.</span>
                     </h1>
 
                     {/* Subheadline */}
                     <p className={styles.subheadline}>
                         The all-in-one platform for invoice management, borderless payroll payments,
-                        and DeFi yield generation. Pay employees instantly in USDC or IDRX,
+                        and DeFi yield generation. Pay employees instantly in AlphaUSD or BetaUSD,
                         and earn yield on your treasury.
                     </p>
 
@@ -78,11 +78,11 @@ export default function Hero() {
                                 {/* Balance Cards */}
                                 <div className={styles.balanceRow}>
                                     <div className={styles.balanceCard}>
-                                        <span className={styles.balanceLabel}>USDC Balance</span>
+                                        <span className={styles.balanceLabel}>AlphaUSD Balance</span>
                                         <span className={styles.balanceValue}>$50,000.00</span>
                                     </div>
                                     <div className={styles.balanceCard}>
-                                        <span className={styles.balanceLabel}>IDRX Balance</span>
+                                        <span className={styles.balanceLabel}>BetaUSD Balance</span>
                                         <span className={styles.balanceValue}>Rp 750,000,000</span>
                                     </div>
                                 </div>

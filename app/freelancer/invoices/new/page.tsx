@@ -11,7 +11,7 @@ interface InvoiceFormData {
     clientName: string;
     clientEmail: string;
     amount: string;
-    currency: 'USDC' | 'IDRX';
+    currency: 'AlphaUSD' | 'BetaUSD' | 'pathUSD';
     description: string;
     dueDate: string;
 }
@@ -28,7 +28,7 @@ export default function NewInvoicePage() {
         clientName: '',
         clientEmail: '',
         amount: '',
-        currency: 'USDC',
+        currency: 'AlphaUSD',
         description: '',
         dueDate: '',
     });
@@ -152,7 +152,7 @@ export default function NewInvoicePage() {
                                             clientName: '',
                                             clientEmail: '',
                                             amount: '',
-                                            currency: 'USDC',
+                                            currency: 'AlphaUSD',
                                             description: '',
                                             dueDate: '',
                                         });
@@ -254,8 +254,9 @@ export default function NewInvoicePage() {
                                                 onChange={handleChange}
                                                 className={styles.currencySelect}
                                             >
-                                                <option value="USDC">USDC</option>
-                                                <option value="IDRX">IDRX</option>
+                                                <option value="AlphaUSD">AlphaUSD</option>
+                                                <option value="BetaUSD">BetaUSD</option>
+                                                <option value="pathUSD">pathUSD</option>
                                             </select>
                                         </div>
                                     </div>

@@ -1,34 +1,16 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import "@coinbase/onchainkit/styles.css";
 import { OnchainProvider } from "@/providers/OnchainProvider";
 import { UserProvider } from "@/contexts/UserContext";
 
 export const metadata: Metadata = {
-  title: "Cheqq - Payroll & DeFi. Unified on Base.",
-  description: "The all-in-one platform for invoice management, borderless payroll, and DeFi yield generation. Built on Base for the future of business finance.",
-  keywords: ["payroll", "invoice", "DeFi", "Base", "stablecoin", "IDRX", "crypto payments"],
+  title: "Cheqq - Payroll & Stablecoin Payments on Tempo",
+  description: "The all-in-one platform for invoice management, borderless payroll, and stablecoin payments. Built on Tempo for the future of business finance.",
+  keywords: ["payroll", "invoice", "stablecoin", "Tempo", "payments", "crypto payments", "AlphaUSD"],
   openGraph: {
-    title: "Cheqq - Payroll & DeFi. Unified on Base.",
-    description: "The all-in-one platform for invoice management, borderless payroll, and DeFi yield generation.",
+    title: "Cheqq - Payroll & Stablecoin Payments on Tempo",
+    description: "The all-in-one platform for invoice management, borderless payroll, and stablecoin payments.",
     type: "website",
-  },
-  other: {
-    'base:app_id': '697b8de6748a9bde7c61ac0d',
-    'fc:miniapp': JSON.stringify({
-      version: 'next',
-      imageUrl: 'https://cheqq.endhonesa.com/og.png',
-      button: {
-        title: 'Launch Cheqq',
-        action: {
-          type: 'launch_miniapp',
-          name: 'Cheqq',
-          url: 'https://cheqq.endhonesa.com',
-          splashImageUrl: 'https://cheqq.endhonesa.com/splash.png',
-          splashBackgroundColor: '#0052FF',
-        },
-      },
-    }),
   },
 };
 

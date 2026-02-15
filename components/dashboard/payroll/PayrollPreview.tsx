@@ -9,7 +9,7 @@ export interface PayrollItem {
     grossAmount: number;
     loanDeduction: number;
     netAmount: number;
-    currency: 'USDC' | 'IDRX';
+    currency: 'AlphaUSD' | 'BetaUSD';
     selected: boolean;
 }
 

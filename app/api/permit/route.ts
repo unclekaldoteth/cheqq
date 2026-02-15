@@ -1,6 +1,7 @@
 /**
  * Permit API Route
  * Issues short-lived EIP-712 signed permits for gated contract calls
+ * Updated for Tempo Testnet (chain ID 42431)
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -9,8 +10,8 @@ import {
     createSignedPermit,
     computeActionHash,
     ACTIONS,
+    getGatedActionsAddress,
 } from "@/lib/permit";
-import { SCHEMA_UIDS } from "@/lib/eas";
 import { type Hex } from "viem";
 import { randomUUID } from "crypto";
 
@@ -21,16 +22,14 @@ const RATE_LIMITS = {
     PAYROLL_PER_DAY: 5,
 };
 
-// Gated actions contract address (to be updated after deployment)
-const GATED_ACTIONS_ADDRESS: Record<number, Hex> = {
-    84532: "0x0000000000000000000000000000000000000000" as Hex, // Base Sepolia - TBD
-    8453: "0x0000000000000000000000000000000000000000" as Hex, // Base Mainnet - TBD
-};
+// Tempo Testnet chain ID
+const TEMPO_CHAIN_ID = 42431;
 
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
         const { walletAddress, action, params, chainId } = body;
+        const chainIdNumber = Number(chainId);
 
         // Validate inputs
         if (!walletAddress || typeof walletAddress !== "string") {
@@ -47,9 +46,9 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        if (!chainId || (chainId !== 84532 && chainId !== 8453)) {
+        if (!Number.isInteger(chainIdNumber) || chainIdNumber !== TEMPO_CHAIN_ID) {
             return NextResponse.json(
-                { error: "Invalid chain ID. Must be 84532 (Base Sepolia) or 8453 (Base Mainnet)" },
+                { error: "Invalid chain ID. Must be 42431 (Tempo Testnet)" },
                 { status: 400 }
             );
         }
@@ -109,60 +108,28 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Determine schema based on action and find attestation
-        let requiredSchemaUID: Hex;
-        let attestationUID: Hex | null = null;
-        const schemaUIDs = chainId === 8453 ? SCHEMA_UIDS.base : SCHEMA_UIDS.baseSepolia;
+        // On Tempo, we skip EAS attestation checks (EAS not available on Tempo)
+        // Instead, we verify that the wallet is a known freelancer or company member
+        const zeroBytes32 = "0x0000000000000000000000000000000000000000000000000000000000000000" as Hex;
+        const requiredSchemaUID: Hex = zeroBytes32;
+        const attestationUID: Hex = zeroBytes32;
 
-        // Check if it's a freelancer or company action
+        // Check if it's a freelancer or company wallet
         const freelancer = await prisma.freelancer.findFirst({
             where: { walletAddress: normalizedWallet },
-            include: {
-                kycCredentials: {
-                    where: {
-                        chainId,
-                        revokedAt: null,
-                        expiresAt: { gt: new Date() },
-                    },
-                    orderBy: { createdAt: "desc" },
-                    take: 1,
-                },
-            },
         });
 
         const companyRole = await prisma.companyWalletRole.findFirst({
             where: {
                 walletAddress: normalizedWallet,
-                chainId,
+                chainId: chainIdNumber,
                 revokedAt: null,
-            },
-            include: {
-                company: {
-                    include: {
-                        kybCredentials: {
-                            where: {
-                                chainId,
-                                revokedAt: null,
-                                expiresAt: { gt: new Date() },
-                            },
-                            orderBy: { createdAt: "desc" },
-                            take: 1,
-                        },
-                    },
-                },
             },
         });
 
-        // Determine which attestation to use
-        if (freelancer && freelancer.kycCredentials[0]?.attestationUid) {
-            requiredSchemaUID = schemaUIDs.freelancerKYC;
-            attestationUID = freelancer.kycCredentials[0].attestationUid as Hex;
-        } else if (companyRole && companyRole.attestationUid) {
-            requiredSchemaUID = schemaUIDs.companyRole;
-            attestationUID = companyRole.attestationUid as Hex;
-        } else {
+        if (!freelancer && !companyRole) {
             return NextResponse.json(
-                { error: "No valid KYC/KYB attestation found. Please complete verification first." },
+                { error: "No registered user found. Please complete registration first." },
                 { status: 403 }
             );
         }
@@ -174,8 +141,8 @@ export async function POST(request: NextRequest) {
       SELECT 
         ${permitNonceId},
         ${normalizedWallet}, 
-        ${chainId}, 
-        COALESCE((SELECT MAX("nonce") FROM "PermitNonce" WHERE "subjectAddress" = ${normalizedWallet} AND "chainId" = ${chainId}), 0) + 1,
+        ${chainIdNumber}, 
+        COALESCE((SELECT MAX("nonce") FROM "PermitNonce" WHERE "subjectAddress" = ${normalizedWallet} AND "chainId" = ${chainIdNumber}), 0) + 1,
         ${action},
         NOW()
       RETURNING "nonce"
@@ -184,8 +151,10 @@ export async function POST(request: NextRequest) {
         const nonce = nonceResult[0].nonce;
 
         // Get contract address
-        const contractAddress = GATED_ACTIONS_ADDRESS[chainId];
-        if (!contractAddress || contractAddress === "0x0000000000000000000000000000000000000000") {
+        let contractAddress: Hex;
+        try {
+            contractAddress = getGatedActionsAddress(chainIdNumber);
+        } catch {
             return NextResponse.json(
                 { error: "Gated actions contract not deployed on this chain" },
                 { status: 501 }
@@ -201,8 +170,8 @@ export async function POST(request: NextRequest) {
             params,
             nonce,
             requiredSchemaUID,
-            attestationUID || ("0x0000000000000000000000000000000000000000000000000000000000000000" as Hex),
-            chainId,
+            attestationUID,
+            chainIdNumber,
             contractAddress
         );
 
@@ -215,8 +184,7 @@ export async function POST(request: NextRequest) {
                 metadata: {
                     nonce: nonce.toString(),
                     expiry: signedPermit.permit.expiry.toString(),
-                    attestationUID,
-                    chainId,
+                    chainId: chainIdNumber,
                 },
             },
         });
@@ -232,8 +200,7 @@ export async function POST(request: NextRequest) {
                 requiredAttestationUID: signedPermit.permit.requiredAttestationUID,
             },
             signature: signedPermit.signature,
-            attestationUID,
-            chainId,
+            chainId: chainIdNumber,
             expiresAt: new Date(Number(signedPermit.permit.expiry) * 1000).toISOString(),
         });
     } catch (error) {

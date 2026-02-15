@@ -165,7 +165,7 @@ export async function GET(request: Request) {
             e.availableBalance = e.totalPaid - e.withdrawn - e.pendingWithdrawals;
         }
 
-        // Calculate totals (in primary currency - USDC)
+        // Calculate totals (in primary currency - AlphaUSD)
         const totals = {
             totalInvoiced: Object.values(earningsByCurrency).reduce((sum, e) => sum + e.totalInvoiced, 0),
             totalPaid: Object.values(earningsByCurrency).reduce((sum, e) => sum + e.totalPaid, 0),

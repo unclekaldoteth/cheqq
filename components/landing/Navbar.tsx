@@ -15,8 +15,14 @@ export default function Navbar() {
             <div className={`container ${styles.navContainer}`}>
                 {/* Logo */}
                 <Link href="/" className={styles.logo}>
-                    <Image src="/logo.png" alt="Cheqq" width={32} height={32} className={styles.logoImage} />
-                    Cheqq
+                    <Image
+                        src="/brand/tempo-mark-black.svg"
+                        alt="Tempo"
+                        width={32}
+                        height={32}
+                        style={{ objectFit: 'contain' }}
+                    />
+                    <span style={{ fontWeight: 700, fontSize: '1.25rem' }}>Cheqq</span>
                 </Link>
 
                 {/* Desktop Navigation */}

@@ -1,19 +1,7 @@
 'use client';
 
 import { usePrivy } from '@privy-io/react-auth';
-import {
-    ConnectWallet,
-    Wallet,
-    WalletDropdown,
-    WalletDropdownDisconnect,
-    WalletDropdownLink,
-} from '@coinbase/onchainkit/wallet';
-import {
-    Address,
-    Avatar,
-    Name,
-} from '@coinbase/onchainkit/identity';
-import { useAccount, useConnect } from 'wagmi';
+import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import { injected } from 'wagmi/connectors';
 import type { EIP1193Provider } from 'viem';
 import styles from './WalletConnect.module.css';
@@ -39,9 +27,10 @@ const getInjectedProvider = () => {
 };
 
 export function WalletConnect() {
-    const { ready, authenticated, user, login } = usePrivy();
+    const { ready, authenticated, user, login, logout } = usePrivy();
     const { status, address } = useAccount();
     const { connect, status: connectStatus } = useConnect();
+    const { disconnect } = useDisconnect();
     const privyAddress = user?.wallet?.address;
 
     const isWagmiConnected = status === 'connected' && !!address;
@@ -63,6 +52,11 @@ export function WalletConnect() {
             })
             : injected({ shimDisconnect: true });
         connect({ connector });
+    };
+
+    const handleDisconnect = () => {
+        disconnect();
+        logout();
     };
 
     if (!authenticated) {
@@ -100,42 +94,36 @@ export function WalletConnect() {
 
     return (
         <div className={styles.walletWrapper}>
-            <Wallet>
-                <ConnectWallet>
-                    <Avatar className={styles.avatar} />
-                    <Name className={styles.name} />
-                </ConnectWallet>
-                <WalletDropdown
-                    className={styles.dropdownPortal}
-                    classNames={{ container: styles.dropdownContent }}
-                >
-                    <div className={styles.dropdownInner}>
-                        {address && (
-                            <div className={styles.dropdownHeader}>
-                                <Avatar address={address} className={styles.dropdownAvatar} />
-                                <div className={styles.dropdownHeaderText}>
-                                    <div className={styles.dropdownLabel}>Connected</div>
-                                    <Address
-                                        address={address}
-                                        className={styles.dropdownAddress}
-                                        hasCopyAddressOnClick
-                                    />
-                                </div>
-                            </div>
-                        )}
-                        <WalletDropdownLink
-                            className={styles.dropdownItem}
-                            icon="wallet"
-                            href="https://wallet.coinbase.com"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                        >
-                            Go to Wallet Dashboard
-                        </WalletDropdownLink>
-                        <WalletDropdownDisconnect className={styles.dropdownDisconnect} />
+            <div className={styles.connectedWallet}>
+                <div className={styles.walletInfo}>
+                    <div className={styles.walletAvatar}>
+                        {address?.slice(2, 4).toUpperCase()}
                     </div>
-                </WalletDropdown>
-            </Wallet>
+                    <div className={styles.walletDetails}>
+                        <div className={styles.walletLabel}>Connected</div>
+                        <div className={styles.walletAddress}>
+                            {address ? truncateAddress(address) : ''}
+                        </div>
+                    </div>
+                </div>
+                <div className={styles.walletActions}>
+                    <a
+                        href={`https://explore.tempo.xyz/address/${address}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.explorerLink}
+                    >
+                        Explorer ↗
+                    </a>
+                    <button
+                        type="button"
+                        className={styles.disconnectButton}
+                        onClick={handleDisconnect}
+                    >
+                        Disconnect
+                    </button>
+                </div>
+            </div>
         </div>
     );
 }

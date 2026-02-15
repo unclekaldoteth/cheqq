@@ -18,13 +18,15 @@ import "../src/CheqqPayroll.sol";
  *
  * Usage:
  *   forge script script/ConfigureCheqqPayroll.s.sol:ConfigureCheqqPayroll \
- *     --rpc-url $BASE_SEPOLIA_RPC_URL \
+ *     --rpc-url $TEMPO_TESTNET_RPC_URL \
  *     --private-key $PRIVATE_KEY \
  *     --broadcast
  */
 contract ConfigureCheqqPayroll is Script {
-    address constant USDC_BASE_SEPOLIA = 0x036CbD53842c5426634e7929541eC2318f3dCF7e;
-    address constant USDC_BASE_MAINNET = 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913;
+    uint256 constant TEMPO_CHAIN_ID = 42431;
+    address constant ALPHA_USD_TEMPO = 0x20C0000000000000000000000000000000000001;
+    address constant BETA_USD_TEMPO = 0x20C0000000000000000000000000000000000002;
+    address constant PATH_USD_TEMPO = 0x20C0000000000000000000000000000000000000;
 
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
@@ -33,16 +35,8 @@ contract ConfigureCheqqPayroll is Script {
         address companyAddress = vm.envAddress("COMPANY_ADDRESS");
 
         address tokenOverride = vm.envOr("TOKEN_ADDRESS", address(0));
-        address tokenAddress;
-
-        if (tokenOverride != address(0)) {
-            tokenAddress = tokenOverride;
-        } else if (block.chainid == 84532) {
-            tokenAddress = USDC_BASE_SEPOLIA;
-        } else if (block.chainid == 8453) {
-            tokenAddress = USDC_BASE_MAINNET;
-        } else {
-            revert("Unsupported chain");
+        if (block.chainid != TEMPO_CHAIN_ID) {
+            revert("Unsupported chain. Use Tempo Testnet (42431)");
         }
 
         CheqqPayroll payroll = CheqqPayroll(payrollAddress);
@@ -51,7 +45,6 @@ contract ConfigureCheqqPayroll is Script {
         console.log("Deployer:", deployer);
         console.log("Payroll:", payrollAddress);
         console.log("Company:", companyAddress);
-        console.log("Token:", tokenAddress);
         console.log("Chain ID:", block.chainid);
 
         if (payroll.owner() != deployer) {
@@ -60,7 +53,17 @@ contract ConfigureCheqqPayroll is Script {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        payroll.setTokenWhitelist(tokenAddress, true);
+        if (tokenOverride != address(0)) {
+            payroll.setTokenWhitelist(tokenOverride, true);
+            console.log("Token whitelisted:", tokenOverride);
+        } else {
+            payroll.setTokenWhitelist(ALPHA_USD_TEMPO, true);
+            payroll.setTokenWhitelist(BETA_USD_TEMPO, true);
+            payroll.setTokenWhitelist(PATH_USD_TEMPO, true);
+            console.log("AlphaUSD whitelisted:", ALPHA_USD_TEMPO);
+            console.log("BetaUSD whitelisted:", BETA_USD_TEMPO);
+            console.log("pathUSD whitelisted:", PATH_USD_TEMPO);
+        }
         payroll.setCompanyRegistration(companyAddress, true);
 
         vm.stopBroadcast();

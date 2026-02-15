@@ -20,8 +20,14 @@ export default function FreelancerSidebar() {
     return (
         <aside className={styles.sidebar}>
             <div className={styles.logo}>
-                <Image src="/logo.png" alt="Cheqq" width={32} height={32} className={styles.logoImage} />
-                <span className={styles.logoText}>Cheqq</span>
+                <Image
+                    src="/brand/tempo-mark-black.svg"
+                    alt="Cheqq"
+                    width={32}
+                    height={32}
+                    style={{ objectFit: 'contain' }}
+                />
+                <span style={{ fontWeight: 700, fontSize: '1.25rem' }}>Cheqq</span>
                 <span className={styles.badge}>Freelancer</span>
             </div>
 

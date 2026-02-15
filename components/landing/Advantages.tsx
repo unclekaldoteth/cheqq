@@ -5,17 +5,17 @@ const advantages = [
     {
         icon: <Zap size={24} />,
         title: 'Instant Payments',
-        description: 'Settle transactions in seconds on Base L2. No more waiting days for bank transfers.',
+        description: 'Settle transactions in seconds on Tempo Network. No more waiting days for bank transfers.',
     },
     {
         icon: <Globe size={24} />,
-        title: 'IDRX Native',
+        title: 'BetaUSD Native',
         description: 'Built-in support for Indonesian Rupiah stablecoin. Perfect for local businesses going global.',
     },
     {
         icon: <TrendingUp size={24} />,
         title: 'Earn DeFi Yield',
-        description: 'Put idle treasury to work via Morpho and Aerodrome. Earn up to 8% APY automatically.',
+        description: 'Put idle treasury to work via Tempo DeFi protocols. Earn up to 8% APY automatically.',
     },
     {
         icon: <Shield size={24} />,
@@ -40,7 +40,7 @@ export default function Advantages() {
             <div className="container">
                 <div className="section-header">
                     <span className="badge">Why Cheqq</span>
-                    <h2>Built different. Built on Base.</h2>
+                    <h2>Built different. Built on Tempo.</h2>
                     <p>
                         Traditional payroll is slow, expensive, and outdated. Cheqq brings the speed of crypto
                         with the reliability your business needs.
